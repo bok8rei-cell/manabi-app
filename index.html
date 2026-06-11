@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>おうちまなびゲーム</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#ff7043">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="まなびゲーム">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="app">
+
+  <!-- ホーム画面：だれが べんきょうする？ -->
+  <section id="screen-home" class="screen">
+    <h1>📘 おうちまなびゲーム 📘</h1>
+    <p class="lead">だれが べんきょうする？</p>
+    <div class="grade-select">
+      <button class="grade-btn g1" data-grade="1">1年生</button>
+      <button class="grade-btn g3" data-grade="3">3年生</button>
+      <button class="grade-btn g5" data-grade="5">5年生</button>
+    </div>
+  </section>
+
+  <!-- 1年生：1週間プログラム画面 -->
+  <section id="screen-week1" class="screen hidden">
+    <button class="back-btn" data-back="home">← もどる</button>
+    <h2>1年生 1しゅうかんプログラム</h2>
+    <div class="progress-box" id="week1-progress-box"></div>
+    <div class="week1-days" id="week1-days"></div>
+    <button class="sub-btn" id="week1-free-btn">じゆうれんしゅうへ</button>
+  </section>
+
+  <!-- 教科選択画面 -->
+  <section id="screen-subject" class="screen hidden">
+    <button class="back-btn" data-back="home">← もどる</button>
+    <h2 id="subject-title"></h2>
+    <div class="progress-box" id="progress-box"></div>
+    <div class="subject-select" id="subject-buttons"></div>
+  </section>
+
+  <!-- ドリル画面 -->
+  <section id="screen-quiz" class="screen hidden">
+    <button class="back-btn" data-back="subject">← もどる</button>
+    <div class="quiz-header">
+      <div class="quiz-progress" id="quiz-progress"></div>
+      <div class="quiz-score">⭐ <span id="quiz-score">0</span></div>
+    </div>
+    <div class="quiz-card">
+      <div class="quiz-question" id="quiz-question"></div>
+      <div class="quiz-answer-area" id="quiz-answer-area"></div>
+      <div class="quiz-feedback" id="quiz-feedback"></div>
+      <button class="main-btn" id="quiz-action-btn">こたえる</button>
+    </div>
+  </section>
+
+  <!-- 結果画面 -->
+  <section id="screen-result" class="screen hidden">
+    <h2>けっか</h2>
+    <div class="result-card">
+      <div class="result-score" id="result-score"></div>
+      <div class="result-message" id="result-message"></div>
+    </div>
+    <div class="result-buttons">
+      <button class="main-btn" id="retry-btn">もういちど</button>
+      <button class="sub-btn" id="home-btn">きょうかをえらぶ</button>
+    </div>
+  </section>
+
+</div>
+
+<script src="js/math.js"></script>
+<script src="js/kanji.js"></script>
+<script src="js/rikashakai.js"></script>
+<script src="js/eigo.js"></script>
+<script src="js/week1.js"></script>
+<script src="js/app.js"></script>
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js').catch(() => {});
+    });
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,29 @@
+{
+  "name": "おうちまなびゲーム",
+  "short_name": "まなびゲーム",
+  "description": "1年生・3年生・5年生むけ さんすう・こくご・りかしゃかい・えいごの学習アプリ",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#fef6e4",
+  "theme_color": "#ff7043",
+  "icons": [
+    {
+      "src": "icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
