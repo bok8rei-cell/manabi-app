@@ -73,44 +73,8 @@ function saveProgress(grade, subject, sessionCorrect, sessionTotal) {
 document.querySelectorAll('.grade-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     state.grade = Number(btn.dataset.grade);
-    if (state.grade === 1) {
-      showWeek1Screen();
-    } else {
-      showSubjectScreen();
-    }
+    showSubjectScreen();
   });
-});
-
-// ---- 1年生：1週間プログラム画面 ----
-function showWeek1Screen() {
-  const container = document.getElementById('week1-days');
-  container.innerHTML = '';
-
-  let totalDone = 0;
-  WEEK1_PLAN.forEach(plan => {
-    const p = loadProgress(1, `week1_day${plan.day}`);
-    const done = p.total > 0;
-    if (done) totalDone++;
-
-    const btn = document.createElement('button');
-    btn.className = 'week1-day-btn' + (done ? ' done' : '') + (plan.day === 7 ? ' review' : '');
-    let label = `${plan.day}にちめ\n${plan.title}`;
-    if (done) label += `\n（さいご：${p.correct}/${p.total}）`;
-    btn.textContent = label;
-    btn.addEventListener('click', () => startWeek1Quiz(plan.day));
-    container.appendChild(btn);
-  });
-
-  const box = document.getElementById('week1-progress-box');
-  box.textContent = totalDone === 0
-    ? 'まずは「1にちめ」から はじめよう！'
-    : `${totalDone} / 7にち やったよ！`;
-
-  showScreen('week1');
-}
-
-document.getElementById('week1-free-btn').addEventListener('click', () => {
-  showSubjectScreen();
 });
 
 function showSubjectScreen() {
@@ -155,33 +119,14 @@ function renderProgressBox() {
 document.querySelectorAll('[data-back]').forEach(btn => {
   btn.addEventListener('click', () => {
     const dest = btn.dataset.back;
-    if (dest === 'home') {
-      if (state.grade === 1) showWeek1Screen();
-      else showScreen('home');
-    }
-    if (dest === 'subject') {
-      if (state.mode === 'week1') showWeek1Screen();
-      else showSubjectScreen();
-    }
+    if (dest === 'home') showScreen('home');
+    if (dest === 'subject') showSubjectScreen();
   });
 });
 
 // ---- クイズ開始 ----
 function startQuiz(subjectKey) {
-  state.mode = 'free';
   state.subject = subjectKey;
-  state.problemQueue = null;
-  state.questionIndex = 0;
-  state.score = 0;
-  showScreen('quiz');
-  nextQuestion();
-}
-
-function startWeek1Quiz(day) {
-  state.mode = 'week1';
-  state.week1Day = day;
-  state.subject = `week1_day${day}`;
-  state.problemQueue = buildWeek1Problems(day);
   state.questionIndex = 0;
   state.score = 0;
   showScreen('quiz');
@@ -191,9 +136,7 @@ function startWeek1Quiz(day) {
 function nextQuestion() {
   state.answered = false;
   state.selectedChoice = null;
-  state.currentProblem = state.problemQueue
-    ? state.problemQueue[state.questionIndex]
-    : GENERATORS[state.subject](state.grade);
+  state.currentProblem = GENERATORS[state.subject](state.grade);
   renderQuestion();
 }
 
@@ -314,23 +257,13 @@ function finishQuiz() {
   message += `\n（れんぞく ${progress.streak || 0}日め）`;
 
   document.getElementById('result-message').textContent = message;
-  document.getElementById('home-btn').textContent =
-    state.mode === 'week1' ? '1しゅうかんプログラムへ' : 'きょうかをえらぶ';
   showScreen('result');
 }
 
 document.getElementById('retry-btn').addEventListener('click', () => {
-  if (state.mode === 'week1') {
-    startWeek1Quiz(state.week1Day);
-  } else {
-    startQuiz(state.subject);
-  }
+  startQuiz(state.subject);
 });
 
 document.getElementById('home-btn').addEventListener('click', () => {
-  if (state.mode === 'week1') {
-    showWeek1Screen();
-  } else {
-    showSubjectScreen();
-  }
+  showSubjectScreen();
 });

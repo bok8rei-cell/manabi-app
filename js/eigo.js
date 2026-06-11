@@ -55,24 +55,6 @@ const EIGO_DATA = {
   ]
 };
 
-// 指定したリストから出題し、選択肢は distractorPool（無ければ同リスト）から作る
-function generateEigoProblemFromList(correctList, distractorPool) {
-  distractorPool = distractorPool || correctList;
-  const correct = correctList[randInt(0, correctList.length - 1)];
-
-  const pool = distractorPool.filter(item => item.en !== correct.en);
-  const distractors = shuffleArray(pool).slice(0, 3).map(item => item.en);
-
-  const choices = shuffleArray([correct.en, ...distractors]);
-
-  return {
-    question: `${correct.emoji}\nこれを えいごで いうと？`,
-    type: 'choice',
-    choices,
-    answer: correct.en
-  };
-}
-
 function generateEigoProblem(grade) {
   const list = EIGO_DATA[grade] || EIGO_DATA[1];
   const correct = list[randInt(0, list.length - 1)];

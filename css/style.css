@@ -95,34 +95,6 @@ h2 {
   cursor: not-allowed;
 }
 
-.week1-days {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  margin-top: 16px;
-}
-
-.week1-day-btn {
-  font-size: 1.05em;
-  padding: 16px 10px;
-  border: none;
-  border-radius: 14px;
-  background: #ffa726;
-  color: #fff;
-  cursor: pointer;
-  font-weight: bold;
-  white-space: pre-line;
-  line-height: 1.4;
-}
-.week1-day-btn:active { transform: scale(0.97); }
-.week1-day-btn.done {
-  background: #66bb6a;
-}
-.week1-day-btn.review {
-  grid-column: span 2;
-  background: #ab47bc;
-}
-
 .progress-box {
   background: #fff8e1;
   border-radius: 12px;

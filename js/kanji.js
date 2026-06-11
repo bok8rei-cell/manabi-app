@@ -122,35 +122,6 @@ function generateKanjiProblem(grade) {
   };
 }
 
-// 指定したリストから出題し、選択肢は distractorPool（無ければ同リスト）から作る
-function generateKanjiProblemFromList(correctList, distractorPool) {
-  distractorPool = distractorPool || correctList;
-  const correct = correctList[randInt(0, correctList.length - 1)];
-
-  const pool = distractorPool.filter(item => item.reading !== correct.reading);
-  const shuffledPool = shuffleArray(pool);
-  const distractors = [];
-  const usedReadings = new Set([correct.reading]);
-  for (const item of shuffledPool) {
-    if (distractors.length >= 3) break;
-    if (usedReadings.has(item.reading)) continue;
-    usedReadings.add(item.reading);
-    distractors.push(item.reading);
-  }
-  while (distractors.length < 3) {
-    distractors.push(correct.reading + 'ー');
-  }
-
-  const choices = shuffleArray([correct.reading, ...distractors]);
-
-  return {
-    question: `「${correct.word}」の\n「${correct.kanji}」の よみかたは？`,
-    type: 'choice',
-    choices,
-    answer: correct.reading
-  };
-}
-
 function shuffleArray(arr) {
   const a = [...arr];
   for (let i = a.length - 1; i > 0; i--) {
