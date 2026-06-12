@@ -493,8 +493,8 @@ function genGrade7() {
   const type = types[randInt(0, types.length - 1)];
 
   if (type === 'negAddSub') {
-    const a = randInt(-10, 10);
-    const b = randInt(-10, 10);
+    const a = randInt(-9, 9);
+    const b = randInt(-9, 9);
     const isAdd = Math.random() < 0.5;
     if (isAdd) {
       return {
@@ -516,8 +516,8 @@ function genGrade7() {
   if (type === 'negMulDiv') {
     const isMul = Math.random() < 0.5;
     if (isMul) {
-      const a = randInt(-9, 9) || 1;
-      const b = randInt(-9, 9) || 1;
+      const a = randInt(-6, 6) || 1;
+      const b = randInt(-6, 6) || 1;
       return {
         question: `(${a}) × (${b}) = ？`,
         type: 'input',
@@ -525,8 +525,8 @@ function genGrade7() {
         answer: `${a * b}`
       };
     } else {
-      const b = randInt(-9, 9) || 1;
-      const c = randInt(-9, 9) || 1;
+      const b = randInt(-6, 6) || 1;
+      const c = randInt(-6, 6) || 1;
       const a = b * c;
       return {
         question: `(${a}) ÷ (${b}) = ？`,
@@ -538,8 +538,8 @@ function genGrade7() {
   }
 
   if (type === 'literalSimplify') {
-    const a = randInt(2, 9);
-    const b = randInt(1, 9);
+    const a = randInt(1, 6);
+    const b = randInt(1, 6);
     const isAdd = Math.random() < 0.5;
     const result = isAdd ? a + b : a - b;
     const op = isAdd ? '＋' : '－';
@@ -562,9 +562,9 @@ function genGrade7() {
   }
 
   if (type === 'literalSubstitute') {
-    const x = randInt(-5, 5) || 1;
-    const a = randInt(2, 9);
-    const b = randInt(-9, 9);
+    const x = randInt(-3, 3) || 1;
+    const a = randInt(2, 5);
+    const b = randInt(-5, 5);
     const result = a * x + b;
     const bStr = b >= 0 ? `＋ ${b}` : `－ ${Math.abs(b)}`;
     return {
@@ -576,9 +576,9 @@ function genGrade7() {
   }
 
   if (type === 'equation') {
-    const a = randInt(2, 9);
-    const x = randInt(-10, 10) || 1;
-    const b = randInt(-10, 10);
+    const a = randInt(2, 5);
+    const x = randInt(-5, 5) || 1;
+    const b = randInt(-5, 5);
     const c = a * x + b;
     const bStr = b >= 0 ? `＋ ${b}` : `－ ${Math.abs(b)}`;
     return {
@@ -618,7 +618,7 @@ function genGrade7() {
   }
 
   if (type === 'absValue') {
-    const a = randInt(-15, 15) || 1;
+    const a = randInt(-10, 10) || 1;
     return {
       question: `| ${a} | の値は？\n（絶対値）`,
       type: 'input',
@@ -628,8 +628,8 @@ function genGrade7() {
   }
 
   // expand: a(x + b) の展開
-  const a = randInt(2, 9);
-  const b = randInt(1, 9);
+  const a = randInt(2, 5);
+  const b = randInt(1, 5);
   const correct = `${a}x+${a * b}`;
   const distractors = new Set([`${a}x+${b}`, `x+${a * b}`, `${a}x-${a * b}`]);
   distractors.delete(correct);
