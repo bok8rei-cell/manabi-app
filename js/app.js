@@ -1,12 +1,13 @@
 // ===== おうちまなびゲーム メインスクリプト =====
 
 const TOTAL_QUESTIONS = 10;
+const DONT_KNOW = '__DONTKNOW__';
 
 const SUBJECTS = [
-  { key: 'math', label: '算数', cls: '' },
-  { key: 'kanji', label: '国語（漢字）', cls: 'kokugo' },
-  { key: 'rikashakai', label: '理科・社会', cls: 'rikashakai', grades: [3, 5] },
-  { key: 'eigo', label: '英語', cls: 'eigo' }
+  { key: 'math', label: '算数', kanaLabel: 'さんすう', cls: '' },
+  { key: 'kanji', label: '国語（漢字）', kanaLabel: 'こくご（かんじ）', cls: 'kokugo' },
+  { key: 'rikashakai', label: '理科・社会', kanaLabel: 'りか・しゃかい', cls: 'rikashakai', grades: [3, 5] },
+  { key: 'eigo', label: '英語', kanaLabel: 'えいご', cls: 'eigo' }
 ];
 
 const GENERATORS = {
@@ -21,7 +22,8 @@ const state = {
   grade: null,
   subject: null,
   questionIndex: 0,
-  score: 0,
+  correctCount: 0,
+  incorrectCount: 0,
   currentProblem: null,
   selectedChoice: null,
   answered: false
@@ -87,7 +89,7 @@ function showSubjectScreen() {
     const available = !subj.grades || subj.grades.includes(state.grade);
     const btn = document.createElement('button');
     btn.className = `subject-btn ${subj.cls}`;
-    btn.textContent = subj.label;
+    btn.textContent = state.grade === 1 ? subj.kanaLabel : subj.label;
     if (!available) {
       btn.disabled = true;
       btn.textContent += '\n（3・5年生）';
@@ -110,7 +112,8 @@ function renderProgressBox() {
     const p = loadProgress(state.grade, subj.key);
     if (p.total === 0) return;
     const rate = Math.round((p.correct / p.total) * 100);
-    lines.push(`${subj.label}：これまで ${p.total}問中 ${p.correct}問せいかい（${rate}%）　れんぞく${p.streak || 0}日`);
+    const label = state.grade === 1 ? subj.kanaLabel : subj.label;
+    lines.push(`${label}：これまで ${p.total}問中 ${p.correct}問せいかい（${rate}%）　れんぞく${p.streak || 0}日`);
   });
   box.textContent = lines.length > 0 ? lines.join('\n') : 'きょうも がんばろう！';
 }
@@ -128,9 +131,18 @@ document.querySelectorAll('[data-back]').forEach(btn => {
 function startQuiz(subjectKey) {
   state.subject = subjectKey;
   state.questionIndex = 0;
-  state.score = 0;
+  state.correctCount = 0;
+  state.incorrectCount = 0;
   showScreen('quiz');
   nextQuestion();
+}
+
+function updateStats() {
+  const total = state.correctCount + state.incorrectCount;
+  const rate = total > 0 ? Math.round((state.correctCount / total) * 100) : 0;
+  document.getElementById('quiz-correct').textContent = state.correctCount;
+  document.getElementById('quiz-incorrect').textContent = state.incorrectCount;
+  document.getElementById('quiz-rate').textContent = rate;
 }
 
 function nextQuestion() {
@@ -142,27 +154,29 @@ function nextQuestion() {
 
 function renderQuestion() {
   document.getElementById('quiz-progress').textContent = `もんだい ${state.questionIndex + 1} / ${TOTAL_QUESTIONS}`;
-  document.getElementById('quiz-score').textContent = state.score;
   document.getElementById('quiz-question').textContent = state.currentProblem.question;
   document.getElementById('quiz-feedback').textContent = '';
   document.getElementById('quiz-feedback').className = 'quiz-feedback';
+  updateStats();
 
   const area = document.getElementById('quiz-answer-area');
   area.innerHTML = '';
 
   const problem = state.currentProblem;
 
+  const selectChoice = (btn, value) => {
+    if (state.answered) return;
+    state.selectedChoice = value;
+    area.querySelectorAll('.choice-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+  };
+
   if (problem.type === 'choice') {
     problem.choices.forEach(choice => {
       const btn = document.createElement('button');
       btn.className = 'choice-btn';
       btn.textContent = choice;
-      btn.addEventListener('click', () => {
-        if (state.answered) return;
-        state.selectedChoice = choice;
-        area.querySelectorAll('.choice-btn').forEach(b => b.classList.remove('selected'));
-        btn.classList.add('selected');
-      });
+      btn.addEventListener('click', () => selectChoice(btn, choice));
       area.appendChild(btn);
     });
   } else {
@@ -171,12 +185,32 @@ function renderQuestion() {
     input.id = 'answer-input';
     input.inputMode = problem.inputType === 'number' ? 'numeric' : 'text';
     input.placeholder = problem.isFraction ? 'れい：3/4' : 'こたえ';
+    input.addEventListener('input', () => {
+      if (state.selectedChoice === DONT_KNOW) {
+        state.selectedChoice = null;
+        area.querySelectorAll('.choice-btn').forEach(b => b.classList.remove('selected'));
+      }
+    });
     area.appendChild(input);
     setTimeout(() => input.focus(), 0);
     input.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') document.getElementById('quiz-action-btn').click();
     });
   }
+
+  // 「わからない」ボタン（どの問題タイプでも選べる）
+  const dontKnowBtn = document.createElement('button');
+  dontKnowBtn.className = 'choice-btn dontknow-btn';
+  dontKnowBtn.textContent = 'わからない';
+  dontKnowBtn.addEventListener('click', () => {
+    if (state.answered) return;
+    if (problem.type === 'input') {
+      const input = document.getElementById('answer-input');
+      if (input) input.value = '';
+    }
+    selectChoice(dontKnowBtn, DONT_KNOW);
+  });
+  area.appendChild(dontKnowBtn);
 
   document.getElementById('quiz-action-btn').textContent = 'こたえる';
 }
@@ -192,40 +226,52 @@ document.getElementById('quiz-action-btn').addEventListener('click', () => {
 
 function checkAnswer() {
   const problem = state.currentProblem;
+  const isDontKnow = state.selectedChoice === DONT_KNOW;
   let correct = false;
   let userAnswer = null;
 
-  if (problem.type === 'choice') {
-    userAnswer = state.selectedChoice;
-    if (userAnswer === null) return; // 未選択なら何もしない
-    correct = userAnswer === problem.answer;
+  if (!isDontKnow) {
+    if (problem.type === 'choice') {
+      userAnswer = state.selectedChoice;
+      if (userAnswer === null) return; // 未選択なら何もしない
+      correct = userAnswer === problem.answer;
+    } else {
+      const input = document.getElementById('answer-input');
+      userAnswer = input.value;
+      if (userAnswer.trim() === '') return; // 未入力なら何もしない
+      correct = isMathAnswerCorrect(problem, userAnswer);
+    }
+  }
 
+  if (problem.type === 'choice') {
     document.querySelectorAll('#quiz-answer-area .choice-btn').forEach(b => {
       if (b.textContent === problem.answer) b.classList.add('correct');
       else if (b.textContent === userAnswer && !correct) b.classList.add('wrong');
       b.disabled = true;
     });
   } else {
-    const input = document.getElementById('answer-input');
-    userAnswer = input.value;
-    if (userAnswer.trim() === '') return; // 未入力なら何もしない
-    correct = isMathAnswerCorrect(problem, userAnswer);
-    input.disabled = true;
+    document.getElementById('answer-input').disabled = true;
+    document.querySelector('#quiz-answer-area .dontknow-btn').disabled = true;
   }
 
   state.answered = true;
 
   const fb = document.getElementById('quiz-feedback');
-  if (correct) {
-    state.score++;
+  if (isDontKnow) {
+    state.incorrectCount++;
+    fb.textContent = `🤔 こたえは「${problem.answer}」だよ。おぼえておこう！`;
+    fb.classList.add('wrong');
+  } else if (correct) {
+    state.correctCount++;
     fb.textContent = '⭕ せいかい！';
     fb.classList.add('correct');
   } else {
+    state.incorrectCount++;
     fb.textContent = `❌ ざんねん！ こたえは「${problem.answer}」`;
     fb.classList.add('wrong');
   }
 
-  document.getElementById('quiz-score').textContent = state.score;
+  updateStats();
   document.getElementById('quiz-action-btn').textContent =
     state.questionIndex + 1 < TOTAL_QUESTIONS ? 'つぎへ' : 'けっかをみる';
 }
@@ -240,16 +286,16 @@ function advance() {
 }
 
 function finishQuiz() {
-  const progress = saveProgress(state.grade, state.subject, state.score, TOTAL_QUESTIONS);
+  const progress = saveProgress(state.grade, state.subject, state.correctCount, TOTAL_QUESTIONS);
 
-  document.getElementById('result-score').textContent = `${state.score} / ${TOTAL_QUESTIONS} もん せいかい！`;
+  document.getElementById('result-score').textContent = `${state.correctCount} / ${TOTAL_QUESTIONS} もん せいかい！`;
 
   let message;
-  if (state.score === TOTAL_QUESTIONS) {
+  if (state.correctCount === TOTAL_QUESTIONS) {
     message = '🌟 パーフェクト！　すごいね！';
-  } else if (state.score >= TOTAL_QUESTIONS * 0.8) {
+  } else if (state.correctCount >= TOTAL_QUESTIONS * 0.8) {
     message = '👏 よくできました！';
-  } else if (state.score >= TOTAL_QUESTIONS * 0.5) {
+  } else if (state.correctCount >= TOTAL_QUESTIONS * 0.5) {
     message = '😊 もうすこし！がんばろう！';
   } else {
     message = '💪 つぎは もっとできるよ！';
