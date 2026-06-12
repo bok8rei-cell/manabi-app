@@ -175,6 +175,90 @@ document.getElementById('sync-export-btn').addEventListener('click', () => {
   document.getElementById('sync-message').textContent = '📤 ファイルを書き出しました！';
 });
 
+// ---- クラウド同期（Firestore） ----
+const syncCodeInput = document.getElementById('sync-code');
+syncCodeInput.value = localStorage.getItem('manabi_synccode') || '';
+syncCodeInput.addEventListener('input', () => {
+  localStorage.setItem('manabi_synccode', syncCodeInput.value.trim());
+});
+
+function mergeRankingList(existing, incoming) {
+  const merged = [...existing, ...incoming];
+  merged.sort((a, b) => b.rate - a.rate || b.correct - a.correct || (a.date < b.date ? 1 : -1));
+  return merged.slice(0, 20);
+}
+
+function mergeSyncData(a, b) {
+  const merged = { progress: {}, ranking: {}, playerName: a.playerName || b.playerName || '' };
+  const progressKeys = new Set([...Object.keys(a.progress || {}), ...Object.keys(b.progress || {})]);
+  progressKeys.forEach(key => {
+    const pa = (a.progress || {})[key] || { correct: 0, total: 0, best: 0, streak: 0, lastDate: null };
+    const pb = (b.progress || {})[key] || { correct: 0, total: 0, best: 0, streak: 0, lastDate: null };
+    merged.progress[key] = mergeProgress(pa, pb);
+  });
+  const rankingKeys = new Set([...Object.keys(a.ranking || {}), ...Object.keys(b.ranking || {})]);
+  rankingKeys.forEach(key => {
+    merged.ranking[key] = mergeRankingList((a.ranking || {})[key] || [], (b.ranking || {})[key] || []);
+  });
+  return merged;
+}
+
+function cloudUnavailable(msg) {
+  if (!cloudDb) {
+    msg.textContent = 'クラウド同期が設定されていません。js/firebase-config.jsに設定を入力してください。';
+    return true;
+  }
+  const code = syncCodeInput.value.trim();
+  if (!code) {
+    msg.textContent = '同期コードを入力してください。';
+    return true;
+  }
+  return false;
+}
+
+document.getElementById('cloud-upload-btn').addEventListener('click', async () => {
+  const msg = document.getElementById('sync-message');
+  if (cloudUnavailable(msg)) return;
+  const code = syncCodeInput.value.trim();
+  msg.textContent = '送信中...';
+  try {
+    const docRef = cloudDb.collection('syncCodes').doc(code);
+    const snap = await docRef.get();
+    const cloudData = snap.exists ? snap.data() : { progress: {}, ranking: {}, playerName: '' };
+    const localData = collectSyncData();
+    const merged = mergeSyncData(localData, cloudData);
+    await docRef.set(merged);
+    applySyncData(merged);
+    msg.textContent = '☁️ クラウドに送りました！';
+  } catch (e) {
+    msg.textContent = '送信に失敗しました。通信環境を確認してください。';
+  }
+});
+
+document.getElementById('cloud-download-btn').addEventListener('click', async () => {
+  const msg = document.getElementById('sync-message');
+  if (cloudUnavailable(msg)) return;
+  const code = syncCodeInput.value.trim();
+  msg.textContent = '受信中...';
+  try {
+    const docRef = cloudDb.collection('syncCodes').doc(code);
+    const snap = await docRef.get();
+    if (!snap.exists) {
+      msg.textContent = 'まだクラウドにデータがありません。';
+      return;
+    }
+    const cloudData = snap.data();
+    const localData = collectSyncData();
+    const merged = mergeSyncData(localData, cloudData);
+    applySyncData(merged);
+    await docRef.set(merged);
+    msg.textContent = '☁️ クラウドから受け取りました！';
+    if (!document.getElementById('screen-report').classList.contains('hidden')) showReportScreen();
+  } catch (e) {
+    msg.textContent = '受信に失敗しました。通信環境を確認してください。';
+  }
+});
+
 document.getElementById('sync-import-btn').addEventListener('click', () => {
   const fileInput = document.getElementById('sync-import-file');
   const file = fileInput.files[0];

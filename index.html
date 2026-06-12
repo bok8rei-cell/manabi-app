@@ -66,6 +66,17 @@
       <button class="main-btn" id="sync-import-btn">📥 読み込む</button>
     </div>
     <div class="sync-message" id="sync-message"></div>
+
+    <div class="sync-section">
+      <h3>☁️ クラウドで同期</h3>
+      <p class="sync-desc">両方の端末で同じ「同期コード」を入力すると、ファイルなしでクラウド経由でデータをやり取りできます。</p>
+      <div class="player-name-box">
+        <label for="sync-code">同期コード：</label>
+        <input type="text" id="sync-code" placeholder="例：sakura123" maxlength="20">
+      </div>
+      <button class="main-btn" id="cloud-upload-btn">☁️ クラウドに送る</button>
+      <button class="main-btn" id="cloud-download-btn">☁️ クラウドから受け取る</button>
+    </div>
   </section>
 
   <!-- 教科選択画面 -->
@@ -110,6 +121,9 @@
 
 </div>
 
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+<script src="js/firebase-config.js"></script>
 <script src="js/math.js"></script>
 <script src="js/kanji.js"></script>
 <script src="js/rikashakai.js"></script>
