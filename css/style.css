@@ -65,6 +65,52 @@ h2 {
 }
 .grade-btn:active { transform: scale(0.97); }
 .grade-btn.g1 { background: #ffb74d; }
+
+.report-btn {
+  display: block;
+  width: 100%;
+  margin-top: 20px;
+}
+
+/* がくしゅう状況レポート */
+.report-card {
+  background: #f5f5f5;
+  border-radius: 14px;
+  padding: 16px;
+  margin-top: 16px;
+}
+.report-card h3 {
+  margin: 0 0 8px;
+  color: #555;
+}
+.report-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 6px 0;
+  border-bottom: 1px solid #e0e0e0;
+  font-size: 0.95em;
+}
+.report-row:last-child { border-bottom: none; }
+.report-row .subject-name {
+  font-weight: bold;
+  color: #555;
+}
+.report-row .subject-detail {
+  color: #777;
+  font-size: 0.9em;
+  text-align: right;
+}
+.report-row .subject-rate {
+  font-weight: bold;
+}
+.report-row .subject-rate.high { color: #43a047; }
+.report-row .subject-rate.mid { color: #fb8c00; }
+.report-row .subject-rate.low { color: #e53935; }
+.report-empty {
+  color: #999;
+  font-size: 0.9em;
+}
 .grade-btn.g3 { background: #4fc3f7; }
 .grade-btn.g5 { background: #ba68c8; }
 

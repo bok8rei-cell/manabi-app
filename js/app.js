@@ -79,6 +79,81 @@ document.querySelectorAll('.grade-btn').forEach(btn => {
   });
 });
 
+document.getElementById('report-open-btn').addEventListener('click', () => {
+  showReportScreen();
+});
+
+// ---- がくしゅう状況レポート画面 ----
+function showReportScreen() {
+  const container = document.getElementById('report-content');
+  container.innerHTML = '';
+
+  [1, 3, 5].forEach(grade => {
+    const card = document.createElement('div');
+    card.className = 'report-card';
+
+    const heading = document.createElement('h3');
+    heading.textContent = `${grade}年生`;
+    card.appendChild(heading);
+
+    let hasAnyData = false;
+
+    SUBJECTS.forEach(subj => {
+      if (subj.grades && !subj.grades.includes(grade)) return;
+
+      const p = loadProgress(grade, subj.key);
+      const label = grade === 1 ? subj.kanaLabel : subj.label;
+
+      const row = document.createElement('div');
+      row.className = 'report-row';
+
+      const nameEl = document.createElement('span');
+      nameEl.className = 'subject-name';
+      nameEl.textContent = label;
+      row.appendChild(nameEl);
+
+      if (p.total === 0) {
+        const emptyEl = document.createElement('span');
+        emptyEl.className = 'report-empty';
+        emptyEl.textContent = 'まだやっていない';
+        row.appendChild(emptyEl);
+      } else {
+        hasAnyData = true;
+        const rate = Math.round((p.correct / p.total) * 100);
+
+        const detailEl = document.createElement('span');
+        detailEl.className = 'subject-detail';
+
+        const rateEl = document.createElement('span');
+        rateEl.className = 'subject-rate';
+        if (rate >= 80) rateEl.classList.add('high');
+        else if (rate >= 50) rateEl.classList.add('mid');
+        else rateEl.classList.add('low');
+        rateEl.textContent = `${rate}%`;
+
+        detailEl.textContent = `${p.total}問中${p.correct}問正解　れんぞく${p.streak || 0}日　`;
+        detailEl.appendChild(rateEl);
+
+        row.appendChild(detailEl);
+      }
+
+      card.appendChild(row);
+    });
+
+    if (!hasAnyData) {
+      const note = document.createElement('div');
+      note.className = 'report-empty';
+      note.style.marginTop = '8px';
+      note.textContent = 'この学年はまだ学習記録がありません。';
+      card.appendChild(note);
+    }
+
+    container.appendChild(card);
+  });
+
+  showScreen('report');
+}
+
 function showSubjectScreen() {
   document.getElementById('subject-title').textContent = `${state.grade}年生 きょうかをえらぼう`;
 
