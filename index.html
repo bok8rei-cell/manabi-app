@@ -33,6 +33,7 @@
     </div>
     <button class="sub-btn report-btn" id="report-open-btn">📊 がくしゅう状況をみる（保護者用）</button>
     <button class="sub-btn ranking-btn" id="ranking-open-btn">🏆 みんなの順位をみる</button>
+    <button class="sub-btn sync-btn" id="sync-open-btn">🔄 他の端末とデータを同期</button>
   </section>
 
   <!-- 学習状況レポート画面 -->
@@ -47,6 +48,24 @@
     <button class="back-btn" data-back="home">← もどる</button>
     <h2>🏆 みんなの順位</h2>
     <div id="ranking-content"></div>
+  </section>
+
+  <!-- データ同期画面 -->
+  <section id="screen-sync" class="screen hidden">
+    <button class="back-btn" data-back="home">← もどる</button>
+    <h2>🔄 データの同期</h2>
+    <div class="sync-section">
+      <h3>書き出す</h3>
+      <p class="sync-desc">このきき（タブレットなど）のがくしゅうデータをファイルにほぞんします。</p>
+      <button class="main-btn" id="sync-export-btn">📤 ファイルに書き出す</button>
+    </div>
+    <div class="sync-section">
+      <h3>読み込む</h3>
+      <p class="sync-desc">書き出したファイルを選ぶと、このきき（PCなど）にデータをとりこめます。</p>
+      <input type="file" id="sync-import-file" accept="application/json">
+      <button class="main-btn" id="sync-import-btn">📥 読み込む</button>
+    </div>
+    <div class="sync-message" id="sync-message"></div>
   </section>
 
   <!-- 教科選択画面 -->

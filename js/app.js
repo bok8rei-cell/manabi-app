@@ -109,6 +109,94 @@ document.getElementById('ranking-open-btn').addEventListener('click', () => {
   showRankingScreen();
 });
 
+document.getElementById('sync-open-btn').addEventListener('click', () => {
+  document.getElementById('sync-message').textContent = '';
+  showScreen('sync');
+});
+
+// ---- 端末間のデータ同期（書き出し・読み込み） ----
+function collectSyncData() {
+  const data = { progress: {}, ranking: {}, playerName: state.playerName };
+  ALL_GRADES.forEach(grade => {
+    SUBJECTS.forEach(subj => {
+      const key = progressKey(grade, subj.key);
+      const raw = localStorage.getItem(key);
+      if (raw) data.progress[key] = JSON.parse(raw);
+    });
+    const rKey = rankingKey(grade);
+    const raw = localStorage.getItem(rKey);
+    if (raw) data.ranking[rKey] = JSON.parse(raw);
+  });
+  return data;
+}
+
+function mergeProgress(a, b) {
+  return {
+    correct: (a.correct || 0) + (b.correct || 0),
+    total: (a.total || 0) + (b.total || 0),
+    best: Math.max(a.best || 0, b.best || 0),
+    streak: Math.max(a.streak || 0, b.streak || 0),
+    lastDate: [a.lastDate, b.lastDate].filter(Boolean).sort().pop() || null
+  };
+}
+
+function applySyncData(data) {
+  Object.entries(data.progress || {}).forEach(([key, value]) => {
+    const raw = localStorage.getItem(key);
+    const existing = raw ? JSON.parse(raw) : { correct: 0, total: 0, best: 0, streak: 0, lastDate: null };
+    localStorage.setItem(key, JSON.stringify(mergeProgress(existing, value)));
+  });
+
+  Object.entries(data.ranking || {}).forEach(([key, value]) => {
+    const existing = JSON.parse(localStorage.getItem(key) || '[]');
+    const merged = [...existing, ...value];
+    merged.sort((a, b) => b.rate - a.rate || b.correct - a.correct || (a.date < b.date ? 1 : -1));
+    localStorage.setItem(key, JSON.stringify(merged.slice(0, 20)));
+  });
+
+  if (data.playerName && !state.playerName) {
+    state.playerName = data.playerName;
+    localStorage.setItem('manabi_playername', state.playerName);
+    document.getElementById('player-name').value = state.playerName;
+  }
+}
+
+document.getElementById('sync-export-btn').addEventListener('click', () => {
+  const json = JSON.stringify(collectSyncData());
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `manabi-data-${new Date().toISOString().slice(0, 10)}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  document.getElementById('sync-message').textContent = '📤 ファイルを書き出しました！';
+});
+
+document.getElementById('sync-import-btn').addEventListener('click', () => {
+  const fileInput = document.getElementById('sync-import-file');
+  const file = fileInput.files[0];
+  const msg = document.getElementById('sync-message');
+  if (!file) {
+    msg.textContent = 'ファイルを選んでください。';
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const data = JSON.parse(reader.result);
+      applySyncData(data);
+      msg.textContent = '📥 データを読み込みました！';
+      if (!document.getElementById('screen-report').classList.contains('hidden')) showReportScreen();
+    } catch (e) {
+      msg.textContent = '読み込みに失敗しました。ファイルを確認してください。';
+    }
+  };
+  reader.readAsText(file);
+});
+
 // ---- みんなの順位（ランキング） ----
 function rankingKey(grade) {
   return `manabi_ranking_g${grade}`;
