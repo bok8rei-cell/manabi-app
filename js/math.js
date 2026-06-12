@@ -1,4 +1,4 @@
-// ===== さんすう もんだい せいせい =====
+// ===== さんすう・すうがく もんだい せいせい =====
 
 function randInt(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -41,7 +41,7 @@ function fractionToString([num, den]) {
 
 // ===== 1年生 =====
 function genGrade1() {
-  const types = ['add', 'sub', 'compare'];
+  const types = ['add', 'sub', 'compare', 'addWord', 'subWord', 'tens', 'threeAdd'];
   const type = types[randInt(0, types.length - 1)];
 
   if (type === 'add') {
@@ -66,6 +66,59 @@ function genGrade1() {
     };
   }
 
+  if (type === 'addWord') {
+    const items = [
+      ['りんご', 'こ'], ['えんぴつ', '本'], ['ねこ', 'びき'],
+      ['花', '本'], ['アメ', 'こ'], ['とり', 'わ']
+    ];
+    const [name, unit] = items[randInt(0, items.length - 1)];
+    const a = randInt(1, 9);
+    const b = randInt(1, 9);
+    return {
+      question: `${name}が ${a}${unit}あります。\n${b}${unit}もらうと、あわせて何${unit}になる？`,
+      type: 'input',
+      inputType: 'number',
+      answer: `${a + b}`
+    };
+  }
+
+  if (type === 'subWord') {
+    const items = [
+      ['あめ', 'こ'], ['いろえんぴつ', '本'], ['とり', 'わ'], ['カード', 'まい']
+    ];
+    const [name, unit] = items[randInt(0, items.length - 1)];
+    const a = randInt(5, 15);
+    const b = randInt(1, a - 1);
+    return {
+      question: `${name}が ${a}${unit}あります。\n${b}${unit}つかうと、何${unit}のこる？`,
+      type: 'input',
+      inputType: 'number',
+      answer: `${a - b}`
+    };
+  }
+
+  if (type === 'tens') {
+    const a = randInt(1, 9);
+    return {
+      question: `${a} と あわせて 10に なる数は？`,
+      type: 'input',
+      inputType: 'number',
+      answer: `${10 - a}`
+    };
+  }
+
+  if (type === 'threeAdd') {
+    const a = randInt(1, 8);
+    const b = randInt(1, 8);
+    const c = randInt(1, 8);
+    return {
+      question: `${a} ＋ ${b} ＋ ${c} = ？`,
+      type: 'input',
+      inputType: 'number',
+      answer: `${a + b + c}`
+    };
+  }
+
   // compare
   let a = randInt(1, 20);
   let b = randInt(1, 20);
@@ -82,7 +135,7 @@ function genGrade1() {
 
 // ===== 3年生 =====
 function genGrade3() {
-  const types = ['mul', 'div', 'addsub', 'decimal'];
+  const types = ['mul', 'div', 'addsub', 'decimal', 'mulWord', 'divRemainder', 'unit', 'time'];
   const type = types[randInt(0, types.length - 1)];
 
   if (type === 'mul') {
@@ -105,6 +158,74 @@ function genGrade3() {
       type: 'input',
       inputType: 'number',
       answer: `${c}`
+    };
+  }
+
+  if (type === 'mulWord') {
+    const a = randInt(2, 9);
+    const b = randInt(2, 12);
+    return {
+      question: `1つの箱に ${a}こずつ お菓子が入っています。\n${b}箱では 何こ？`,
+      type: 'input',
+      inputType: 'number',
+      answer: `${a * b}`
+    };
+  }
+
+  if (type === 'divRemainder') {
+    const b = randInt(2, 9);
+    const c = randInt(1, 9);
+    const r = randInt(1, b - 1);
+    const a = b * c + r;
+    return {
+      question: `${a} ÷ ${b} = ？\nあまりも こたえてね。\n（れい：3あまり2 → 「3あまり2」と入力）`,
+      type: 'input',
+      inputType: 'text',
+      answerType: 'remainder',
+      answer: `${c}あまり${r}`
+    };
+  }
+
+  if (type === 'unit') {
+    const units = [
+      { big: 'm', small: 'cm', rate: 100 },
+      { big: 'L', small: 'mL', rate: 1000 },
+      { big: 'kg', small: 'g', rate: 1000 }
+    ];
+    const u = units[randInt(0, units.length - 1)];
+    const toSmall = Math.random() < 0.5;
+    if (toSmall) {
+      const v = randInt(1, 9);
+      return {
+        question: `${v}${u.big} は 何${u.small}？`,
+        type: 'input',
+        inputType: 'number',
+        answer: `${v * u.rate}`
+      };
+    } else {
+      const v = randInt(1, 9) * u.rate;
+      return {
+        question: `${v}${u.small} は 何${u.big}？`,
+        type: 'input',
+        inputType: 'number',
+        answer: `${v / u.rate}`
+      };
+    }
+  }
+
+  if (type === 'time') {
+    const h = randInt(1, 11);
+    const m = randInt(0, 50);
+    const addMin = randInt(5, 50);
+    const totalMin = h * 60 + m + addMin;
+    const nh = Math.floor(totalMin / 60) % 24;
+    const nm = totalMin % 60;
+    return {
+      question: `今、${h}時${m}分です。\n${addMin}分後は何時何分？\n（れい：3時5分 → 「3時5分」と入力）`,
+      type: 'input',
+      inputType: 'text',
+      answerType: 'time',
+      answer: `${nh}時${nm}分`
     };
   }
 
@@ -158,7 +279,7 @@ function genGrade3() {
 
 // ===== 5年生 =====
 function genGrade5() {
-  const types = ['fraction', 'decimalMul', 'decimalDiv', 'percent', 'area'];
+  const types = ['fraction', 'decimalMul', 'decimalDiv', 'percent', 'area', 'average', 'speed', 'ratio', 'circle', 'volume'];
   const type = types[randInt(0, types.length - 1)];
 
   if (type === 'fraction') {
@@ -238,6 +359,103 @@ function genGrade5() {
     };
   }
 
+  if (type === 'average') {
+    const n = 4;
+    const nums = [];
+    for (let i = 0; i < n; i++) nums.push(randInt(2, 20));
+    let sum = nums.reduce((a, b) => a + b, 0);
+    const rem = sum % n;
+    if (rem !== 0) {
+      nums[n - 1] += (n - rem);
+      sum += (n - rem);
+    }
+    return {
+      question: `${nums.join('、')} の平均は？`,
+      type: 'input',
+      inputType: 'number',
+      answer: `${sum / n}`
+    };
+  }
+
+  if (type === 'speed') {
+    const sub = randInt(0, 2);
+    const time = randInt(2, 8);
+    const speed = randInt(2, 12);
+    if (sub === 0) {
+      const dist = time * speed;
+      return {
+        question: `${dist}kmの道を ${time}時間で走ると、\n速さは時速何km？`,
+        type: 'input',
+        inputType: 'number',
+        answer: `${speed}`
+      };
+    } else if (sub === 1) {
+      return {
+        question: `時速${speed}kmで ${time}時間走ると、\n何km進む？`,
+        type: 'input',
+        inputType: 'number',
+        answer: `${speed * time}`
+      };
+    } else {
+      const dist = speed * time;
+      return {
+        question: `${dist}kmの道を 時速${speed}kmで走ると、\n何時間かかる？`,
+        type: 'input',
+        inputType: 'number',
+        answer: `${time}`
+      };
+    }
+  }
+
+  if (type === 'ratio') {
+    let a = randInt(1, 6);
+    let b = randInt(1, 6);
+    while (gcd(a, b) !== 1) { a = randInt(1, 6); b = randInt(1, 6); }
+    const g = randInt(2, 5);
+    const qa = a * g, qb = b * g;
+    return {
+      question: `${qa} : ${qb} を 簡単な比にすると？\n（れい：2:3 → 「2:3」と入力）`,
+      type: 'input',
+      inputType: 'text',
+      answerType: 'ratio',
+      answer: `${a}:${b}`
+    };
+  }
+
+  if (type === 'circle') {
+    const r = randInt(1, 10);
+    const isCircumference = Math.random() < 0.5;
+    if (isCircumference) {
+      const c = Math.round(2 * r * 3.14 * 100) / 100;
+      return {
+        question: `半径 ${r}cmの円の円周は何cm？\n（円周率は3.14とする）`,
+        type: 'input',
+        inputType: 'text',
+        answer: `${c}`
+      };
+    } else {
+      const area = Math.round(r * r * 3.14 * 100) / 100;
+      return {
+        question: `半径 ${r}cmの円の面積は何cm²？\n（円周率は3.14とする）`,
+        type: 'input',
+        inputType: 'text',
+        answer: `${area}`
+      };
+    }
+  }
+
+  if (type === 'volume') {
+    const a = randInt(2, 10);
+    const b = randInt(2, 10);
+    const c = randInt(2, 10);
+    return {
+      question: `たて${a}cm、よこ${b}cm、高さ${c}cmの\n直方体の体積は何cm³？`,
+      type: 'input',
+      inputType: 'number',
+      answer: `${a * b * c}`
+    };
+  }
+
   // area
   const isTriangle = Math.random() < 0.5;
   if (isTriangle) {
@@ -262,10 +480,178 @@ function genGrade5() {
   }
 }
 
+// ===== 中学1年生 =====
+function formatLinear(coef) {
+  if (coef === 0) return '0';
+  if (coef === 1) return 'x';
+  if (coef === -1) return '-x';
+  return `${coef}x`;
+}
+
+function genGrade7() {
+  const types = ['negAddSub', 'negMulDiv', 'literalSimplify', 'literalSubstitute', 'equation', 'proportion', 'absValue', 'expand'];
+  const type = types[randInt(0, types.length - 1)];
+
+  if (type === 'negAddSub') {
+    const a = randInt(-10, 10);
+    const b = randInt(-10, 10);
+    const isAdd = Math.random() < 0.5;
+    if (isAdd) {
+      return {
+        question: `(${a}) ＋ (${b}) = ？`,
+        type: 'input',
+        inputType: 'text',
+        answer: `${a + b}`
+      };
+    } else {
+      return {
+        question: `(${a}) － (${b}) = ？`,
+        type: 'input',
+        inputType: 'text',
+        answer: `${a - b}`
+      };
+    }
+  }
+
+  if (type === 'negMulDiv') {
+    const isMul = Math.random() < 0.5;
+    if (isMul) {
+      const a = randInt(-9, 9) || 1;
+      const b = randInt(-9, 9) || 1;
+      return {
+        question: `(${a}) × (${b}) = ？`,
+        type: 'input',
+        inputType: 'text',
+        answer: `${a * b}`
+      };
+    } else {
+      const b = randInt(-9, 9) || 1;
+      const c = randInt(-9, 9) || 1;
+      const a = b * c;
+      return {
+        question: `(${a}) ÷ (${b}) = ？`,
+        type: 'input',
+        inputType: 'text',
+        answer: `${c}`
+      };
+    }
+  }
+
+  if (type === 'literalSimplify') {
+    const a = randInt(2, 9);
+    const b = randInt(1, 9);
+    const isAdd = Math.random() < 0.5;
+    const result = isAdd ? a + b : a - b;
+    const op = isAdd ? '＋' : '－';
+    const correct = formatLinear(result);
+    const distractors = new Set();
+    let guard = 0;
+    while (distractors.size < 3 && guard < 50) {
+      guard++;
+      const offset = [-2, -1, 1, 2][randInt(0, 3)];
+      const s = formatLinear(result + offset);
+      if (s !== correct) distractors.add(s);
+    }
+    const choices = shuffleArray([correct, ...distractors]);
+    return {
+      question: `${a}x ${op} ${b}x を計算すると？`,
+      type: 'choice',
+      choices,
+      answer: correct
+    };
+  }
+
+  if (type === 'literalSubstitute') {
+    const x = randInt(-5, 5) || 1;
+    const a = randInt(2, 9);
+    const b = randInt(-9, 9);
+    const result = a * x + b;
+    const bStr = b >= 0 ? `＋ ${b}` : `－ ${Math.abs(b)}`;
+    return {
+      question: `x = ${x} のとき、\n${a}x ${bStr} の値は？`,
+      type: 'input',
+      inputType: 'text',
+      answer: `${result}`
+    };
+  }
+
+  if (type === 'equation') {
+    const a = randInt(2, 9);
+    const x = randInt(-10, 10) || 1;
+    const b = randInt(-10, 10);
+    const c = a * x + b;
+    const bStr = b >= 0 ? `＋ ${b}` : `－ ${Math.abs(b)}`;
+    return {
+      question: `${a}x ${bStr} = ${c}\nx の値は？`,
+      type: 'input',
+      inputType: 'text',
+      answer: `${x}`
+    };
+  }
+
+  if (type === 'proportion') {
+    const isDirect = Math.random() < 0.5;
+    if (isDirect) {
+      const a = randInt(2, 9);
+      const x1 = randInt(1, 10);
+      const x2 = randInt(1, 10);
+      return {
+        question: `yはxに比例し、x = ${x1} のとき y = ${a * x1} です。\nx = ${x2} のときの y の値は？`,
+        type: 'input',
+        inputType: 'number',
+        answer: `${a * x2}`
+      };
+    } else {
+      const x1 = randInt(1, 6);
+      const y1 = randInt(1, 6);
+      const k = x1 * y1;
+      const divisors = [];
+      for (let d = 1; d <= k; d++) if (k % d === 0) divisors.push(d);
+      const x2 = divisors[randInt(0, divisors.length - 1)];
+      return {
+        question: `yはxに反比例し、x = ${x1} のとき y = ${y1} です。\nx = ${x2} のときの y の値は？`,
+        type: 'input',
+        inputType: 'number',
+        answer: `${k / x2}`
+      };
+    }
+  }
+
+  if (type === 'absValue') {
+    const a = randInt(-15, 15) || 1;
+    return {
+      question: `| ${a} | の値は？\n（絶対値）`,
+      type: 'input',
+      inputType: 'number',
+      answer: `${Math.abs(a)}`
+    };
+  }
+
+  // expand: a(x + b) の展開
+  const a = randInt(2, 9);
+  const b = randInt(1, 9);
+  const correct = `${a}x+${a * b}`;
+  const distractors = new Set([`${a}x+${b}`, `x+${a * b}`, `${a}x-${a * b}`]);
+  distractors.delete(correct);
+  let guard = 0;
+  while (distractors.size < 3 && guard < 50) {
+    guard++;
+    distractors.add(`${a}x+${a * b + randInt(1, 5)}`);
+  }
+  const choices = shuffleArray([correct, ...[...distractors].slice(0, 3)]);
+  return {
+    question: `${a}(x ＋ ${b}) を展開すると？`,
+    type: 'choice',
+    choices,
+    answer: correct
+  };
+}
+
 function generateMathProblem(grade) {
   if (grade === 1) return genGrade1();
   if (grade === 3) return genGrade3();
-  return genGrade5();
+  if (grade === 5) return genGrade5();
+  return genGrade7();
 }
 
 // ユーザー入力が正解かどうか判定
@@ -280,6 +666,25 @@ function isMathAnswerCorrect(problem, userInput) {
     const ur = reduceFraction(userFrac[0], userFrac[1]);
     const ar = reduceFraction(ansFrac[0], ansFrac[1]);
     return ur[0] === ar[0] && ur[1] === ar[1];
+  }
+  if (problem.answerType === 'remainder') {
+    const norm = s => String(s).trim().replace(/\s+/g, '').replace(/余り/g, 'あまり');
+    return norm(userInput) === norm(problem.answer);
+  }
+  if (problem.answerType === 'time') {
+    const parse = s => {
+      const m = String(s).match(/(\d+)\s*時\s*(\d+)\s*分/);
+      if (!m) return null;
+      return [Number(m[1]), Number(m[2])];
+    };
+    const u = parse(userInput);
+    const a = parse(problem.answer);
+    if (!u || !a) return false;
+    return u[0] === a[0] && u[1] === a[1];
+  }
+  if (problem.answerType === 'ratio') {
+    const norm = s => String(s).trim().replace(/\s+/g, '').replace(/：/g, ':');
+    return norm(userInput) === norm(problem.answer);
   }
   // 数値比較（小数誤差対策）
   const u = Number(String(userInput).trim());

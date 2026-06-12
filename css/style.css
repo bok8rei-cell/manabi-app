@@ -113,6 +113,58 @@ h2 {
 }
 .grade-btn.g3 { background: #4fc3f7; }
 .grade-btn.g5 { background: #ba68c8; }
+.grade-btn.g7 { background: #78909c; }
+
+/* なまえ入力 */
+.player-name-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 8px;
+  font-size: 1em;
+  color: #555;
+}
+.player-name-box input {
+  font-size: 1em;
+  padding: 8px 12px;
+  border: 2px solid #ccc;
+  border-radius: 10px;
+  width: 140px;
+  text-align: center;
+}
+
+.ranking-btn {
+  background: #fff3e0;
+  color: #ef6c00;
+}
+
+/* みんなの順位 */
+.ranking-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px solid #e0e0e0;
+  font-size: 0.9em;
+}
+.ranking-row:last-child { border-bottom: none; }
+.ranking-row .ranking-rank {
+  font-weight: bold;
+  color: #ff7043;
+  min-width: 2.6em;
+}
+.ranking-row .ranking-name {
+  font-weight: bold;
+  color: #555;
+  flex: 0 0 auto;
+}
+.ranking-row .ranking-detail {
+  color: #777;
+  font-size: 0.9em;
+  text-align: right;
+  flex: 1;
+}
 
 /* 教科選択 */
 .subject-select {
@@ -304,6 +356,7 @@ h2 {
   margin-top: 12px;
   font-size: 1.3em;
   color: #555;
+  white-space: pre-line;
 }
 .result-buttons {
   display: flex;

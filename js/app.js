@@ -6,9 +6,21 @@ const DONT_KNOW = '__DONTKNOW__';
 const SUBJECTS = [
   { key: 'math', label: '算数', kanaLabel: 'さんすう', cls: '' },
   { key: 'kanji', label: '国語（漢字）', kanaLabel: 'こくご（かんじ）', cls: 'kokugo' },
-  { key: 'rikashakai', label: '理科・社会', kanaLabel: 'りか・しゃかい', cls: 'rikashakai', grades: [3, 5] },
+  { key: 'rikashakai', label: '理科・社会', kanaLabel: 'りか・しゃかい', cls: 'rikashakai', grades: [3, 5, 7] },
   { key: 'eigo', label: '英語', kanaLabel: 'えいご', cls: 'eigo' }
 ];
+
+const ALL_GRADES = [1, 3, 5, 7];
+
+function gradeLabel(grade) {
+  return grade === 7 ? '中学1年生' : `${grade}年生`;
+}
+
+function subjectLabel(grade, subj) {
+  if (grade === 1) return subj.kanaLabel;
+  if (grade === 7 && subj.key === 'math') return '数学';
+  return subj.label;
+}
 
 const GENERATORS = {
   math: generateMathProblem,
@@ -26,8 +38,18 @@ const state = {
   incorrectCount: 0,
   currentProblem: null,
   selectedChoice: null,
-  answered: false
+  answered: false,
+  playerName: ''
 };
+
+// ---- なまえ入力 ----
+const playerNameInput = document.getElementById('player-name');
+state.playerName = localStorage.getItem('manabi_playername') || '';
+playerNameInput.value = state.playerName;
+playerNameInput.addEventListener('input', () => {
+  state.playerName = playerNameInput.value.trim();
+  localStorage.setItem('manabi_playername', state.playerName);
+});
 
 // ---- 画面切り替え ----
 function showScreen(name) {
@@ -83,17 +105,106 @@ document.getElementById('report-open-btn').addEventListener('click', () => {
   showReportScreen();
 });
 
+document.getElementById('ranking-open-btn').addEventListener('click', () => {
+  showRankingScreen();
+});
+
+// ---- みんなの順位（ランキング） ----
+function rankingKey(grade) {
+  return `manabi_ranking_g${grade}`;
+}
+
+function loadRanking(grade) {
+  const raw = localStorage.getItem(rankingKey(grade));
+  if (!raw) return [];
+  try {
+    const arr = JSON.parse(raw);
+    return Array.isArray(arr) ? arr : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function saveRankingEntry(grade, subjectKey, correct, total) {
+  const name = state.playerName.trim();
+  if (!name) return;
+
+  const subj = SUBJECTS.find(s => s.key === subjectKey);
+  const label = subjectLabel(grade, subj);
+  const rate = Math.round((correct / total) * 100);
+
+  const list = loadRanking(grade);
+  list.push({
+    name,
+    subject: label,
+    correct,
+    total,
+    rate,
+    date: new Date().toISOString().slice(0, 10)
+  });
+  list.sort((a, b) => b.rate - a.rate || b.correct - a.correct || (a.date < b.date ? 1 : -1));
+  localStorage.setItem(rankingKey(grade), JSON.stringify(list.slice(0, 20)));
+}
+
+function showRankingScreen() {
+  const container = document.getElementById('ranking-content');
+  container.innerHTML = '';
+
+  ALL_GRADES.forEach(grade => {
+    const card = document.createElement('div');
+    card.className = 'report-card';
+
+    const heading = document.createElement('h3');
+    heading.textContent = gradeLabel(grade);
+    card.appendChild(heading);
+
+    const list = loadRanking(grade);
+    if (list.length === 0) {
+      const empty = document.createElement('div');
+      empty.className = 'report-empty';
+      empty.textContent = 'まだ ランキングデータがありません。';
+      card.appendChild(empty);
+    } else {
+      list.slice(0, 5).forEach((entry, i) => {
+        const row = document.createElement('div');
+        row.className = 'ranking-row';
+
+        const rankEl = document.createElement('span');
+        rankEl.className = 'ranking-rank';
+        rankEl.textContent = `${i + 1}位`;
+
+        const nameEl = document.createElement('span');
+        nameEl.className = 'ranking-name';
+        nameEl.textContent = entry.name;
+
+        const detailEl = document.createElement('span');
+        detailEl.className = 'ranking-detail';
+        detailEl.textContent = `${entry.subject}　${entry.correct}/${entry.total}（${entry.rate}%）`;
+
+        row.appendChild(rankEl);
+        row.appendChild(nameEl);
+        row.appendChild(detailEl);
+        card.appendChild(row);
+      });
+    }
+
+    container.appendChild(card);
+  });
+
+  showScreen('ranking');
+}
+
 // ---- がくしゅう状況レポート画面 ----
 function showReportScreen() {
   const container = document.getElementById('report-content');
   container.innerHTML = '';
 
-  [1, 3, 5].forEach(grade => {
+  ALL_GRADES.forEach(grade => {
     const card = document.createElement('div');
     card.className = 'report-card';
 
     const heading = document.createElement('h3');
-    heading.textContent = `${grade}年生`;
+    heading.textContent = gradeLabel(grade);
     card.appendChild(heading);
 
     let hasAnyData = false;
@@ -102,7 +213,7 @@ function showReportScreen() {
       if (subj.grades && !subj.grades.includes(grade)) return;
 
       const p = loadProgress(grade, subj.key);
-      const label = grade === 1 ? subj.kanaLabel : subj.label;
+      const label = subjectLabel(grade, subj);
 
       const row = document.createElement('div');
       row.className = 'report-row';
@@ -155,7 +266,7 @@ function showReportScreen() {
 }
 
 function showSubjectScreen() {
-  document.getElementById('subject-title').textContent = `${state.grade}年生 きょうかをえらぼう`;
+  document.getElementById('subject-title').textContent = `${gradeLabel(state.grade)} きょうかをえらぼう`;
 
   const container = document.getElementById('subject-buttons');
   container.innerHTML = '';
@@ -164,10 +275,10 @@ function showSubjectScreen() {
     const available = !subj.grades || subj.grades.includes(state.grade);
     const btn = document.createElement('button');
     btn.className = `subject-btn ${subj.cls}`;
-    btn.textContent = state.grade === 1 ? subj.kanaLabel : subj.label;
+    btn.textContent = subjectLabel(state.grade, subj);
     if (!available) {
       btn.disabled = true;
-      btn.textContent += '\n（3・5年生）';
+      btn.textContent += '\n（3・5・中学1年生）';
     } else {
       btn.addEventListener('click', () => startQuiz(subj.key));
     }
@@ -187,7 +298,7 @@ function renderProgressBox() {
     const p = loadProgress(state.grade, subj.key);
     if (p.total === 0) return;
     const rate = Math.round((p.correct / p.total) * 100);
-    const label = state.grade === 1 ? subj.kanaLabel : subj.label;
+    const label = subjectLabel(state.grade, subj);
     lines.push(`${label}：これまで ${p.total}問中 ${p.correct}問せいかい（${rate}%）　れんぞく${p.streak || 0}日`);
   });
   box.textContent = lines.length > 0 ? lines.join('\n') : 'きょうも がんばろう！';
@@ -362,6 +473,7 @@ function advance() {
 
 function finishQuiz() {
   const progress = saveProgress(state.grade, state.subject, state.correctCount, TOTAL_QUESTIONS);
+  saveRankingEntry(state.grade, state.subject, state.correctCount, TOTAL_QUESTIONS);
 
   document.getElementById('result-score').textContent = `${state.correctCount} / ${TOTAL_QUESTIONS} もん せいかい！`;
 
@@ -376,6 +488,9 @@ function finishQuiz() {
     message = '💪 つぎは もっとできるよ！';
   }
   message += `\n（れんぞく ${progress.streak || 0}日め）`;
+  if (!state.playerName) {
+    message += '\n\n💡 ホーム画面で なまえを入力すると\nランキングに登録されるよ！';
+  }
 
   document.getElementById('result-message').textContent = message;
   showScreen('result');

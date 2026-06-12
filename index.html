@@ -20,13 +20,19 @@
   <!-- ホーム画面：だれが べんきょうする？ -->
   <section id="screen-home" class="screen">
     <h1>📘 おうちまなびゲーム 📘</h1>
+    <div class="player-name-box">
+      <label for="player-name">なまえ：</label>
+      <input type="text" id="player-name" placeholder="なまえを にゅうりょく" maxlength="10">
+    </div>
     <p class="lead">だれが べんきょうする？</p>
     <div class="grade-select">
       <button class="grade-btn g1" data-grade="1">1年生</button>
       <button class="grade-btn g3" data-grade="3">3年生</button>
       <button class="grade-btn g5" data-grade="5">5年生</button>
+      <button class="grade-btn g7" data-grade="7">中学1年生</button>
     </div>
     <button class="sub-btn report-btn" id="report-open-btn">📊 がくしゅう状況をみる（保護者用）</button>
+    <button class="sub-btn ranking-btn" id="ranking-open-btn">🏆 みんなの順位をみる</button>
   </section>
 
   <!-- 学習状況レポート画面 -->
@@ -34,6 +40,13 @@
     <button class="back-btn" data-back="home">← もどる</button>
     <h2>がくしゅう状況</h2>
     <div id="report-content"></div>
+  </section>
+
+  <!-- みんなの順位画面 -->
+  <section id="screen-ranking" class="screen hidden">
+    <button class="back-btn" data-back="home">← もどる</button>
+    <h2>🏆 みんなの順位</h2>
+    <div id="ranking-content"></div>
   </section>
 
   <!-- 教科選択画面 -->

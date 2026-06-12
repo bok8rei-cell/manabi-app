@@ -89,36 +89,94 @@ const KANJI_DATA = {
     { kanji: '確', reading: 'かく', word: '確認' },
     { kanji: '額', reading: 'がく', word: '金額' },
     { kanji: '刊', reading: 'かん', word: '夕刊' },
-    { kanji: '幹', reading: 'みき', word: '幹' }
+    { kanji: '幹', reading: 'みき', word: '幹' },
+    { kanji: '基', reading: 'き', word: '基本' },
+    { kanji: '寄', reading: 'き', word: '寄付' },
+    { kanji: '規', reading: 'き', word: '規則' }
+  ],
+  7: [
+    { kanji: '詩', reading: 'し', word: '詩集' },
+    { kanji: '訪', reading: 'ほう', word: '訪問' },
+    { kanji: '軌', reading: 'き', word: '軌道' },
+    { kanji: '普', reading: 'ふ', word: '普通' },
+    { kanji: '互', reading: 'ご', word: '相互' },
+    { kanji: '包', reading: 'ほう', word: '包囲' },
+    { kanji: '鑑', reading: 'かん', word: '鑑賞' },
+    { kanji: '委', reading: 'い', word: '委員' },
+    { kanji: '縮', reading: 'しゅく', word: '縮小' },
+    { kanji: '拒', reading: 'きょ', word: '拒否' },
+    { kanji: '伏', reading: 'ふく', word: '起伏' },
+    { kanji: '抽', reading: 'ちゅう', word: '抽選' },
+    { kanji: '沿', reading: 'えん', word: '沿岸' },
+    { kanji: '革', reading: 'かく', word: '改革' },
+    { kanji: '鋭', reading: 'えい', word: '鋭利' },
+    { kanji: '純', reading: 'じゅん', word: '純粋' },
+    { kanji: '賃', reading: 'ちん', word: '賃貸' },
+    { kanji: '鮮', reading: 'せん', word: '新鮮' },
+    { kanji: '詳', reading: 'しょう', word: '詳細' },
+    { kanji: '婚', reading: 'こん', word: '結婚' },
+    { kanji: '翻', reading: 'ほん', word: '翻訳' },
+    { kanji: '載', reading: 'さい', word: '記載' },
+    { kanji: '履', reading: 'り', word: '履歴' },
+    { kanji: '緯', reading: 'い', word: '緯度' },
+    { kanji: '紛', reading: 'ふん', word: '紛争' }
   ]
 };
 
 function generateKanjiProblem(grade) {
   const list = KANJI_DATA[grade] || KANJI_DATA[1];
   const correct = list[randInt(0, list.length - 1)];
+  const askReading = Math.random() < 0.5;
 
-  // 不正解の選択肢を集める（読み方が重複しないように）
-  const distractorPool = list.filter(item => item.reading !== correct.reading);
+  if (askReading) {
+    // 不正解の選択肢を集める（読み方が重複しないように）
+    const distractorPool = list.filter(item => item.reading !== correct.reading);
+    shuffleArray(distractorPool);
+    const distractors = [];
+    const usedReadings = new Set([correct.reading]);
+    for (const item of distractorPool) {
+      if (distractors.length >= 3) break;
+      if (usedReadings.has(item.reading)) continue;
+      usedReadings.add(item.reading);
+      distractors.push(item.reading);
+    }
+    while (distractors.length < 3) {
+      distractors.push(correct.reading + 'ー');
+    }
+
+    const choices = shuffleArray([correct.reading, ...distractors]);
+
+    return {
+      question: `「${correct.word}」の\n「${correct.kanji}」の よみかたは？`,
+      type: 'choice',
+      choices,
+      answer: correct.reading
+    };
+  }
+
+  // 読みから漢字を選ぶ（単語中の漢字を□でかくす）
+  const distractorPool = list.filter(item => item.kanji !== correct.kanji);
   shuffleArray(distractorPool);
   const distractors = [];
-  const usedReadings = new Set([correct.reading]);
+  const usedKanji = new Set([correct.kanji]);
   for (const item of distractorPool) {
     if (distractors.length >= 3) break;
-    if (usedReadings.has(item.reading)) continue;
-    usedReadings.add(item.reading);
-    distractors.push(item.reading);
+    if (usedKanji.has(item.kanji)) continue;
+    usedKanji.add(item.kanji);
+    distractors.push(item.kanji);
   }
   while (distractors.length < 3) {
-    distractors.push(correct.reading + 'ー');
+    distractors.push(correct.kanji);
   }
 
-  const choices = shuffleArray([correct.reading, ...distractors]);
+  const choices = shuffleArray([correct.kanji, ...distractors]);
+  const maskedWord = correct.word.replace(correct.kanji, '□');
 
   return {
-    question: `「${correct.word}」の\n「${correct.kanji}」の よみかたは？`,
+    question: `「${maskedWord}」の「${correct.reading}」に\nあてはまる漢字は？`,
     type: 'choice',
     choices,
-    answer: correct.reading
+    answer: correct.kanji
   };
 }
 
