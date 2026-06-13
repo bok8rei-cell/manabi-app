@@ -4,12 +4,12 @@
 // その値をここに貼り付けてください。Firestore（テストモード可）を有効にしてから使ってください。
 
 const firebaseConfig = {
-  apiKey: 'YOUR_API_KEY',
-  authDomain: 'YOUR_PROJECT_ID.firebaseapp.com',
-  projectId: 'YOUR_PROJECT_ID',
-  storageBucket: 'YOUR_PROJECT_ID.appspot.com',
-  messagingSenderId: 'YOUR_SENDER_ID',
-  appId: 'YOUR_APP_ID'
+  apiKey: 'AIzaSyDVpd6JakmCDSGVyommmcK8SU4xoUBodbE',
+  authDomain: 'manabinodesu.firebaseapp.com',
+  projectId: 'manabinodesu',
+  storageBucket: 'manabinodesu.firebasestorage.app',
+  messagingSenderId: '636007933889',
+  appId: '1:636007933889:web:61849b07ac76ebb5e8b140'
 };
 
 let cloudDb = null;
