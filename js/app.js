@@ -44,7 +44,7 @@ const state = {
 
 // ---- なまえ入力 ----
 const playerNameInput = document.getElementById('player-name');
-const playerNameList = document.getElementById('player-name-list');
+const playerNameSaved = document.getElementById('player-name-saved');
 state.playerName = localStorage.getItem('manabi_playername') || '';
 playerNameInput.value = state.playerName;
 
@@ -59,12 +59,22 @@ function loadPlayerNames() {
   }
 }
 
-function renderPlayerNameList() {
-  playerNameList.innerHTML = '';
+function selectPlayerName(name) {
+  state.playerName = name;
+  localStorage.setItem('manabi_playername', state.playerName);
+  playerNameInput.value = name;
+  renderPlayerNameSaved();
+}
+
+function renderPlayerNameSaved() {
+  playerNameSaved.innerHTML = '';
   loadPlayerNames().forEach(name => {
-    const opt = document.createElement('option');
-    opt.value = name;
-    playerNameList.appendChild(opt);
+    const btn = document.createElement('button');
+    btn.className = 'name-chip';
+    if (name === state.playerName) btn.classList.add('selected');
+    btn.textContent = name;
+    btn.addEventListener('click', () => selectPlayerName(name));
+    playerNameSaved.appendChild(btn);
   });
 }
 
@@ -74,16 +84,16 @@ function registerPlayerName(name) {
   if (!names.includes(name)) {
     names.unshift(name);
     localStorage.setItem('manabi_playernames', JSON.stringify(names.slice(0, 10)));
-    renderPlayerNameList();
   }
+  renderPlayerNameSaved();
 }
 
-renderPlayerNameList();
-registerPlayerName(state.playerName);
+renderPlayerNameSaved();
 
 playerNameInput.addEventListener('input', () => {
   state.playerName = playerNameInput.value.trim();
   localStorage.setItem('manabi_playername', state.playerName);
+  renderPlayerNameSaved();
 });
 playerNameInput.addEventListener('change', () => {
   registerPlayerName(state.playerName);

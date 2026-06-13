@@ -134,6 +134,29 @@ h2 {
   text-align: center;
 }
 
+.player-name-saved {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 8px;
+}
+.name-chip {
+  font-size: 0.85em;
+  padding: 6px 14px;
+  border: 2px solid #ddd;
+  border-radius: 14px;
+  background: #fff;
+  color: #777;
+  cursor: pointer;
+}
+.name-chip.selected {
+  border-color: #ff7043;
+  background: #fff3e0;
+  color: #ff7043;
+  font-weight: bold;
+}
+
 .ranking-btn {
   background: #fff3e0;
   color: #ef6c00;

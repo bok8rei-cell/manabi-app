@@ -75,7 +75,7 @@ function genGrade1() {
     const a = randInt(1, 9);
     const b = randInt(1, 9);
     return {
-      question: `${name}が ${a}${unit}あります。\n${b}${unit}もらうと、あわせて何${unit}になる？`,
+      question: `${name}が ${a}${unit}あります。\n${b}${unit}もらうと、あわせてなん${unit}になる？`,
       type: 'input',
       inputType: 'number',
       answer: `${a + b}`
@@ -90,7 +90,7 @@ function genGrade1() {
     const a = randInt(5, 15);
     const b = randInt(1, a - 1);
     return {
-      question: `${name}が ${a}${unit}あります。\n${b}${unit}つかうと、何${unit}のこる？`,
+      question: `${name}が ${a}${unit}あります。\n${b}${unit}つかうと、なん${unit}のこる？`,
       type: 'input',
       inputType: 'number',
       answer: `${a - b}`
@@ -100,7 +100,7 @@ function genGrade1() {
   if (type === 'tens') {
     const a = randInt(1, 9);
     return {
-      question: `${a} と あわせて 10に なる数は？`,
+      question: `${a} と あわせて 10に なる かずは？`,
       type: 'input',
       inputType: 'number',
       answer: `${10 - a}`
@@ -414,7 +414,7 @@ function genGrade5() {
     const g = randInt(2, 5);
     const qa = a * g, qb = b * g;
     return {
-      question: `${qa} : ${qb} を 簡単な比にすると？\n（れい：2:3 → 「2:3」と入力）`,
+      question: `${qa} : ${qb} を かんたんな比にすると？\n（れい：2:3 → 「2:3」と入力）`,
       type: 'input',
       inputType: 'text',
       answerType: 'ratio',
