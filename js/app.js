@@ -44,11 +44,49 @@ const state = {
 
 // ---- なまえ入力 ----
 const playerNameInput = document.getElementById('player-name');
+const playerNameList = document.getElementById('player-name-list');
 state.playerName = localStorage.getItem('manabi_playername') || '';
 playerNameInput.value = state.playerName;
+
+function loadPlayerNames() {
+  const raw = localStorage.getItem('manabi_playernames');
+  if (!raw) return [];
+  try {
+    const arr = JSON.parse(raw);
+    return Array.isArray(arr) ? arr : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function renderPlayerNameList() {
+  playerNameList.innerHTML = '';
+  loadPlayerNames().forEach(name => {
+    const opt = document.createElement('option');
+    opt.value = name;
+    playerNameList.appendChild(opt);
+  });
+}
+
+function registerPlayerName(name) {
+  if (!name) return;
+  const names = loadPlayerNames();
+  if (!names.includes(name)) {
+    names.unshift(name);
+    localStorage.setItem('manabi_playernames', JSON.stringify(names.slice(0, 10)));
+    renderPlayerNameList();
+  }
+}
+
+renderPlayerNameList();
+registerPlayerName(state.playerName);
+
 playerNameInput.addEventListener('input', () => {
   state.playerName = playerNameInput.value.trim();
   localStorage.setItem('manabi_playername', state.playerName);
+});
+playerNameInput.addEventListener('change', () => {
+  registerPlayerName(state.playerName);
 });
 
 // ---- 画面切り替え ----
@@ -159,6 +197,7 @@ function applySyncData(data) {
     localStorage.setItem('manabi_playername', state.playerName);
     document.getElementById('player-name').value = state.playerName;
   }
+  if (data.playerName) registerPlayerName(data.playerName);
 }
 
 document.getElementById('sync-export-btn').addEventListener('click', () => {
