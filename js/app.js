@@ -216,19 +216,26 @@ function cloudUnavailable(msg) {
   return false;
 }
 
+// 読み込み・書き込みをまとめて行い、ローカルとクラウドを同じ状態にする
+async function performCloudSync() {
+  const code = (localStorage.getItem('manabi_synccode') || '').trim();
+  if (!cloudDb || !code) return null;
+  const docRef = cloudDb.collection('syncCodes').doc(code);
+  const snap = await docRef.get();
+  const cloudData = snap.exists ? snap.data() : { progress: {}, ranking: {}, playerName: '' };
+  const localData = collectSyncData();
+  const merged = mergeSyncData(localData, cloudData);
+  await docRef.set(merged);
+  applySyncData(merged);
+  return merged;
+}
+
 document.getElementById('cloud-upload-btn').addEventListener('click', async () => {
   const msg = document.getElementById('sync-message');
   if (cloudUnavailable(msg)) return;
-  const code = syncCodeInput.value.trim();
   msg.textContent = '送信中...';
   try {
-    const docRef = cloudDb.collection('syncCodes').doc(code);
-    const snap = await docRef.get();
-    const cloudData = snap.exists ? snap.data() : { progress: {}, ranking: {}, playerName: '' };
-    const localData = collectSyncData();
-    const merged = mergeSyncData(localData, cloudData);
-    await docRef.set(merged);
-    applySyncData(merged);
+    await performCloudSync();
     msg.textContent = '☁️ クラウドに送りました！';
   } catch (e) {
     msg.textContent = '送信に失敗しました。通信環境を確認してください。';
@@ -238,26 +245,20 @@ document.getElementById('cloud-upload-btn').addEventListener('click', async () =
 document.getElementById('cloud-download-btn').addEventListener('click', async () => {
   const msg = document.getElementById('sync-message');
   if (cloudUnavailable(msg)) return;
-  const code = syncCodeInput.value.trim();
   msg.textContent = '受信中...';
   try {
-    const docRef = cloudDb.collection('syncCodes').doc(code);
-    const snap = await docRef.get();
-    if (!snap.exists) {
-      msg.textContent = 'まだクラウドにデータがありません。';
-      return;
-    }
-    const cloudData = snap.data();
-    const localData = collectSyncData();
-    const merged = mergeSyncData(localData, cloudData);
-    applySyncData(merged);
-    await docRef.set(merged);
+    await performCloudSync();
     msg.textContent = '☁️ クラウドから受け取りました！';
     if (!document.getElementById('screen-report').classList.contains('hidden')) showReportScreen();
   } catch (e) {
     msg.textContent = '受信に失敗しました。通信環境を確認してください。';
   }
 });
+
+// 起動時に自動で1回クラウドと同期する（同期コードが設定されている場合のみ）
+if (cloudDb && syncCodeInput.value.trim()) {
+  performCloudSync().catch(() => {});
+}
 
 document.getElementById('sync-import-btn').addEventListener('click', () => {
   const fileInput = document.getElementById('sync-import-file');
@@ -646,6 +647,10 @@ function advance() {
 function finishQuiz() {
   const progress = saveProgress(state.grade, state.subject, state.correctCount, TOTAL_QUESTIONS);
   saveRankingEntry(state.grade, state.subject, state.correctCount, TOTAL_QUESTIONS);
+
+  if (cloudDb && syncCodeInput.value.trim()) {
+    performCloudSync().catch(() => {});
+  }
 
   document.getElementById('result-score').textContent = `${state.correctCount} / ${TOTAL_QUESTIONS} もん せいかい！`;
 
