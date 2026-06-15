@@ -162,6 +162,41 @@ h2 {
   color: #ef6c00;
 }
 
+/* タイムアタック */
+.speed-btn {
+  display: block;
+  width: 100%;
+  margin-top: 20px;
+  font-size: 1.2em;
+  padding: 18px;
+  border: none;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #ffd54f 0%, #ffb300 100%);
+  color: #5d4037;
+  cursor: pointer;
+  font-weight: bold;
+}
+.speed-btn:active { transform: scale(0.98); }
+
+.speed-timer {
+  font-size: 1.3em;
+  font-weight: bold;
+  color: #ff7043;
+  font-variant-numeric: tabular-nums;
+}
+
+.speed-choices {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-top: 8px;
+}
+.speed-choices .choice-btn {
+  font-size: 1.8em;
+  font-weight: bold;
+  padding: 28px 12px;
+}
+
 .sync-btn {
   background: #e0f2f1;
   color: #00897b;

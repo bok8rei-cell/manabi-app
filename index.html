@@ -32,6 +32,7 @@
       <button class="grade-btn g5" data-grade="5">5年生</button>
       <button class="grade-btn g7" data-grade="7">中学1年生</button>
     </div>
+    <button class="speed-btn" id="speed-open-btn">⚡ 1けたの数 10問タイムアタック</button>
     <button class="sub-btn report-btn" id="report-open-btn">📊 がくしゅう状況をみる（保護者用）</button>
     <button class="sub-btn ranking-btn" id="ranking-open-btn">🏆 みんなの順位をみる</button>
     <button class="sub-btn sync-btn" id="sync-open-btn">🔄 他の端末とデータを同期</button>
@@ -49,6 +50,53 @@
     <button class="back-btn" data-back="home">← もどる</button>
     <h2>🏆 みんなの順位</h2>
     <div id="ranking-content"></div>
+  </section>
+
+  <!-- タイムアタック：説明画面 -->
+  <section id="screen-speed" class="screen hidden">
+    <button class="back-btn" data-back="home">← もどる</button>
+    <h2>⚡ タイムアタック</h2>
+    <p class="lead">1けた＋1けたの たし算が 10問！<br>なんびょうで できるか チャレンジしよう！</p>
+    <div class="result-buttons">
+      <button class="main-btn" id="speed-start-btn">スタート！</button>
+      <button class="sub-btn" id="speed-ranking-open-btn">🏆 タイムランキングをみる</button>
+    </div>
+  </section>
+
+  <!-- タイムアタック：ドリル画面 -->
+  <section id="screen-speedquiz" class="screen hidden">
+    <button class="back-btn" id="speed-quit-btn">← やめる</button>
+    <div class="quiz-header speed-header">
+      <div class="quiz-progress" id="speed-progress"></div>
+      <div class="speed-timer" id="speed-timer">0.0秒</div>
+    </div>
+    <div class="quiz-card">
+      <div class="quiz-question" id="speed-question"></div>
+      <div class="speed-choices" id="speed-choice-area"></div>
+      <div class="quiz-feedback" id="speed-feedback"></div>
+    </div>
+  </section>
+
+  <!-- タイムアタック：結果画面 -->
+  <section id="screen-speedresult" class="screen hidden">
+    <h2>けっか</h2>
+    <div class="result-card">
+      <div class="result-score" id="speed-result-time"></div>
+      <div class="result-message" id="speed-result-message"></div>
+    </div>
+    <div class="result-buttons">
+      <button class="main-btn" id="speed-retry-btn">もういちど</button>
+      <button class="sub-btn" id="speed-ranking-btn">🏆 ランキングをみる</button>
+      <button class="sub-btn" id="speed-home-btn">ホームへ</button>
+    </div>
+  </section>
+
+  <!-- タイムアタック：ランキング画面 -->
+  <section id="screen-speedranking" class="screen hidden">
+    <button class="back-btn" data-back="home">← もどる</button>
+    <h2>🏆 タイムランキング</h2>
+    <p class="lead" style="font-size:0.9em;">（10問ぜんぶ せいかいした人の中で、はやい順）</p>
+    <div id="speedranking-content"></div>
   </section>
 
   <!-- データ同期画面 -->
