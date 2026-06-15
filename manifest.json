@@ -1,6 +1,6 @@
 {
-  "name": "おうちまなびゲーム",
-  "short_name": "まなびゲーム",
+  "name": "BRAIN QUEST：零式",
+  "short_name": "零式",
   "description": "1年生・3年生・5年生むけ さんすう・こくご・りかしゃかい・えいごの学習アプリ",
   "start_url": "./index.html",
   "scope": "./",

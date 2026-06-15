@@ -1,4 +1,4 @@
-// ===== おうちまなびゲーム メインスクリプト =====
+// ===== BRAIN QUEST：零式 メインスクリプト =====
 
 const TOTAL_QUESTIONS = 10;
 const DONT_KNOW = '__DONTKNOW__';
@@ -149,12 +149,20 @@ document.querySelectorAll('.grade-btn').forEach(btn => {
   });
 });
 
+// 画面を開く前に、同期コードが設定されていればクラウドの最新データを取り込む
+async function syncBeforeShow(showFn) {
+  if (cloudDb && syncCodeInput.value.trim()) {
+    try { await performCloudSync(); } catch (e) {}
+  }
+  showFn();
+}
+
 document.getElementById('report-open-btn').addEventListener('click', () => {
-  showReportScreen();
+  syncBeforeShow(showReportScreen);
 });
 
 document.getElementById('ranking-open-btn').addEventListener('click', () => {
-  showRankingScreen();
+  syncBeforeShow(showRankingScreen);
 });
 
 document.getElementById('sync-open-btn').addEventListener('click', () => {
@@ -175,7 +183,17 @@ function collectSyncData() {
     const raw = localStorage.getItem(rKey);
     if (raw) data.ranking[rKey] = JSON.parse(raw);
   });
+  const speedRaw = localStorage.getItem(SPEED_RANKING_KEY);
+  if (speedRaw) data.ranking[SPEED_RANKING_KEY] = JSON.parse(speedRaw);
   return data;
+}
+
+// ランキングの並び順（タイムアタックは時間が速い順、それ以外は正答率が高い順）
+function rankingSortFn(key) {
+  if (key === SPEED_RANKING_KEY) {
+    return (a, b) => b.correct - a.correct || a.time - b.time || (a.date < b.date ? 1 : -1);
+  }
+  return (a, b) => b.rate - a.rate || b.correct - a.correct || (a.date < b.date ? 1 : -1);
 }
 
 function mergeProgress(a, b) {
@@ -198,7 +216,7 @@ function applySyncData(data) {
   Object.entries(data.ranking || {}).forEach(([key, value]) => {
     const existing = JSON.parse(localStorage.getItem(key) || '[]');
     const merged = [...existing, ...value];
-    merged.sort((a, b) => b.rate - a.rate || b.correct - a.correct || (a.date < b.date ? 1 : -1));
+    merged.sort(rankingSortFn(key));
     localStorage.setItem(key, JSON.stringify(merged.slice(0, 20)));
   });
 
@@ -231,9 +249,9 @@ syncCodeInput.addEventListener('input', () => {
   localStorage.setItem('manabi_synccode', syncCodeInput.value.trim());
 });
 
-function mergeRankingList(existing, incoming) {
+function mergeRankingList(existing, incoming, key) {
   const merged = [...existing, ...incoming];
-  merged.sort((a, b) => b.rate - a.rate || b.correct - a.correct || (a.date < b.date ? 1 : -1));
+  merged.sort(rankingSortFn(key));
   return merged.slice(0, 20);
 }
 
@@ -247,7 +265,7 @@ function mergeSyncData(a, b) {
   });
   const rankingKeys = new Set([...Object.keys(a.ranking || {}), ...Object.keys(b.ranking || {})]);
   rankingKeys.forEach(key => {
-    merged.ranking[key] = mergeRankingList((a.ranking || {})[key] || [], (b.ranking || {})[key] || []);
+    merged.ranking[key] = mergeRankingList((a.ranking || {})[key] || [], (b.ranking || {})[key] || [], key);
   });
   return merged;
 }
@@ -938,11 +956,11 @@ document.getElementById('speed-retry-btn').addEventListener('click', () => {
 });
 
 document.getElementById('speed-ranking-btn').addEventListener('click', () => {
-  showSpeedRankingScreen();
+  syncBeforeShow(showSpeedRankingScreen);
 });
 
 document.getElementById('speed-ranking-open-btn').addEventListener('click', () => {
-  showSpeedRankingScreen();
+  syncBeforeShow(showSpeedRankingScreen);
 });
 
 document.getElementById('speed-home-btn').addEventListener('click', () => {
