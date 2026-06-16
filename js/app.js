@@ -891,7 +891,13 @@ function showSpeedRankingScreen() {
   const container = document.getElementById('speedranking-content');
   container.innerHTML = '';
 
-  const list = loadSpeedRanking().filter(e => e.correct === e.total);
+  const countPerName = {};
+  const list = loadSpeedRanking()
+    .filter(e => e.correct === e.total)
+    .filter(e => {
+      countPerName[e.name] = (countPerName[e.name] || 0) + 1;
+      return countPerName[e.name] <= 3;
+    });
 
   if (list.length === 0) {
     const empty = document.createElement('div');
