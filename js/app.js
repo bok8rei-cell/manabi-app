@@ -64,6 +64,7 @@ function selectPlayerName(name) {
   localStorage.setItem('manabi_playername', state.playerName);
   playerNameInput.value = name;
   renderPlayerNameSaved();
+  if (cloudDb) performCloudSync().catch(() => {});
 }
 
 function renderPlayerNameSaved() {
@@ -97,6 +98,7 @@ playerNameInput.addEventListener('input', () => {
 });
 playerNameInput.addEventListener('change', () => {
   registerPlayerName(state.playerName);
+  if (cloudDb && state.playerName) performCloudSync().catch(() => {});
 });
 
 // ---- 画面切り替え ----
@@ -161,21 +163,12 @@ async function syncBeforeShow(showFn) {
   const container = document.getElementById(SYNC_CONTENT_IDS[showFn.name]);
   const syncCode = syncCodeInput.value.trim();
 
-  if (!syncCode) {
-    // 同期コード未設定 → 設定を促すバナーを表示
+  if (!getActiveSyncCode()) {
+    // なまえも同期コードも未設定 → 案内を表示
     if (container) {
       const notice = document.createElement('div');
       notice.className = 'sync-notice';
-      notice.innerHTML = '💡 <strong>同期コードを設定</strong>すると他の端末のデータも見られます。';
-      const btn = document.createElement('button');
-      btn.className = 'sub-btn';
-      btn.style.marginTop = '8px';
-      btn.textContent = '🔄 同期コードを設定する';
-      btn.addEventListener('click', () => {
-        document.getElementById('sync-message').textContent = '';
-        showScreen('sync');
-      });
-      notice.appendChild(btn);
+      notice.textContent = '💡 ホーム画面でなまえを入力すると、他の端末のデータも自動で見られます。';
       container.prepend(notice);
     }
     return;
@@ -321,17 +314,22 @@ function cloudUnavailable(msg) {
     msg.textContent = 'クラウド同期が設定されていません。js/firebase-config.jsに設定を入力してください。';
     return true;
   }
-  const code = syncCodeInput.value.trim();
-  if (!code) {
-    msg.textContent = '同期コードを入力してください。';
+  if (!getActiveSyncCode()) {
+    msg.textContent = 'まずホーム画面でなまえを入力してください。';
     return true;
   }
   return false;
 }
 
 // 読み込み・書き込みをまとめて行い、ローカルとクラウドを同じ状態にする
+// 同期キー：手動の同期コードがあればそれを使い、なければプレイヤー名で自動同期
+function getActiveSyncCode() {
+  return (localStorage.getItem('manabi_synccode') || '').trim()
+      || state.playerName.trim();
+}
+
 async function performCloudSync() {
-  const code = (localStorage.getItem('manabi_synccode') || '').trim();
+  const code = getActiveSyncCode();
   if (!cloudDb || !code) return null;
   const docRef = cloudDb.collection('syncCodes').doc(code);
   const snap = await docRef.get();
@@ -368,8 +366,8 @@ document.getElementById('cloud-download-btn').addEventListener('click', async ()
   }
 });
 
-// 起動時に自動で1回クラウドと同期する（同期コードが設定されている場合のみ）
-if (cloudDb && syncCodeInput.value.trim()) {
+// 起動時に自動で1回クラウドと同期する（なまえ or 同期コードがあれば）
+if (cloudDb && getActiveSyncCode()) {
   performCloudSync().catch(() => {});
 }
 
