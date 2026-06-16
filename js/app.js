@@ -896,7 +896,7 @@ function showSpeedRankingScreen() {
     .filter(e => e.correct === e.total)
     .filter(e => {
       countPerName[e.name] = (countPerName[e.name] || 0) + 1;
-      return countPerName[e.name] <= 3;
+      return countPerName[e.name] <= 2;
     });
 
   if (list.length === 0) {
