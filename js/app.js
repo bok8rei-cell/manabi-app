@@ -150,11 +150,57 @@ document.querySelectorAll('.grade-btn').forEach(btn => {
 });
 
 // 画面を開く前に、同期コードが設定されていればクラウドの最新データを取り込む
+const SYNC_CONTENT_IDS = {
+  showReportScreen: 'report-content',
+  showRankingScreen: 'ranking-content',
+  showSpeedRankingScreen: 'speedranking-content'
+};
+
 async function syncBeforeShow(showFn) {
-  if (cloudDb && syncCodeInput.value.trim()) {
-    try { await performCloudSync(); } catch (e) {}
+  showFn(); // まず即座に画面を表示
+  const container = document.getElementById(SYNC_CONTENT_IDS[showFn.name]);
+  const syncCode = syncCodeInput.value.trim();
+
+  if (!syncCode) {
+    // 同期コード未設定 → 設定を促すバナーを表示
+    if (container) {
+      const notice = document.createElement('div');
+      notice.className = 'sync-notice';
+      notice.innerHTML = '💡 <strong>同期コードを設定</strong>すると他の端末のデータも見られます。';
+      const btn = document.createElement('button');
+      btn.className = 'sub-btn';
+      btn.style.marginTop = '8px';
+      btn.textContent = '🔄 同期コードを設定する';
+      btn.addEventListener('click', () => {
+        document.getElementById('sync-message').textContent = '';
+        showScreen('sync');
+      });
+      notice.appendChild(btn);
+      container.prepend(notice);
+    }
+    return;
   }
-  showFn();
+
+  if (!cloudDb) return;
+
+  // 同期コードあり → ローディング表示してクラウド同期
+  let loadingEl = null;
+  if (container) {
+    loadingEl = document.createElement('div');
+    loadingEl.className = 'sync-loading';
+    loadingEl.textContent = '☁️ 最新データを取得中...';
+    container.prepend(loadingEl);
+  }
+
+  try {
+    await performCloudSync();
+    showFn(); // 同期後に再描画
+  } catch (e) {
+    if (loadingEl && loadingEl.parentNode) {
+      loadingEl.className = 'sync-notice sync-notice-error';
+      loadingEl.textContent = '⚠️ クラウドとの同期に失敗しました。通信環境を確認してください。';
+    }
+  }
 }
 
 document.getElementById('report-open-btn').addEventListener('click', () => {
