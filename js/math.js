@@ -41,12 +41,24 @@ function fractionToString([num, den]) {
 
 // ===== 1年生 =====
 function genGrade1() {
-  const types = ['add', 'sub', 'compare', 'addWord', 'subWord', 'tens', 'threeAdd'];
+  const types = ['add', 'sub', 'compare', 'addWord', 'subWord', 'tens', 'threeAdd', 'bigAdd', 'bigAddWord'];
   const type = types[randInt(0, types.length - 1)];
 
   if (type === 'add') {
-    const a = randInt(1, 12);
-    const b = randInt(1, 12);
+    const a = randInt(1, 15);
+    const b = randInt(1, 15);
+    return {
+      question: `${a} ＋ ${b} = ？`,
+      type: 'input',
+      inputType: 'number',
+      answer: `${a + b}`
+    };
+  }
+
+  if (type === 'bigAdd') {
+    // 答えが必ず2けたになるたし算（くりあがり）
+    const a = randInt(3, 9);
+    const b = randInt(Math.max(1, 10 - a), 9);
     return {
       question: `${a} ＋ ${b} = ？`,
       type: 'input',
@@ -56,7 +68,7 @@ function genGrade1() {
   }
 
   if (type === 'sub') {
-    const a = randInt(2, 18);
+    const a = randInt(2, 20);
     const b = randInt(1, a);
     return {
       question: `${a} － ${b} = ？`,
@@ -72,10 +84,27 @@ function genGrade1() {
       ['花', '本'], ['アメ', 'こ'], ['とり', 'わ']
     ];
     const [name, unit] = items[randInt(0, items.length - 1)];
-    const a = randInt(1, 9);
-    const b = randInt(1, 9);
+    const a = randInt(1, 12);
+    const b = randInt(1, 12);
     return {
       question: `${name}が ${a}${unit}あります。\n${b}${unit}もらうと、あわせてなん${unit}になる？`,
+      type: 'input',
+      inputType: 'number',
+      answer: `${a + b}`
+    };
+  }
+
+  if (type === 'bigAddWord') {
+    // 答えが2けたになる文章題
+    const items = [
+      ['シール', 'まい'], ['どんぐり', 'こ'], ['おはじき', 'こ'],
+      ['みかん', 'こ'], ['本', 'さつ'], ['カード', 'まい']
+    ];
+    const [name, unit] = items[randInt(0, items.length - 1)];
+    const a = randInt(5, 9);
+    const b = randInt(Math.max(1, 10 - a), 9);
+    return {
+      question: `${name}が ${a}${unit}あります。\nともだちから ${b}${unit}もらうと、\nぜんぶで なん${unit}？`,
       type: 'input',
       inputType: 'number',
       answer: `${a + b}`
@@ -87,7 +116,7 @@ function genGrade1() {
       ['あめ', 'こ'], ['いろえんぴつ', '本'], ['とり', 'わ'], ['カード', 'まい']
     ];
     const [name, unit] = items[randInt(0, items.length - 1)];
-    const a = randInt(5, 15);
+    const a = randInt(5, 18);
     const b = randInt(1, a - 1);
     return {
       question: `${name}が ${a}${unit}あります。\n${b}${unit}つかうと、なん${unit}のこる？`,
@@ -108,9 +137,9 @@ function genGrade1() {
   }
 
   if (type === 'threeAdd') {
-    const a = randInt(1, 8);
-    const b = randInt(1, 8);
-    const c = randInt(1, 8);
+    const a = randInt(1, 9);
+    const b = randInt(1, 9);
+    const c = randInt(1, 9);
     return {
       question: `${a} ＋ ${b} ＋ ${c} = ？`,
       type: 'input',

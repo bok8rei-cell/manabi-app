@@ -130,8 +130,7 @@ function generateKanjiProblem(grade) {
 
   if (askReading) {
     // 不正解の選択肢を集める（読み方が重複しないように）
-    const distractorPool = list.filter(item => item.reading !== correct.reading);
-    shuffleArray(distractorPool);
+    const distractorPool = shuffleArray(list.filter(item => item.reading !== correct.reading));
     const distractors = [];
     const usedReadings = new Set([correct.reading]);
     for (const item of distractorPool) {
@@ -155,8 +154,7 @@ function generateKanjiProblem(grade) {
   }
 
   // 読みから漢字を選ぶ（単語中の漢字を□でかくす）
-  const distractorPool = list.filter(item => item.kanji !== correct.kanji);
-  shuffleArray(distractorPool);
+  const distractorPool = shuffleArray(list.filter(item => item.kanji !== correct.kanji));
   const distractors = [];
   const usedKanji = new Set([correct.kanji]);
   for (const item of distractorPool) {
