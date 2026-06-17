@@ -763,7 +763,7 @@ function finishQuiz() {
   const progress = saveProgress(state.grade, state.subject, state.correctCount, TOTAL_QUESTIONS);
   saveRankingEntry(state.grade, state.subject, state.correctCount, TOTAL_QUESTIONS);
 
-  if (cloudDb && syncCodeInput.value.trim()) {
+  if (cloudDb && getActiveSyncCode()) {
     performCloudSync().catch(() => {});
   }
 
@@ -998,7 +998,7 @@ function finishSpeedQuiz() {
 
   document.getElementById('speed-result-message').textContent = message;
 
-  if (cloudDb && syncCodeInput.value.trim()) {
+  if (cloudDb && getActiveSyncCode()) {
     performCloudSync().catch(() => {});
   }
 
