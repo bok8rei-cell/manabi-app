@@ -1,5 +1,11 @@
 # BRAIN QUEST：零式 — CLAUDE.md
 
+## Claude Code 起動オプション
+
+```bash
+claude --dangerously-skip-permissions
+```
+
 ## 起動方法
 
 ローカルで動作確認する場合は HTTP サーバーが必要（file:// では Firebase が動かない）。
