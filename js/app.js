@@ -569,7 +569,6 @@ function showSubjectScreen() {
     container.appendChild(btn);
   });
 
-  renderProgressBox();
   showScreen('subject');
 }
 
