@@ -645,7 +645,12 @@ function renderQuestion() {
     problem.choices.forEach(choice => {
       const btn = document.createElement('button');
       btn.className = 'choice-btn';
-      btn.textContent = choice;
+      if (problem.choiceFormat === 'kanji-kana') {
+        const sp = choice.indexOf(' ');
+        btn.innerHTML = `${choice.slice(0, sp)}<span class="choice-kana"> ${choice.slice(sp + 1)}</span>`;
+      } else {
+        btn.textContent = choice;
+      }
       btn.addEventListener('click', () => selectChoice(btn, choice));
       area.appendChild(btn);
     });

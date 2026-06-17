@@ -3,36 +3,36 @@
 
 const KANJI_DATA = {
   1: [
-    { kanji: '一', reading: 'いち', word: '一年生' },
+    { kanji: '一', reading: 'いち', word: '一日' },
     { kanji: '二', reading: 'に', word: '二月' },
-    { kanji: '三', reading: 'さん', word: '三角形' },
+    { kanji: '三', reading: 'さん', word: '三つ' },
     { kanji: '四', reading: 'し', word: '四月' },
     { kanji: '五', reading: 'ご', word: '五人' },
-    { kanji: '六', reading: 'ろく', word: '六時' },
+    { kanji: '六', reading: 'ろく', word: '六日' },
     { kanji: '七', reading: 'しち', word: '七夕' },
     { kanji: '八', reading: 'はち', word: '八月' },
-    { kanji: '九', reading: 'きゅう', word: '九州' },
+    { kanji: '九', reading: 'きゅう', word: '九日' },
     { kanji: '十', reading: 'じゅう', word: '十月' },
     { kanji: '百', reading: 'ひゃく', word: '百円' },
     { kanji: '千', reading: 'せん', word: '千円' },
-    { kanji: '上', reading: 'うえ', word: '机の上' },
+    { kanji: '上', reading: 'うえ', word: '山の上' },
     { kanji: '下', reading: 'した', word: '木の下' },
     { kanji: '左', reading: 'ひだり', word: '左手' },
     { kanji: '右', reading: 'みぎ', word: '右手' },
-    { kanji: '中', reading: 'なか', word: '箱の中' },
+    { kanji: '中', reading: 'なか', word: '川の中' },
     { kanji: '大', reading: 'おお', word: '大きい' },
     { kanji: '小', reading: 'ちい', word: '小さい' },
-    { kanji: '山', reading: 'やま', word: '富士山' },
+    { kanji: '山', reading: 'やま', word: '火山' },
     { kanji: '川', reading: 'かわ', word: '小川' },
     { kanji: '田', reading: 'た', word: '田んぼ' },
     { kanji: '人', reading: 'ひと', word: '三人' },
     { kanji: '口', reading: 'くち', word: '入り口' },
     { kanji: '目', reading: 'め', word: '目玉' },
-    { kanji: '耳', reading: 'みみ', word: '耳鳴り' },
-    { kanji: '手', reading: 'て', word: '手紙' },
+    { kanji: '耳', reading: 'みみ', word: '右耳' },
+    { kanji: '手', reading: 'て', word: '手足' },
     { kanji: '足', reading: 'あし', word: '足音' },
     { kanji: '月', reading: 'つき', word: '三日月' },
-    { kanji: '日', reading: 'ひ', word: '日曜日' }
+    { kanji: '日', reading: 'ひ', word: '日本' }
   ],
   3: [
     { kanji: '運', reading: 'うん', word: '運動会' },
@@ -129,7 +129,7 @@ function generateKanjiProblem(grade) {
 
   // ===== 1年生：選択肢を「漢字＋ひらがな」形式にする =====
   if (grade === 1) {
-    const correctChoice = `${correct.kanji}${correct.reading}`;
+    const correctChoice = `${correct.kanji} ${correct.reading}`;
     const maskedWord = correct.word.replace(correct.kanji, '□');
 
     const distractorPool = shuffleArray(list.filter(item => item.kanji !== correct.kanji));
@@ -139,7 +139,7 @@ function generateKanjiProblem(grade) {
       if (distractors.length >= 3) break;
       if (usedKanji.has(item.kanji)) continue;
       usedKanji.add(item.kanji);
-      distractors.push(`${item.kanji}${item.reading}`);
+      distractors.push(`${item.kanji} ${item.reading}`);
     }
     const choices = shuffleArray([correctChoice, ...distractors]);
 
@@ -147,7 +147,8 @@ function generateKanjiProblem(grade) {
       question: `「${maskedWord}」の\n□に はいる かんじは どれ？`,
       type: 'choice',
       choices,
-      answer: correctChoice
+      answer: correctChoice,
+      choiceFormat: 'kanji-kana'
     };
   }
 

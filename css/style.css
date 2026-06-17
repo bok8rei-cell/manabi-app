@@ -425,6 +425,12 @@ h2 {
   background: #ffebee;
 }
 
+.choice-kana {
+  font-size: 0.72em;
+  font-weight: normal;
+  color: #777;
+}
+
 .quiz-feedback {
   margin-top: 16px;
   font-size: 1.2em;
