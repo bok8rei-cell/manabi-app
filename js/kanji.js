@@ -126,10 +126,35 @@ const KANJI_DATA = {
 function generateKanjiProblem(grade) {
   const list = KANJI_DATA[grade] || KANJI_DATA[1];
   const correct = list[randInt(0, list.length - 1)];
+
+  // ===== 1年生：選択肢を「漢字＋ひらがな」形式にする =====
+  if (grade === 1) {
+    const correctChoice = `${correct.kanji}${correct.reading}`;
+    const maskedWord = correct.word.replace(correct.kanji, '□');
+
+    const distractorPool = shuffleArray(list.filter(item => item.kanji !== correct.kanji));
+    const distractors = [];
+    const usedKanji = new Set([correct.kanji]);
+    for (const item of distractorPool) {
+      if (distractors.length >= 3) break;
+      if (usedKanji.has(item.kanji)) continue;
+      usedKanji.add(item.kanji);
+      distractors.push(`${item.kanji}${item.reading}`);
+    }
+    const choices = shuffleArray([correctChoice, ...distractors]);
+
+    return {
+      question: `「${maskedWord}」の\n□に はいる かんじは どれ？`,
+      type: 'choice',
+      choices,
+      answer: correctChoice
+    };
+  }
+
+  // ===== 3年生以上：従来の形式 =====
   const askReading = Math.random() < 0.5;
 
   if (askReading) {
-    // 不正解の選択肢を集める（読み方が重複しないように）
     const distractorPool = shuffleArray(list.filter(item => item.reading !== correct.reading));
     const distractors = [];
     const usedReadings = new Set([correct.reading]);
@@ -153,7 +178,6 @@ function generateKanjiProblem(grade) {
     };
   }
 
-  // 読みから漢字を選ぶ（単語中の漢字を□でかくす）
   const distractorPool = shuffleArray(list.filter(item => item.kanji !== correct.kanji));
   const distractors = [];
   const usedKanji = new Set([correct.kanji]);
