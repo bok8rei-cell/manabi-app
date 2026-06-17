@@ -3,36 +3,36 @@
 
 const KANJI_DATA = {
   1: [
-    { kanji: '一', reading: 'いち', word: '一日' },
-    { kanji: '二', reading: 'に', word: '二月' },
+    { kanji: '一', reading: 'いち', word: '一日',   wordKana: '□にち' },
+    { kanji: '二', reading: 'に',   word: '二月',   wordKana: '□がつ' },
     { kanji: '三', reading: 'さん', word: '三つ' },
-    { kanji: '四', reading: 'し', word: '四月' },
-    { kanji: '五', reading: 'ご', word: '五人' },
-    { kanji: '六', reading: 'ろく', word: '六日' },
-    { kanji: '七', reading: 'しち', word: '七夕' },
-    { kanji: '八', reading: 'はち', word: '八月' },
-    { kanji: '九', reading: 'きゅう', word: '九日' },
-    { kanji: '十', reading: 'じゅう', word: '十月' },
-    { kanji: '百', reading: 'ひゃく', word: '百円' },
-    { kanji: '千', reading: 'せん', word: '千円' },
-    { kanji: '上', reading: 'うえ', word: '山の上' },
-    { kanji: '下', reading: 'した', word: '木の下' },
-    { kanji: '左', reading: 'ひだり', word: '左手' },
-    { kanji: '右', reading: 'みぎ', word: '右手' },
-    { kanji: '中', reading: 'なか', word: '川の中' },
-    { kanji: '大', reading: 'おお', word: '大きい' },
-    { kanji: '小', reading: 'ちい', word: '小さい' },
-    { kanji: '山', reading: 'やま', word: '火山' },
-    { kanji: '川', reading: 'かわ', word: '小川' },
-    { kanji: '田', reading: 'た', word: '田んぼ' },
-    { kanji: '人', reading: 'ひと', word: '三人' },
-    { kanji: '口', reading: 'くち', word: '入り口' },
-    { kanji: '目', reading: 'め', word: '目玉' },
-    { kanji: '耳', reading: 'みみ', word: '右耳' },
-    { kanji: '手', reading: 'て', word: '手足' },
-    { kanji: '足', reading: 'あし', word: '足音' },
-    { kanji: '月', reading: 'つき', word: '三日月' },
-    { kanji: '日', reading: 'ひ', word: '日本' }
+    { kanji: '四', reading: 'し',   word: '四月',   wordKana: '□がつ' },
+    { kanji: '五', reading: 'ご',   word: '五人',   wordKana: '□にん' },
+    { kanji: '六', reading: 'ろく', word: '六日',   wordKana: '□にち' },
+    { kanji: '七', reading: 'しち', word: '七夕',   wordKana: '□ゆう' },
+    { kanji: '八', reading: 'はち', word: '八月',   wordKana: '□がつ' },
+    { kanji: '九', reading: 'きゅう', word: '九日', wordKana: '□にち' },
+    { kanji: '十', reading: 'じゅう', word: '十月', wordKana: '□がつ' },
+    { kanji: '百', reading: 'ひゃく', word: '百円', wordKana: '□えん' },
+    { kanji: '千', reading: 'せん', word: '千円',   wordKana: '□えん' },
+    { kanji: '上', reading: 'うえ',  word: '山の上', wordKana: 'やまの□' },
+    { kanji: '下', reading: 'した',  word: '木の下', wordKana: 'きの□' },
+    { kanji: '左', reading: 'ひだり', word: '左手', wordKana: '□て' },
+    { kanji: '右', reading: 'みぎ',  word: '右手',  wordKana: '□て' },
+    { kanji: '中', reading: 'なか',  word: '川の中', wordKana: 'かわの□' },
+    { kanji: '大', reading: 'おお',  word: '大きい' },
+    { kanji: '小', reading: 'ちい',  word: '小さい' },
+    { kanji: '山', reading: 'やま',  word: '火山',  wordKana: 'か□' },
+    { kanji: '川', reading: 'かわ',  word: '小川',  wordKana: 'お□' },
+    { kanji: '田', reading: 'た',    word: '田んぼ' },
+    { kanji: '人', reading: 'ひと',  word: '三人',  wordKana: 'さん□' },
+    { kanji: '口', reading: 'くち',  word: '入り口', wordKana: 'いり□' },
+    { kanji: '目', reading: 'め',    word: '目玉',  wordKana: '□たま' },
+    { kanji: '耳', reading: 'みみ',  word: '右耳',  wordKana: 'みぎ□' },
+    { kanji: '手', reading: 'て',    word: '手足',  wordKana: '□あし' },
+    { kanji: '足', reading: 'あし',  word: '足音',  wordKana: '□おと' },
+    { kanji: '月', reading: 'つき',  word: '三日月', wordKana: 'みか□' },
+    { kanji: '日', reading: 'ひ',    word: '日本',  wordKana: '□もと' }
   ],
   3: [
     { kanji: '運', reading: 'うん', word: '運動会' },
@@ -130,7 +130,7 @@ function generateKanjiProblem(grade) {
   // ===== 1年生：選択肢を「漢字＋ひらがな」形式にする =====
   if (grade === 1) {
     const correctChoice = `${correct.kanji} ${correct.reading}`;
-    const maskedWord = correct.word.replace(correct.kanji, '□');
+    const maskedWord = correct.wordKana || correct.word.replace(correct.kanji, '□');
 
     const distractorPool = shuffleArray(list.filter(item => item.kanji !== correct.kanji));
     const distractors = [];
