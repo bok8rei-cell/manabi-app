@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>BRAIN QUEST：零式</title>
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#ff7043">
+<meta name="theme-color" content="#050d1a">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -15,11 +15,50 @@
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
+<canvas id="stars-canvas"></canvas>
 <div id="app">
 
   <!-- ホーム画面：だれが べんきょうする？ -->
   <section id="screen-home" class="screen">
-    <h1>📘 BRAIN QUEST：零式 📘</h1>
+    <h1>BRAIN QUEST：零式</h1>
+    <svg class="robot-mascot" viewBox="0 0 120 160" xmlns="http://www.w3.org/2000/svg" width="90" height="115">
+      <defs>
+        <filter id="glow"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+        <filter id="glow2"><feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+      </defs>
+      <!-- antenna -->
+      <line x1="60" y1="22" x2="60" y2="7" stroke="#00d4ff" stroke-width="2.5" stroke-linecap="round"/>
+      <circle cx="60" cy="4" r="5" fill="#00d4ff" filter="url(#glow2)"/>
+      <!-- head -->
+      <rect x="24" y="22" width="72" height="55" rx="13" fill="#081e38" stroke="#00d4ff" stroke-width="2"/>
+      <!-- eye sockets -->
+      <circle cx="43" cy="46" r="11" fill="#030e1e"/>
+      <circle cx="77" cy="46" r="11" fill="#030e1e"/>
+      <!-- eyes glow -->
+      <circle cx="43" cy="46" r="8" fill="#00d4ff" filter="url(#glow)" opacity="0.95"/>
+      <circle cx="77" cy="46" r="8" fill="#00d4ff" filter="url(#glow)" opacity="0.95"/>
+      <circle cx="43" cy="46" r="3.5" fill="#fff"/>
+      <circle cx="77" cy="46" r="3.5" fill="#fff"/>
+      <!-- mouth -->
+      <path d="M 38 62 Q 60 74 82 62" stroke="#00d4ff" fill="none" stroke-width="2.5" stroke-linecap="round" filter="url(#glow)"/>
+      <!-- neck -->
+      <rect x="48" y="77" width="24" height="12" rx="5" fill="#081e38" stroke="#00d4ff" stroke-width="1.5"/>
+      <!-- body -->
+      <rect x="13" y="89" width="94" height="62" rx="15" fill="#081e38" stroke="#00d4ff" stroke-width="2"/>
+      <!-- chest lights -->
+      <circle cx="40" cy="109" r="5.5" fill="#ff4081" filter="url(#glow)"/>
+      <circle cx="60" cy="109" r="5.5" fill="#fbbf24" filter="url(#glow)"/>
+      <circle cx="80" cy="109" r="5.5" fill="#69ff47" filter="url(#glow)"/>
+      <!-- display panel -->
+      <rect x="33" y="122" width="54" height="18" rx="5" fill="#020d1c" stroke="#00d4ff" stroke-width="1"/>
+      <line x1="40" y1="131" x2="80" y2="131" stroke="#00d4ff" stroke-width="2" stroke-dasharray="5,3" opacity="0.8"/>
+      <!-- left arm -->
+      <rect x="0" y="94" width="13" height="42" rx="6" fill="#081e38" stroke="#00d4ff" stroke-width="1.5"/>
+      <circle cx="6" cy="140" r="7" fill="#081e38" stroke="#00d4ff" stroke-width="1.5"/>
+      <!-- right arm -->
+      <rect x="107" y="94" width="13" height="42" rx="6" fill="#081e38" stroke="#00d4ff" stroke-width="1.5"/>
+      <circle cx="114" cy="140" r="7" fill="#081e38" stroke="#00d4ff" stroke-width="1.5"/>
+    </svg>
     <div class="player-name-box">
       <label for="player-name">なまえ：</label>
       <input type="text" id="player-name" placeholder="なまえを にゅうりょく" maxlength="10">
@@ -27,10 +66,10 @@
     <div class="player-name-saved" id="player-name-saved"></div>
     <p class="lead">だれが べんきょうする？</p>
     <div class="grade-select">
-      <button class="grade-btn g1" data-grade="1">1年生</button>
-      <button class="grade-btn g3" data-grade="3">3年生</button>
-      <button class="grade-btn g5" data-grade="5">5年生</button>
-      <button class="grade-btn g7" data-grade="7">中学1年生</button>
+      <button class="grade-btn g1" data-grade="1">🏠 1年生 🏫</button>
+      <button class="grade-btn g3" data-grade="3">📖 3年生 📚</button>
+      <button class="grade-btn g5" data-grade="5">🌍 5年生 🔭</button>
+      <button class="grade-btn g7" data-grade="7">🧭 中学1年生 ⚙️</button>
     </div>
     <button class="speed-btn" id="speed-open-btn">⚡ 1けたの数 10問タイムアタック</button>
     <button class="sub-btn report-btn" id="report-open-btn">📊 がくしゅう状況をみる（保護者用）</button>
@@ -184,6 +223,33 @@
       navigator.serviceWorker.register('sw.js').catch(() => {});
     });
   }
+</script>
+<script>
+(function() {
+  const c = document.getElementById('stars-canvas');
+  const ctx = c.getContext('2d');
+  function resize() { c.width = innerWidth; c.height = innerHeight; }
+  resize();
+  window.addEventListener('resize', resize);
+  const stars = Array.from({length: 200}, () => ({
+    x: Math.random(), y: Math.random(),
+    r: Math.random() * 1.4 + 0.2,
+    speed: Math.random() * 0.006 + 0.002,
+    phase: Math.random() * Math.PI * 2
+  }));
+  function draw(t) {
+    ctx.clearRect(0, 0, c.width, c.height);
+    stars.forEach(s => {
+      const alpha = 0.2 + 0.8 * Math.abs(Math.sin(t * s.speed * 0.001 + s.phase));
+      ctx.beginPath();
+      ctx.arc(s.x * c.width, s.y * c.height, s.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255,255,255,${alpha})`;
+      ctx.fill();
+    });
+    requestAnimationFrame(draw);
+  }
+  requestAnimationFrame(draw);
+})();
 </script>
 </body>
 </html>
