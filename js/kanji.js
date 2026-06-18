@@ -9,7 +9,7 @@ const KANJI_DATA = {
     { kanji: '四', reading: 'し',   word: '四月',   wordKana: '□がつ' },
     { kanji: '五', reading: 'ご',   word: '五人',   wordKana: '□にん' },
     { kanji: '六', reading: 'ろく', word: '六日',   wordKana: '□にち' },
-    { kanji: '七', reading: 'しち', word: '七夕',   wordKana: '□ゆう' },
+    { kanji: '七', reading: 'しち', word: '七月',   wordKana: '□がつ' },
     { kanji: '八', reading: 'はち', word: '八月',   wordKana: '□がつ' },
     { kanji: '九', reading: 'きゅう', word: '九日', wordKana: '□にち' },
     { kanji: '十', reading: 'じゅう', word: '十月', wordKana: '□がつ' },
@@ -38,7 +38,7 @@ const KANJI_DATA = {
     { kanji: '運', reading: 'うん', word: '運動会' },
     { kanji: '泳', reading: 'えい', word: '水泳' },
     { kanji: '駅', reading: 'えき', word: '駅前' },
-    { kanji: '安', reading: 'やす', word: '安心' },
+    { kanji: '安', reading: 'やす', word: '安い' },
     { kanji: '荷', reading: 'に', word: '荷物' },
     { kanji: '階', reading: 'かい', word: '三階' },
     { kanji: '寒', reading: 'さむ', word: '寒い' },
@@ -100,9 +100,9 @@ const KANJI_DATA = {
     { kanji: '脈', reading: 'みゃく', word: '山脈' },
     { kanji: '普', reading: 'ふ', word: '普通' },
     { kanji: '互', reading: 'ご', word: '相互' },
-    { kanji: '包', reading: 'ほう', word: '包囲' },
+    { kanji: '奮', reading: 'ふん', word: '興奮' },
     { kanji: '域', reading: 'いき', word: '地域' },
-    { kanji: '委', reading: 'い', word: '委員' },
+    { kanji: '継', reading: 'けい', word: '継続' },
     { kanji: '縮', reading: 'しゅく', word: '縮小' },
     { kanji: '担', reading: 'たん', word: '担当' },
     { kanji: '伏', reading: 'ふく', word: '起伏' },
@@ -118,7 +118,7 @@ const KANJI_DATA = {
     { kanji: '訳', reading: 'やく', word: '翻訳' },
     { kanji: '載', reading: 'さい', word: '記載' },
     { kanji: '較', reading: 'かく', word: '比較' },
-    { kanji: '券', reading: 'けん', word: '入場券' },
+    { kanji: '慎', reading: 'しん', word: '慎重' },
     { kanji: '層', reading: 'そう', word: '地層' }
   ]
 };

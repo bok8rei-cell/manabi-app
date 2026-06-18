@@ -41,12 +41,12 @@ function fractionToString([num, den]) {
 
 // ===== 1年生 =====
 function genGrade1() {
-  const types = ['add', 'sub', 'compare', 'addWord', 'subWord', 'tens', 'threeAdd', 'bigAdd', 'bigAddWord'];
+  const types = ['add', 'sub', 'compare', 'addWord', 'subWord', 'tens', 'bigAdd', 'bigAddWord'];
   const type = types[randInt(0, types.length - 1)];
 
   if (type === 'add') {
-    const a = randInt(1, 15);
-    const b = randInt(1, 15);
+    const a = randInt(1, 9);
+    const b = randInt(1, 9);
     return {
       question: `${a} ＋ ${b} = ？`,
       type: 'input',
@@ -84,8 +84,8 @@ function genGrade1() {
       ['花', '本'], ['アメ', 'こ'], ['とり', 'わ']
     ];
     const [name, unit] = items[randInt(0, items.length - 1)];
-    const a = randInt(1, 12);
-    const b = randInt(1, 12);
+    const a = randInt(1, 9);
+    const b = randInt(1, 9);
     return {
       question: `${name}が ${a}${unit}あります。\n${b}${unit}もらうと、あわせてなん${unit}になる？`,
       type: 'input',
@@ -133,18 +133,6 @@ function genGrade1() {
       type: 'input',
       inputType: 'number',
       answer: `${10 - a}`
-    };
-  }
-
-  if (type === 'threeAdd') {
-    const a = randInt(1, 9);
-    const b = randInt(1, 9);
-    const c = randInt(1, 9);
-    return {
-      question: `${a} ＋ ${b} ＋ ${c} = ？`,
-      type: 'input',
-      inputType: 'number',
-      answer: `${a + b + c}`
     };
   }
 
@@ -308,7 +296,7 @@ function genGrade3() {
 
 // ===== 5年生 =====
 function genGrade5() {
-  const types = ['fraction', 'decimalMul', 'decimalDiv', 'percent', 'area', 'average', 'speed', 'ratio', 'circle', 'volume'];
+  const types = ['fraction', 'decimalMul', 'decimalDiv', 'percent', 'area', 'average', 'circle', 'volume'];
   const type = types[randInt(0, types.length - 1)];
 
   if (type === 'fraction') {
@@ -403,51 +391,6 @@ function genGrade5() {
       type: 'input',
       inputType: 'number',
       answer: `${sum / n}`
-    };
-  }
-
-  if (type === 'speed') {
-    const sub = randInt(0, 2);
-    const time = randInt(2, 8);
-    const speed = randInt(2, 12);
-    if (sub === 0) {
-      const dist = time * speed;
-      return {
-        question: `${dist}kmの道を ${time}時間で走ると、\n速さは時速何km？`,
-        type: 'input',
-        inputType: 'number',
-        answer: `${speed}`
-      };
-    } else if (sub === 1) {
-      return {
-        question: `時速${speed}kmで ${time}時間走ると、\n何km進む？`,
-        type: 'input',
-        inputType: 'number',
-        answer: `${speed * time}`
-      };
-    } else {
-      const dist = speed * time;
-      return {
-        question: `${dist}kmの道を 時速${speed}kmで走ると、\n何時間かかる？`,
-        type: 'input',
-        inputType: 'number',
-        answer: `${time}`
-      };
-    }
-  }
-
-  if (type === 'ratio') {
-    let a = randInt(1, 6);
-    let b = randInt(1, 6);
-    while (gcd(a, b) !== 1) { a = randInt(1, 6); b = randInt(1, 6); }
-    const g = randInt(2, 5);
-    const qa = a * g, qb = b * g;
-    return {
-      question: `${qa} : ${qb} を かんたんな比にすると？\n（れい：2:3 → 「2:3」と入力）`,
-      type: 'input',
-      inputType: 'text',
-      answerType: 'ratio',
-      answer: `${a}:${b}`
     };
   }
 

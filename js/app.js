@@ -67,6 +67,17 @@ function selectPlayerName(name) {
   if (cloudDb) performCloudSync().catch(() => {});
 }
 
+function deletePlayerName(name) {
+  const names = loadPlayerNames().filter(n => n !== name);
+  localStorage.setItem('manabi_playernames', JSON.stringify(names));
+  if (state.playerName === name) {
+    state.playerName = '';
+    localStorage.removeItem('manabi_playername');
+    playerNameInput.value = '';
+  }
+  renderPlayerNameSaved();
+}
+
 function renderPlayerNameSaved() {
   playerNameSaved.innerHTML = '';
   loadPlayerNames().forEach(name => {
@@ -75,6 +86,19 @@ function renderPlayerNameSaved() {
     if (name === state.playerName) btn.classList.add('selected');
     btn.textContent = name;
     btn.addEventListener('click', () => selectPlayerName(name));
+
+    let pressTimer;
+    const startPress = () => {
+      pressTimer = setTimeout(() => deletePlayerName(name), 700);
+    };
+    const cancelPress = () => clearTimeout(pressTimer);
+    btn.addEventListener('touchstart', startPress, { passive: true });
+    btn.addEventListener('touchend',   cancelPress);
+    btn.addEventListener('touchmove',  cancelPress);
+    btn.addEventListener('mousedown',  startPress);
+    btn.addEventListener('mouseup',    cancelPress);
+    btn.addEventListener('mouseleave', cancelPress);
+
     playerNameSaved.appendChild(btn);
   });
 }
