@@ -40,13 +40,19 @@ function fractionToString([num, den]) {
 }
 
 // ===== 1年生 =====
-function genGrade1() {
-  const types = ['add', 'sub', 'compare', 'addWord', 'subWord', 'tens', 'bigAdd', 'bigAddWord'];
+function genGrade1(diff = 1) {
+  const typePools = [
+    ['add', 'sub', 'compare', 'tens'],
+    ['add', 'sub', 'compare', 'addWord', 'subWord', 'tens', 'bigAdd', 'bigAddWord'],
+    ['bigAdd', 'bigAddWord', 'subWord', 'addWord', 'sub', 'tens']
+  ];
+  const types = typePools[diff];
   const type = types[randInt(0, types.length - 1)];
+  const maxN = [4, 9, 9][diff];
 
   if (type === 'add') {
-    const a = randInt(1, 9);
-    const b = randInt(1, 9);
+    const a = randInt(1, maxN);
+    const b = randInt(1, maxN);
     return {
       question: `${a} ＋ ${b} = ？`,
       type: 'input',
@@ -56,8 +62,7 @@ function genGrade1() {
   }
 
   if (type === 'bigAdd') {
-    // 答えが必ず2けたになるたし算（くりあがり）
-    const a = randInt(3, 9);
+    const a = diff === 2 ? randInt(5, 9) : randInt(3, 9);
     const b = randInt(Math.max(1, 10 - a), 9);
     return {
       question: `${a} ＋ ${b} = ？`,
@@ -68,7 +73,8 @@ function genGrade1() {
   }
 
   if (type === 'sub') {
-    const a = randInt(2, 20);
+    const maxSub = [8, 20, 18][diff];
+    const a = randInt(2, maxSub);
     const b = randInt(1, a);
     return {
       question: `${a} － ${b} = ？`,
@@ -84,8 +90,8 @@ function genGrade1() {
       ['花', '本'], ['アメ', 'こ'], ['とり', 'わ']
     ];
     const [name, unit] = items[randInt(0, items.length - 1)];
-    const a = randInt(1, 9);
-    const b = randInt(1, 9);
+    const a = randInt(1, maxN);
+    const b = randInt(1, maxN);
     return {
       question: `${name}が ${a}${unit}あります。\n${b}${unit}もらうと、あわせてなん${unit}になる？`,
       type: 'input',
@@ -101,7 +107,7 @@ function genGrade1() {
       ['みかん', 'こ'], ['本', 'さつ'], ['カード', 'まい']
     ];
     const [name, unit] = items[randInt(0, items.length - 1)];
-    const a = randInt(5, 9);
+    const a = diff === 2 ? randInt(6, 9) : randInt(5, 9);
     const b = randInt(Math.max(1, 10 - a), 9);
     return {
       question: `${name}が ${a}${unit}あります。\nともだちから ${b}${unit}もらうと、\nぜんぶで なん${unit}？`,
@@ -137,9 +143,10 @@ function genGrade1() {
   }
 
   // compare
-  let a = randInt(1, 20);
-  let b = randInt(1, 20);
-  while (a === b) b = randInt(1, 20);
+  const cmpMax = [10, 20, 20][diff];
+  let a = randInt(1, cmpMax);
+  let b = randInt(1, cmpMax);
+  while (a === b) b = randInt(1, cmpMax);
   const choices = ['おおきい', 'ちいさい'];
   const isABigger = a > b;
   return {
@@ -151,13 +158,19 @@ function genGrade1() {
 }
 
 // ===== 3年生 =====
-function genGrade3() {
-  const types = ['mul', 'div', 'addsub', 'decimal', 'mulWord', 'divRemainder', 'unit', 'time'];
+function genGrade3(diff = 1) {
+  const typePools = [
+    ['mul', 'div', 'addsub', 'mulWord'],
+    ['mul', 'div', 'addsub', 'decimal', 'mulWord', 'divRemainder', 'unit', 'time'],
+    ['mul', 'div', 'addsub', 'decimal', 'mulWord', 'divRemainder', 'unit', 'time']
+  ];
+  const types = typePools[diff];
   const type = types[randInt(0, types.length - 1)];
+  const maxMul = [5, 9, 9][diff];
 
   if (type === 'mul') {
-    const a = randInt(1, 9);
-    const b = randInt(1, 9);
+    const a = randInt(1, maxMul);
+    const b = randInt(1, maxMul);
     return {
       question: `${a} × ${b} = ？`,
       type: 'input',
@@ -247,10 +260,12 @@ function genGrade3() {
   }
 
   if (type === 'addsub') {
+    const lo = [10, 100, 1000][diff];
+    const hi = [99, 999, 9999][diff];
     const isAdd = Math.random() < 0.5;
     if (isAdd) {
-      const a = randInt(100, 999);
-      const b = randInt(100, 999);
+      const a = randInt(lo, hi);
+      const b = randInt(lo, hi);
       return {
         question: `${a} ＋ ${b} = ？`,
         type: 'input',
@@ -258,8 +273,8 @@ function genGrade3() {
         answer: `${a + b}`
       };
     } else {
-      const a = randInt(100, 999);
-      const b = randInt(10, a);
+      const a = randInt(lo, hi);
+      const b = randInt(Math.floor(lo / 10), a);
       return {
         question: `${a} － ${b} = ？`,
         type: 'input',
@@ -295,12 +310,17 @@ function genGrade3() {
 }
 
 // ===== 5年生 =====
-function genGrade5() {
-  const types = ['fraction', 'decimalMul', 'decimalDiv', 'percent', 'area', 'average', 'circle', 'volume'];
+function genGrade5(diff = 1) {
+  const typePools = [
+    ['fraction', 'decimalMul', 'decimalDiv'],
+    ['fraction', 'decimalMul', 'decimalDiv', 'percent', 'area', 'average', 'circle', 'volume'],
+    ['fraction', 'decimalMul', 'decimalDiv', 'percent', 'area', 'average', 'circle', 'volume']
+  ];
+  const types = typePools[diff];
   const type = types[randInt(0, types.length - 1)];
 
   if (type === 'fraction') {
-    const denoms = [2, 3, 4, 5, 6, 8, 9, 10, 12];
+    const denoms = diff === 0 ? [2, 3, 4, 5, 6] : [2, 3, 4, 5, 6, 8, 9, 10, 12];
     const d1 = denoms[randInt(0, denoms.length - 1)];
     let d2 = denoms[randInt(0, denoms.length - 1)];
     const n1 = randInt(1, d1 - 1);
@@ -460,8 +480,13 @@ function formatLinear(coef) {
   return `${coef}x`;
 }
 
-function genGrade7() {
-  const types = ['negAddSub', 'negMulDiv', 'literalSimplify', 'literalSubstitute', 'equation', 'proportion', 'absValue', 'expand'];
+function genGrade7(diff = 1) {
+  const typePools = [
+    ['negAddSub', 'literalSimplify', 'equation', 'absValue'],
+    ['negAddSub', 'negMulDiv', 'literalSimplify', 'literalSubstitute', 'equation', 'proportion', 'absValue'],
+    ['negAddSub', 'negMulDiv', 'literalSimplify', 'literalSubstitute', 'equation', 'proportion', 'absValue', 'expand']
+  ];
+  const types = typePools[diff];
   const type = types[randInt(0, types.length - 1)];
 
   if (type === 'negAddSub') {
@@ -619,11 +644,11 @@ function genGrade7() {
   };
 }
 
-function generateMathProblem(grade) {
-  if (grade === 1) return genGrade1();
-  if (grade === 3) return genGrade3();
-  if (grade === 5) return genGrade5();
-  return genGrade7();
+function generateMathProblem(grade, diff = 1) {
+  if (grade === 1) return genGrade1(diff);
+  if (grade === 3) return genGrade3(diff);
+  if (grade === 5) return genGrade5(diff);
+  return genGrade7(diff);
 }
 
 // ユーザー入力が正解かどうか判定

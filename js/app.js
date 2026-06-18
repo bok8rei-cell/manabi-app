@@ -29,6 +29,45 @@ const GENERATORS = {
   eigo: generateEigoProblem
 };
 
+// ===== 難易度管理 =====
+const DIFF_KEY = 'manabi_diff';
+const DIFF_LABELS = ['やさしい', 'ふつう', 'むずかしい'];
+const DIFF_STARS  = ['⭐', '⭐⭐', '⭐⭐⭐'];
+
+function getDiff(grade, subject) {
+  const raw = localStorage.getItem(`${DIFF_KEY}_${grade}_${subject}`);
+  return raw !== null ? parseInt(raw) : 1;
+}
+
+function setDiff(grade, subject, level) {
+  const v = Math.max(0, Math.min(2, level));
+  localStorage.setItem(`${DIFF_KEY}_${grade}_${subject}`, String(v));
+  return v;
+}
+
+function teacherEvaluate(grade, subject, correct, total) {
+  const rate = correct / total;
+  const cur  = getDiff(grade, subject);
+  let next   = cur;
+  let comment, badge;
+
+  if (rate >= 0.8) {
+    next    = Math.min(2, cur + 1);
+    comment = rate === 1 ? '🌟 かんぺき！すごいです！' : '✨ よくできました！';
+    badge   = next > cur ? '⬆️ レベルアップ！' : '🏆 もうさいこうレベル！';
+  } else if (rate >= 0.5) {
+    comment = '👍 よくがんばりました！';
+    badge   = '➡️ このままつづけよう';
+  } else {
+    next    = Math.max(0, cur - 1);
+    comment = '💪 もう少しれんしゅうしよう！';
+    badge   = next < cur ? '⬇️ もう少しやさしくします' : 'このレベルでもう少し！';
+  }
+
+  setDiff(grade, subject, next);
+  return { comment, badge, level: next };
+}
+
 // ---- アプリの状態 ----
 const state = {
   grade: null,
@@ -588,6 +627,8 @@ function showSubjectScreen() {
       btn.disabled = true;
       btn.textContent += '\n（3・5・中学1年生）';
     } else {
+      const d = getDiff(state.grade, subj.key);
+      btn.textContent += `\n${DIFF_STARS[d]} ${DIFF_LABELS[d]}`;
       btn.addEventListener('click', () => startQuiz(subj.key));
     }
     container.appendChild(btn);
@@ -641,7 +682,8 @@ function updateStats() {
 function nextQuestion() {
   state.answered = false;
   state.selectedChoice = null;
-  state.currentProblem = GENERATORS[state.subject](state.grade);
+  const diff = getDiff(state.grade, state.subject);
+  state.currentProblem = GENERATORS[state.subject](state.grade, diff);
   renderQuestion();
 }
 
@@ -809,6 +851,14 @@ function finishQuiz() {
   }
 
   document.getElementById('result-message').textContent = message;
+
+  // 先生の採点
+  const ev = teacherEvaluate(state.grade, state.subject, state.correctCount, TOTAL_QUESTIONS);
+  document.getElementById('teacher-comment').textContent = ev.comment;
+  document.getElementById('teacher-badge').textContent   = ev.badge;
+  document.getElementById('teacher-level').textContent   =
+    `${DIFF_STARS[ev.level]} ${DIFF_LABELS[ev.level]}`;
+
   showScreen('result');
 }
 

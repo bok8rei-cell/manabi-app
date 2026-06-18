@@ -691,3 +691,35 @@ h2 { color: #7dd3fc; }
 .sync-notice { background: rgba(5,30,70,0.7); color: #7dd3fc; }
 .sync-notice-error { background: rgba(50,20,0,0.6); color: #fbbf24; }
 .sync-loading { color: #475569; }
+
+/* ===== 先生の採点 ===== */
+.teacher-eval {
+  background: rgba(0, 30, 70, 0.6);
+  border: 1px solid rgba(0, 212, 255, 0.25);
+  border-radius: 16px;
+  padding: 14px 16px;
+  margin-top: 16px;
+}
+.teacher-eval-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.teacher-comment {
+  font-size: 1.1em;
+  font-weight: bold;
+  color: #e2e8f0;
+}
+.teacher-badge {
+  font-size: 0.95em;
+  color: #7dd3fc;
+  margin-top: 4px;
+}
+.teacher-level {
+  text-align: center;
+  font-size: 1em;
+  color: #fbbf24;
+  font-weight: bold;
+  margin-top: 10px;
+  letter-spacing: 0.05em;
+}

@@ -3,6 +3,7 @@
 
 const KANJI_DATA = {
   1: [
+    // やさしい前半（数字・自然の基本象形字）
     { kanji: '一', reading: 'いち', word: '一日',   wordKana: '□にち' },
     { kanji: '二', reading: 'に',   word: '二月',   wordKana: '□がつ' },
     { kanji: '三', reading: 'さん', word: '三つ' },
@@ -13,8 +14,18 @@ const KANJI_DATA = {
     { kanji: '八', reading: 'はち', word: '八月',   wordKana: '□がつ' },
     { kanji: '九', reading: 'きゅう', word: '九日', wordKana: '□にち' },
     { kanji: '十', reading: 'じゅう', word: '十月', wordKana: '□がつ' },
-    { kanji: '百', reading: 'ひゃく', word: '百円', wordKana: '□えん' },
-    { kanji: '千', reading: 'せん', word: '千円',   wordKana: '□えん' },
+    { kanji: '日', reading: 'ひ',    word: '日本',  wordKana: '□もと' },
+    { kanji: '月', reading: 'つき',  word: '三日月', wordKana: 'みか□' },
+    { kanji: '山', reading: 'やま',  word: '火山',  wordKana: 'か□' },
+    { kanji: '川', reading: 'かわ',  word: '小川',  wordKana: 'お□' },
+    { kanji: '田', reading: 'た',    word: '田んぼ' },
+    // むずかしい後半（からだ・位置・大小・大きい数）
+    { kanji: '人', reading: 'ひと',  word: '三人',  wordKana: 'さん□' },
+    { kanji: '口', reading: 'くち',  word: '入り口', wordKana: 'いり□' },
+    { kanji: '手', reading: 'て',    word: '手足',  wordKana: '□あし' },
+    { kanji: '目', reading: 'め',    word: '目玉',  wordKana: '□たま' },
+    { kanji: '耳', reading: 'みみ',  word: '右耳',  wordKana: 'みぎ□' },
+    { kanji: '足', reading: 'あし',  word: '足音',  wordKana: '□おと' },
     { kanji: '上', reading: 'うえ',  word: '山の上', wordKana: 'やまの□' },
     { kanji: '下', reading: 'した',  word: '木の下', wordKana: 'きの□' },
     { kanji: '左', reading: 'ひだり', word: '左手', wordKana: '□て' },
@@ -22,17 +33,8 @@ const KANJI_DATA = {
     { kanji: '中', reading: 'なか',  word: '川の中', wordKana: 'かわの□' },
     { kanji: '大', reading: 'おお',  word: '大きい' },
     { kanji: '小', reading: 'ちい',  word: '小さい' },
-    { kanji: '山', reading: 'やま',  word: '火山',  wordKana: 'か□' },
-    { kanji: '川', reading: 'かわ',  word: '小川',  wordKana: 'お□' },
-    { kanji: '田', reading: 'た',    word: '田んぼ' },
-    { kanji: '人', reading: 'ひと',  word: '三人',  wordKana: 'さん□' },
-    { kanji: '口', reading: 'くち',  word: '入り口', wordKana: 'いり□' },
-    { kanji: '目', reading: 'め',    word: '目玉',  wordKana: '□たま' },
-    { kanji: '耳', reading: 'みみ',  word: '右耳',  wordKana: 'みぎ□' },
-    { kanji: '手', reading: 'て',    word: '手足',  wordKana: '□あし' },
-    { kanji: '足', reading: 'あし',  word: '足音',  wordKana: '□おと' },
-    { kanji: '月', reading: 'つき',  word: '三日月', wordKana: 'みか□' },
-    { kanji: '日', reading: 'ひ',    word: '日本',  wordKana: '□もと' }
+    { kanji: '百', reading: 'ひゃく', word: '百円', wordKana: '□えん' },
+    { kanji: '千', reading: 'せん', word: '千円',   wordKana: '□えん' }
   ],
   3: [
     { kanji: '運', reading: 'うん', word: '運動会' },
@@ -123,9 +125,13 @@ const KANJI_DATA = {
   ]
 };
 
-function generateKanjiProblem(grade) {
+function generateKanjiProblem(grade, diff = 1) {
   const list = KANJI_DATA[grade] || KANJI_DATA[1];
-  const correct = list[randInt(0, list.length - 1)];
+  const half = Math.ceil(list.length / 2);
+  const pool = diff === 0 ? list.slice(0, half) :
+               diff === 2 ? list.slice(list.length - half) :
+               list;
+  const correct = pool[randInt(0, pool.length - 1)];
 
   // ===== 1年生：選択肢を「漢字＋ひらがな」形式にする =====
   if (grade === 1) {
