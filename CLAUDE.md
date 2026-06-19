@@ -92,4 +92,4 @@ GitHub Pages: `https://bok8rei-cell.github.io/manabi-app/`
 
 - iOS でPWAをホーム画面から削除すると localStorage が消えるが、プレイヤー名を再入力すれば Firestore から復元できる
 - Service Worker のキャッシュバージョンを上げないと端末に古いバージョンが残る
-- `sw.js` 現在のバージョン：v19
+- `sw.js` 現在のバージョン：v20

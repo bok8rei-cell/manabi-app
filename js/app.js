@@ -4,10 +4,11 @@ const TOTAL_QUESTIONS = 10;
 const DONT_KNOW = '__DONTKNOW__';
 
 const SUBJECTS = [
-  { key: 'math', label: '算数', kanaLabel: 'さんすう', cls: '' },
-  { key: 'kanji', label: '国語（漢字）', kanaLabel: 'こくご（かんじ）', cls: 'kokugo' },
-  { key: 'rikashakai', label: '理科・社会', kanaLabel: 'りか・しゃかい', cls: 'rikashakai', grades: [3, 5, 7] },
-  { key: 'eigo', label: '英語', kanaLabel: 'えいご', cls: 'eigo' }
+  { key: 'math',      label: '算数',          kanaLabel: 'さんすう',              cls: '' },
+  { key: 'kanji',     label: '国語（漢字）',   kanaLabel: 'こくご（かんじ）',      cls: 'kokugo' },
+  { key: 'kotowaza',  label: 'ことわざ・慣用句', kanaLabel: 'ことわざ・かんようく', cls: 'kokugo', grades: [3, 5, 7] },
+  { key: 'rikashakai',label: '理科・社会',     kanaLabel: 'りか・しゃかい',        cls: 'rikashakai', grades: [3, 5, 7] },
+  { key: 'eigo',      label: '英語',          kanaLabel: 'えいご',               cls: 'eigo' }
 ];
 
 const ALL_GRADES = [1, 3, 5, 7];
@@ -19,14 +20,16 @@ function gradeLabel(grade) {
 function subjectLabel(grade, subj) {
   if (grade === 1) return subj.kanaLabel;
   if (grade === 7 && subj.key === 'math') return '数学';
+  if (subj.key === 'kotowaza' && grade === 7) return '熟語・ことわざ';
   return subj.label;
 }
 
 const GENERATORS = {
-  math: generateMathProblem,
-  kanji: generateKanjiProblem,
+  math:       generateMathProblem,
+  kanji:      generateKanjiProblem,
+  kotowaza:   generateKotowazaProblem,
   rikashakai: generateRikaShakaiProblem,
-  eigo: generateEigoProblem
+  eigo:       generateEigoProblem
 };
 
 // ===== 難易度管理 =====
