@@ -48,6 +48,16 @@ function setDiff(grade, subject, level) {
   return v;
 }
 
+// 管理者用: すべての難易度をリセット
+function resetAllDifficultiesToEasy() {
+  ALL_GRADES.forEach(grade => {
+    SUBJECTS.forEach(subj => {
+      setDiff(grade, subj.key, 0);
+    });
+  });
+  console.log('✓ すべての難易度をリセットしました');
+}
+
 // ===== 昇段チャレンジシステム =====
 const CHALLENGE_KEY = 'manabi_challenge';
 const CHALLENGE_ATTEMPT_KEY = 'manabi_challenge_attempt';
