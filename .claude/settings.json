@@ -1,0 +1,11 @@
+{
+  "name": "manabi-app (BRAIN QUEST：零式)",
+  "description": "小学〜中学の学習問題生成アプリ。Firebase同期・PWA対応。",
+  "agents": {
+    "sensei-teacher": {
+      "description": "学習問題生成ロジックを学習指導要領に基づいて審査するエージェント",
+      "role": "Teacher Agent — 教育専門家として問題の正確性・学年適切性を検査",
+      "instructions": ".claude/agents/sensei-teacher.md を参照"
+    }
+  }
+}

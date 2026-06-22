@@ -220,8 +220,69 @@
       <div class="teacher-level" id="teacher-level"></div>
     </div>
     <div class="result-buttons">
+      <button class="main-btn" id="challenge-btn" style="display:none;">🚀 チャレンジ</button>
       <button class="main-btn" id="retry-btn">もういちど</button>
       <button class="sub-btn" id="home-btn">きょうかをえらぶ</button>
+    </div>
+  </section>
+
+  <!-- チャレンジ確認ポップアップ -->
+  <div id="challenge-modal" class="modal hidden">
+    <div class="modal-content">
+      <div class="modal-text" id="challenge-modal-text"></div>
+      <div class="modal-buttons">
+        <button class="main-btn" id="challenge-confirm-btn">やる</button>
+        <button class="sub-btn" id="challenge-cancel-btn">もどる</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- チャレンジテスト画面 -->
+  <section id="screen-challenge-quiz" class="screen hidden">
+    <div class="quiz-header">
+      <h3 id="challenge-title">🚀 チャレンジ</h3>
+      <div class="quiz-stats">
+        <span id="challenge-progress"></span>
+      </div>
+    </div>
+    <div class="quiz-container">
+      <div class="quiz-problem" id="challenge-problem"></div>
+      <div class="quiz-choices" id="challenge-choices"></div>
+      <div class="quiz-feedback" id="challenge-feedback"></div>
+      <button class="main-btn" id="challenge-quiz-action-btn">こたえる</button>
+    </div>
+  </section>
+
+  <!-- チャレンジテスト結果画面 -->
+  <section id="screen-challenge-result" class="screen hidden">
+    <h2 id="challenge-result-title">チャレンジ ぐあい</h2>
+    <div class="result-card">
+      <div class="result-score" id="challenge-result-score"></div>
+      <div class="result-message" id="challenge-result-message"></div>
+    </div>
+    <div class="teacher-eval">
+      <div class="teacher-eval-header">
+        <svg viewBox="0 0 60 60" width="36" height="36" style="flex-shrink:0">
+          <rect x="12" y="10" width="36" height="28" rx="7" fill="#081e38" stroke="#00d4ff" stroke-width="1.5"/>
+          <circle cx="22" cy="23" r="5" fill="#00d4ff" opacity="0.9"/>
+          <circle cx="38" cy="23" r="5" fill="#00d4ff" opacity="0.9"/>
+          <circle cx="22" cy="23" r="2" fill="#fff"/>
+          <circle cx="38" cy="23" r="2" fill="#fff"/>
+          <path d="M19 33 Q30 39 41 33" stroke="#00d4ff" fill="none" stroke-width="1.5" stroke-linecap="round"/>
+          <line x1="30" y1="10" x2="30" y2="4" stroke="#00d4ff" stroke-width="1.5"/>
+          <circle cx="30" cy="3" r="2.5" fill="#00d4ff"/>
+        </svg>
+        <div>
+          <div class="teacher-comment" id="challenge-teacher-comment"></div>
+          <div class="teacher-badge" id="challenge-teacher-badge"></div>
+        </div>
+      </div>
+      <div class="teacher-level" id="challenge-teacher-level"></div>
+    </div>
+    <div class="result-buttons">
+      <button class="main-btn" id="challenge-result-next-btn">つぎのレベルへ</button>
+      <button class="sub-btn" id="challenge-result-retry-btn">もういちど チャレンジ</button>
+      <button class="sub-btn" id="challenge-result-home-btn">きょうかをえらぶ</button>
     </div>
   </section>
 

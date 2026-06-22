@@ -48,27 +48,85 @@ function setDiff(grade, subject, level) {
   return v;
 }
 
+// ===== 昇段チャレンジシステム =====
+const CHALLENGE_KEY = 'manabi_challenge';
+const CHALLENGE_ATTEMPT_KEY = 'manabi_challenge_attempt';
+
+function getChallengeKey(grade, subject, diffLevel) {
+  return `${CHALLENGE_KEY}_${grade}_${subject}_${diffLevel}`;
+}
+
+function getChallengeAttemptKey(grade, subject, diffLevel) {
+  return `${CHALLENGE_ATTEMPT_KEY}_${grade}_${subject}_${diffLevel}`;
+}
+
+function hasChallenge(grade, subject) {
+  const cur = getDiff(grade, subject);
+  if (cur >= 2) return false;
+  const nextLevel = cur + 1;
+  const key = getChallengeKey(grade, subject, nextLevel);
+  return localStorage.getItem(key) !== null;
+}
+
+function offerChallenge(grade, subject) {
+  const cur = getDiff(grade, subject);
+  if (cur >= 2) return null;
+  const nextLevel = cur + 1;
+  const key = getChallengeKey(grade, subject, nextLevel);
+  const today = new Date().toISOString().slice(0, 10);
+  localStorage.setItem(key, today);
+  return nextLevel;
+}
+
+function canAttemptChallenge(grade, subject, diffLevel) {
+  const attemptKey = getChallengeAttemptKey(grade, subject, diffLevel);
+  const lastAttempt = localStorage.getItem(attemptKey);
+  const today = new Date().toISOString().slice(0, 10);
+  return lastAttempt !== today;
+}
+
+function markChallengeAttempt(grade, subject, diffLevel) {
+  const attemptKey = getChallengeAttemptKey(grade, subject, diffLevel);
+  const today = new Date().toISOString().slice(0, 10);
+  localStorage.setItem(attemptKey, today);
+}
+
+function passChallengeAndUpgrade(grade, subject, diffLevel) {
+  setDiff(grade, subject, diffLevel);
+  const key = getChallengeKey(grade, subject, diffLevel);
+  localStorage.removeItem(key);
+  const attemptKey = getChallengeAttemptKey(grade, subject, diffLevel);
+  localStorage.removeItem(attemptKey);
+}
+
 function teacherEvaluate(grade, subject, correct, total) {
   const rate = correct / total;
   const cur  = getDiff(grade, subject);
   let next   = cur;
-  let comment, badge;
+  let comment, badge, showChallenge = false;
 
   if (rate >= 0.8) {
-    next    = Math.min(2, cur + 1);
-    comment = rate === 1 ? '🌟 かんぺき！すごいです！' : '✨ よくできました！';
-    badge   = next > cur ? '⬆️ レベルアップ！' : '🏆 もうさいこうレベル！';
+    if (cur < 2) {
+      offerChallenge(grade, subject);
+      showChallenge = true;
+      comment = rate === 1 ? '🌟 かんぺき！すごいです！' : '✨ よくできました！';
+      badge = '🚀 つぎのレベルに チャレンジできます！';
+    } else {
+      comment = rate === 1 ? '🌟 かんぺき！すごいです！' : '✨ よくできました！';
+      badge = '🏆 もうさいこうレベル！';
+    }
   } else if (rate >= 0.5) {
     comment = '👍 よくがんばりました！';
-    badge   = '➡️ このままつづけよう';
+    badge = '➡️ このままつづけよう';
   } else {
-    next    = Math.max(0, cur - 1);
+    next = Math.max(0, cur - 1);
+    setDiff(grade, subject, next);
     comment = '💪 もう少しれんしゅうしよう！';
-    badge   = next < cur ? '⬇️ もう少しやさしくします' : 'このレベルでもう少し！';
+    badge = next < cur ? '⬇️ もう少しやさしくします' : 'このレベルでもう少し！';
+    return { comment, badge, level: next, showChallenge: false };
   }
 
-  setDiff(grade, subject, next);
-  return { comment, badge, level: next };
+  return { comment, badge, level: cur, showChallenge };
 }
 
 // ---- アプリの状態 ----
@@ -862,6 +920,14 @@ function finishQuiz() {
   document.getElementById('teacher-level').textContent   =
     `${DIFF_STARS[ev.level]} ${DIFF_LABELS[ev.level]}`;
 
+  // チャレンジボタンの表示制御
+  const challengeBtn = document.getElementById('challenge-btn');
+  if (ev.showChallenge) {
+    challengeBtn.style.display = 'block';
+  } else {
+    challengeBtn.style.display = 'none';
+  }
+
   showScreen('result');
 }
 
@@ -1096,4 +1162,280 @@ document.getElementById('speed-ranking-open-btn').addEventListener('click', () =
 
 document.getElementById('speed-home-btn').addEventListener('click', () => {
   showScreen('home');
+});
+
+// ===== チャレンジシステム =====
+function getChallengeDialogText(grade) {
+  const texts = {
+    1: 'ほんとに\nやりますか？',
+    3: 'ほんとに\nがんばりますか？',
+    5: '本当に\n挑戦しますか？',
+    7: '確実に\n挑戦しますか？'
+  };
+  return texts[grade] || '挑戦しますか？';
+}
+
+function getChallengeLevelName(diffLevel) {
+  const names = ['やさしい', 'ふつう', 'むずかしい'];
+  return names[diffLevel] || '？';
+}
+
+const challengeModal = document.getElementById('challenge-modal');
+const challengeModalText = document.getElementById('challenge-modal-text');
+const challengeConfirmBtn = document.getElementById('challenge-confirm-btn');
+const challengeCancelBtn = document.getElementById('challenge-cancel-btn');
+
+document.getElementById('challenge-btn').addEventListener('click', () => {
+  const cur = getDiff(state.grade, state.subject);
+  const nextLevel = cur + 1;
+  const nextName = getChallengeLevelName(nextLevel);
+
+  const dialogText = getChallengeDialogText(state.grade);
+  const problemCount = nextLevel === 1 ? 15 : (nextLevel === 2 ? 20 : 25);
+  const passScore = Math.ceil(problemCount * 0.8);
+
+  let upgradeText;
+  if (state.grade === 1) {
+    upgradeText = `つぎのレベルへ！`;
+  } else if (state.grade === 3) {
+    upgradeText = `つぎのレベルへ！`;
+  } else if (state.grade === 5) {
+    upgradeText = `${nextName}へ 昇段！`;
+  } else {
+    upgradeText = `${nextName}へ 昇段！`;
+  }
+
+  challengeModalText.innerHTML = `${dialogText.split('\n').join('<br>')}<br><br>（${problemCount}問中${passScore}問正解で<br>${upgradeText}）`;
+  challengeModal.classList.remove('hidden');
+});
+
+challengeCancelBtn.addEventListener('click', () => {
+  challengeModal.classList.add('hidden');
+});
+
+challengeConfirmBtn.addEventListener('click', () => {
+  challengeModal.classList.add('hidden');
+  const cur = getDiff(state.grade, state.subject);
+  const nextLevel = cur + 1;
+
+  if (!canAttemptChallenge(state.grade, state.subject, nextLevel)) {
+    alert('今日のチャレンジはもう実施済みです。明日チャレンジできます。');
+    return;
+  }
+
+  markChallengeAttempt(state.grade, state.subject, nextLevel);
+  startChallengeQuiz(nextLevel);
+});
+
+// ===== チャレンジテスト =====
+const CHALLENGE_QUESTION_COUNTS = { 0: 15, 1: 20, 2: 25 };
+const CHALLENGE_TIME_LIMITS = { 0: 10, 1: 15, 2: 20 };
+
+const challengeState = {
+  diffLevel: null,
+  questionIndex: 0,
+  correctCount: 0,
+  incorrectCount: 0,
+  currentProblem: null,
+  selectedChoice: null,
+  answered: false,
+  problems: []
+};
+
+function generateChallengeProblemSet(diffLevel, total) {
+  const problems = [];
+  for (let i = 0; i < total; i++) {
+    const problem = GENERATORS[state.subject](state.grade, diffLevel);
+    problems.push(problem);
+  }
+  return problems;
+}
+
+function startChallengeQuiz(diffLevel) {
+  const questionCount = CHALLENGE_QUESTION_COUNTS[diffLevel] || 15;
+  challengeState.diffLevel = diffLevel;
+  challengeState.questionIndex = 0;
+  challengeState.correctCount = 0;
+  challengeState.incorrectCount = 0;
+  challengeState.selectedChoice = null;
+  challengeState.answered = false;
+  challengeState.problems = generateChallengeProblemSet(diffLevel, questionCount);
+
+  const titleEl = document.getElementById('challenge-title');
+  if (state.grade === 1) {
+    titleEl.textContent = '🚀 チャレンジ';
+  } else if (state.grade === 3) {
+    titleEl.textContent = '🚀 チャレンジ';
+  } else {
+    titleEl.textContent = '🚀 チャレンジテスト';
+  }
+
+  const resultTitleEl = document.getElementById('challenge-result-title');
+  if (state.grade === 1) {
+    resultTitleEl.textContent = 'チャレンジ ぐあい';
+  } else if (state.grade === 3) {
+    resultTitleEl.textContent = 'チャレンジ ぐあい';
+  } else {
+    resultTitleEl.textContent = 'チャレンジ 結果';
+  }
+
+  showScreen('challenge-quiz');
+  nextChallengeQuestion();
+}
+
+function nextChallengeQuestion() {
+  challengeState.selectedChoice = null;
+  challengeState.answered = false;
+
+  const fb = document.getElementById('challenge-feedback');
+  fb.textContent = '';
+  fb.className = '';
+
+  if (challengeState.questionIndex >= challengeState.problems.length) {
+    finishChallengeQuiz();
+    return;
+  }
+
+  challengeState.currentProblem = challengeState.problems[challengeState.questionIndex];
+  const problem = challengeState.currentProblem;
+
+  document.getElementById('challenge-progress').textContent =
+    `${challengeState.questionIndex + 1} / ${challengeState.problems.length}`;
+
+  document.getElementById('challenge-problem').textContent = problem.problem;
+
+  const choicesDiv = document.getElementById('challenge-choices');
+  choicesDiv.innerHTML = '';
+  problem.choices.forEach((choice, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'choice-btn';
+    btn.textContent = choice;
+    btn.addEventListener('click', () => {
+      challengeState.selectedChoice = choice;
+      btn.classList.add('selected');
+      document.querySelectorAll('#challenge-choices .choice-btn').forEach((b, idx) => {
+        if (idx !== i) b.classList.remove('selected');
+      });
+    });
+    choicesDiv.appendChild(btn);
+  });
+
+  document.getElementById('challenge-quiz-action-btn').textContent =
+    challengeState.questionIndex + 1 < challengeState.problems.length ? 'こたえる' : 'けっかをみる';
+}
+
+function answerChallengeQuestion() {
+  const problem = challengeState.currentProblem;
+  const isDontKnow = challengeState.selectedChoice === DONT_KNOW;
+  const correct = !isDontKnow && challengeState.selectedChoice === problem.answer;
+
+  challengeState.answered = true;
+
+  const fb = document.getElementById('challenge-feedback');
+  if (isDontKnow) {
+    challengeState.incorrectCount++;
+    fb.textContent = `🤔 こたえは「${problem.answer}」だよ。おぼえておこう！`;
+    fb.classList.add('wrong');
+  } else if (correct) {
+    challengeState.correctCount++;
+    fb.textContent = '⭕ せいかい！';
+    fb.classList.add('correct');
+  } else {
+    challengeState.incorrectCount++;
+    fb.textContent = `❌ ざんねん！ こたえは「${problem.answer}」`;
+    fb.classList.add('wrong');
+  }
+
+  document.getElementById('challenge-quiz-action-btn').textContent =
+    challengeState.questionIndex + 1 < challengeState.problems.length ? 'つぎへ' : 'けっかをみる';
+}
+
+function advanceChallengeQuestion() {
+  challengeState.questionIndex++;
+  if (challengeState.questionIndex >= challengeState.problems.length) {
+    finishChallengeQuiz();
+  } else {
+    nextChallengeQuestion();
+  }
+}
+
+function finishChallengeQuiz() {
+  const passScore = Math.ceil(challengeState.problems.length * 0.8);
+  const rate = challengeState.correctCount / challengeState.problems.length;
+  const passed = rate >= 0.8;
+  const nextLevel = challengeState.diffLevel;
+
+  document.getElementById('challenge-result-score').textContent =
+    `${challengeState.correctCount} / ${challengeState.problems.length} もん せいかい！`;
+
+  let message;
+  if (passed) {
+    let levelUpMsg;
+    if (state.grade === 1) {
+      levelUpMsg = `つぎのレベルへ\nすすみました！`;
+    } else if (state.grade === 3) {
+      levelUpMsg = `つぎのレベルへ\nすすみました！`;
+    } else {
+      levelUpMsg = `${getChallengeLevelName(nextLevel)}へ\n昇段しました！`;
+    }
+    message = `🎉 チャレンジ せいこう！\n${levelUpMsg}`;
+    passChallengeAndUpgrade(state.grade, state.subject, nextLevel);
+  } else {
+    let retryMsg;
+    if (state.grade === 1) {
+      retryMsg = `あした\nもういちど チャレンジしてね！`;
+    } else if (state.grade === 3) {
+      retryMsg = `あした\nもう一度 チャレンジしてね！`;
+    } else {
+      retryMsg = `明日もう一度\nチャレンジしてね！`;
+    }
+    message = `💪 ざんねん！\n${retryMsg}`;
+  }
+
+  document.getElementById('challenge-result-message').textContent = message;
+
+  if (passed) {
+    document.getElementById('challenge-teacher-comment').textContent = '🌟 すごい！';
+    document.getElementById('challenge-teacher-badge').textContent = '⬆️ レベルアップ成功！';
+    document.getElementById('challenge-teacher-level').textContent =
+      `${DIFF_STARS[nextLevel]} ${DIFF_LABELS[nextLevel]}`;
+  } else {
+    document.getElementById('challenge-teacher-comment').textContent = '頑張ってね';
+    document.getElementById('challenge-teacher-badge').textContent = 'もう一度挑戦';
+    const curDiff = getDiff(state.grade, state.subject);
+    document.getElementById('challenge-teacher-level').textContent =
+      `${DIFF_STARS[curDiff]} ${DIFF_LABELS[curDiff]}`;
+  }
+
+  showScreen('challenge-result');
+}
+
+document.getElementById('challenge-quiz-action-btn').addEventListener('click', () => {
+  if (!challengeState.answered) {
+    if (!challengeState.selectedChoice) {
+      alert('こたえを えらんでください！');
+      return;
+    }
+    answerChallengeQuestion();
+  } else {
+    advanceChallengeQuestion();
+  }
+});
+
+document.getElementById('challenge-result-next-btn').addEventListener('click', () => {
+  showSubjectScreen();
+});
+
+document.getElementById('challenge-result-retry-btn').addEventListener('click', () => {
+  const nextLevel = challengeState.diffLevel;
+  if (!canAttemptChallenge(state.grade, state.subject, nextLevel)) {
+    alert('今日のチャレンジはもう実施済みです。明日チャレンジできます。');
+    return;
+  }
+  markChallengeAttempt(state.grade, state.subject, nextLevel);
+  startChallengeQuiz(nextLevel);
+});
+
+document.getElementById('challenge-result-home-btn').addEventListener('click', () => {
+  showSubjectScreen();
 });
