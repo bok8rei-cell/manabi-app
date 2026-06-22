@@ -1,7 +1,23 @@
 // ===== BRAIN QUEST：零式 メインスクリプト =====
 
+const APP_VERSION = 'v22';
 const TOTAL_QUESTIONS = 10;
 const DONT_KNOW = '__DONTKNOW__';
+
+// バージョンチェック: 新しいバージョンが利用可能なら Service Worker を更新
+function checkAndUpdateServiceWorker() {
+  const lastVersion = localStorage.getItem('manabi_app_version');
+  if (lastVersion !== APP_VERSION) {
+    localStorage.setItem('manabi_app_version', APP_VERSION);
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then((registrations) => {
+        registrations.forEach((reg) => reg.unregister());
+      });
+    }
+  }
+}
+
+checkAndUpdateServiceWorker();
 
 const SUBJECTS = [
   { key: 'math',      label: '算数',          kanaLabel: 'さんすう',              cls: '' },
