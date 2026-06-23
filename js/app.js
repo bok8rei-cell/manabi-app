@@ -1328,10 +1328,17 @@ function nextChallengeQuestion() {
   document.getElementById('challenge-progress').textContent =
     `${challengeState.questionIndex + 1} / ${challengeState.problems.length}`;
 
-  document.getElementById('challenge-problem').textContent = problem.problem;
+  document.getElementById('challenge-problem').textContent = problem.question;
 
   const choicesDiv = document.getElementById('challenge-choices');
   choicesDiv.innerHTML = '';
+
+  if (!problem.choices) {
+    console.error('チャレンジ問題にchoicesがありません:', problem);
+    choicesDiv.innerHTML = '<p style="color:red;">エラー: 問題データが不正です</p>';
+    return;
+  }
+
   problem.choices.forEach((choice, i) => {
     const btn = document.createElement('button');
     btn.className = 'choice-btn';
@@ -1448,6 +1455,10 @@ document.getElementById('challenge-quiz-action-btn').addEventListener('click', (
   }
 });
 
+document.getElementById('challenge-quit-btn').addEventListener('click', () => {
+  showScreen('subject');
+});
+
 document.getElementById('challenge-result-next-btn').addEventListener('click', () => {
   showSubjectScreen();
 });
@@ -1464,4 +1475,30 @@ document.getElementById('challenge-result-retry-btn').addEventListener('click', 
 
 document.getElementById('challenge-result-home-btn').addEventListener('click', () => {
   showSubjectScreen();
+});
+
+// ===== データ確認ボタン（デバッグ用） =====
+document.getElementById('debug-btn').addEventListener('click', () => {
+  const debugContent = document.getElementById('debug-content');
+  const lines = [];
+
+  lines.push('【 localStorage の内容 】\n');
+
+  const allKeys = Object.keys(localStorage).sort();
+  if (allKeys.length === 0) {
+    lines.push('（データなし）');
+  } else {
+    allKeys.forEach(key => {
+      const value = localStorage.getItem(key);
+      const preview = value.length > 100 ? value.substring(0, 100) + '...' : value;
+      lines.push(`${key}:\n${preview}\n`);
+    });
+  }
+
+  debugContent.textContent = lines.join('\n');
+  document.getElementById('debug-modal').classList.remove('hidden');
+});
+
+document.getElementById('debug-close-btn').addEventListener('click', () => {
+  document.getElementById('debug-modal').classList.add('hidden');
 });

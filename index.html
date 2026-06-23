@@ -62,6 +62,7 @@
       <rect x="107" y="94" width="13" height="42" rx="6" fill="#081e38" stroke="#00d4ff" stroke-width="1.5"/>
       <circle cx="114" cy="140" r="7" fill="#081e38" stroke="#00d4ff" stroke-width="1.5"/>
     </svg>
+    <button id="debug-btn" style="position:absolute; top:20px; right:20px; width:40px; height:40px; border-radius:50%; background:rgba(0,212,255,0.1); border:1px solid rgba(0,212,255,0.3); cursor:pointer; font-size:12px;">🔍</button>
     <div class="player-name-box">
       <label for="player-name">なまえ：</label>
       <input type="text" id="player-name" placeholder="なまえを にゅうりょく" maxlength="30">
@@ -240,8 +241,18 @@
     </div>
   </div>
 
+  <!-- データ確認モーダル -->
+  <div id="debug-modal" class="modal hidden">
+    <div class="modal-content" style="max-height:80vh; overflow-y:auto;">
+      <h3 style="color:#e2e8f0; margin-top:0;">📊 データ確認</h3>
+      <div id="debug-content" style="color:#e2e8f0; font-size:0.9em; font-family:monospace; background:rgba(0,30,70,0.5); padding:12px; border-radius:8px; max-height:60vh; overflow-y:auto; word-break:break-all;"></div>
+      <button class="sub-btn" id="debug-close-btn" style="margin-top:16px; width:100%;">とじる</button>
+    </div>
+  </div>
+
   <!-- チャレンジテスト画面 -->
   <section id="screen-challenge-quiz" class="screen hidden">
+    <button class="back-btn" id="challenge-quit-btn">← やめる</button>
     <div class="quiz-header">
       <h3 id="challenge-title">🚀 チャレンジ</h3>
       <div class="quiz-stats">
