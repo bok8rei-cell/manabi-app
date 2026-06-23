@@ -4,57 +4,58 @@
 const KANJI_DATA = {
   1: [
     // やさしい前半 1〜25（数・自然・元素・天気・植物・動物）
-    { kanji: '一', reading: 'いち',   word: '一日',   wordKana: '□にち' },
-    { kanji: '二', reading: 'に',     word: '二月',   wordKana: '□がつ' },
-    { kanji: '三', reading: 'さん',   word: '三つ' },
-    { kanji: '四', reading: 'し',     word: '四月',   wordKana: '□がつ' },
-    { kanji: '五', reading: 'ご',     word: '五人',   wordKana: '□にん' },
-    { kanji: '六', reading: 'ろく',   word: '六日',   wordKana: '□にち' },
-    { kanji: '七', reading: 'しち',   word: '七月',   wordKana: '□がつ' },
-    { kanji: '八', reading: 'はち',   word: '八月',   wordKana: '□がつ' },
-    { kanji: '九', reading: 'きゅう', word: '九日',   wordKana: '□にち' },
-    { kanji: '十', reading: 'じゅう', word: '十月',   wordKana: '□がつ' },
-    { kanji: '日', reading: 'ひ',     word: '日本',   wordKana: '□もと' },
-    { kanji: '月', reading: 'つき',   word: '三日月', wordKana: 'みか□' },
-    { kanji: '山', reading: 'やま',   word: '火山',   wordKana: 'か□' },
-    { kanji: '川', reading: 'かわ',   word: '小川',   wordKana: 'お□' },
-    { kanji: '田', reading: 'た',     word: '田んぼ' },
-    { kanji: '木', reading: 'き',     word: '木の葉', wordKana: '□のは' },
-    { kanji: '水', reading: 'みず',   word: '水色',   wordKana: '□いろ' },
-    { kanji: '火', reading: 'ひ',     word: '火あそび' },
-    { kanji: '土', reading: 'つち',   word: '土いじり' },
-    { kanji: '花', reading: 'はな',   word: '花火',   wordKana: '□び' },
-    { kanji: '草', reading: 'くさ',   word: '草むら' },
-    { kanji: '天', reading: 'てん',   word: '天気',   wordKana: '□き' },
-    { kanji: '雨', reading: 'あめ',   word: '大雨',   wordKana: 'おお□' },
-    { kanji: '空', reading: 'そら',   word: '青空',   wordKana: 'あお□' },
-    { kanji: '犬', reading: 'いぬ',   word: '子犬',   wordKana: 'こ□' },
+    // yomi = 語の全体の読み。wordKana の □ に reading を入れると yomi になる（答えが1つに定まる）。
+    { kanji: '一', reading: 'いち',   word: '一日',   wordKana: '□にち',   yomi: 'いちにち' },
+    { kanji: '二', reading: 'に',     word: '二月',   wordKana: '□がつ',   yomi: 'にがつ' },
+    { kanji: '三', reading: 'さん',   word: '三角',   wordKana: '□かく',   yomi: 'さんかく' },
+    { kanji: '四', reading: 'し',     word: '四角',   wordKana: '□かく',   yomi: 'しかく' },
+    { kanji: '五', reading: 'ご',     word: '五人',   wordKana: '□にん',   yomi: 'ごにん' },
+    { kanji: '六', reading: 'ろく',   word: '六年',   wordKana: '□ねん',   yomi: 'ろくねん' },
+    { kanji: '七', reading: 'しち',   word: '七五三', wordKana: '□ごさん', yomi: 'しちごさん' },
+    { kanji: '八', reading: 'はち',   word: '八月',   wordKana: '□がつ',   yomi: 'はちがつ' },
+    { kanji: '九', reading: 'きゅう', word: '九本',   wordKana: '□ほん',   yomi: 'きゅうほん' },
+    { kanji: '十', reading: 'じゅう', word: '十月',   wordKana: '□がつ',   yomi: 'じゅうがつ' },
+    { kanji: '日', reading: 'ひ',     word: '日の出', wordKana: '□ので',   yomi: 'ひので' },
+    { kanji: '月', reading: 'つき',   word: 'お月さま', wordKana: 'お□さま', yomi: 'おつきさま' },
+    { kanji: '山', reading: 'やま',   word: '山道',   wordKana: '□みち',   yomi: 'やまみち' },
+    { kanji: '川', reading: 'かわ',   word: '川岸',   wordKana: '□ぎし',   yomi: 'かわぎし' },
+    { kanji: '田', reading: 'た',     word: '田んぼ', wordKana: '□んぼ',   yomi: 'たんぼ' },
+    { kanji: '木', reading: 'き',     word: '木の枝', wordKana: '□のえだ', yomi: 'きのえだ' },
+    { kanji: '水', reading: 'みず',   word: '水色',   wordKana: '□いろ',   yomi: 'みずいろ' },
+    { kanji: '火', reading: 'ひ',     word: '火あそび', wordKana: '□あそび', yomi: 'ひあそび' },
+    { kanji: '土', reading: 'つち',   word: '土いじり', wordKana: '□いじり', yomi: 'つちいじり' },
+    { kanji: '花', reading: 'はな',   word: '花火',   wordKana: '□び',     yomi: 'はなび' },
+    { kanji: '草', reading: 'くさ',   word: '草むら', wordKana: '□むら',   yomi: 'くさむら' },
+    { kanji: '天', reading: 'てん',   word: '天気',   wordKana: '□き',     yomi: 'てんき' },
+    { kanji: '雨', reading: 'あめ',   word: '大雨',   wordKana: 'おお□',   yomi: 'おおあめ' },
+    { kanji: '空', reading: 'そら',   word: '空色',   wordKana: '□いろ',   yomi: 'そらいろ' },
+    { kanji: '犬', reading: 'いぬ',   word: '子犬',   wordKana: 'こ□',     yomi: 'こいぬ' },
     // むずかしい後半 26〜50（からだ・方向・もの・学校・大きい数）
-    { kanji: '人', reading: 'ひと',   word: '三人',   wordKana: 'さん□' },
-    { kanji: '口', reading: 'くち',   word: '入り口', wordKana: 'いり□' },
-    { kanji: '手', reading: 'て',     word: '手足',   wordKana: '□あし' },
-    { kanji: '目', reading: 'め',     word: '目玉',   wordKana: '□たま' },
-    { kanji: '耳', reading: 'みみ',   word: '右耳',   wordKana: 'みぎ□' },
-    { kanji: '足', reading: 'あし',   word: '足音',   wordKana: '□おと' },
-    { kanji: '上', reading: 'うえ',   word: '山の上', wordKana: 'やまの□' },
-    { kanji: '下', reading: 'した',   word: '木の下', wordKana: 'きの□' },
-    { kanji: '左', reading: 'ひだり', word: '左手',   wordKana: '□て' },
-    { kanji: '右', reading: 'みぎ',   word: '右手',   wordKana: '□て' },
-    { kanji: '中', reading: 'なか',   word: '川の中', wordKana: 'かわの□' },
-    { kanji: '大', reading: 'おお',   word: '大きい' },
-    { kanji: '小', reading: 'ちい',   word: '小さい' },
-    { kanji: '石', reading: 'いし',   word: '石ころ' },
-    { kanji: '車', reading: 'くるま', word: '車いす' },
-    { kanji: '赤', reading: 'あか',   word: '赤ちゃん' },
-    { kanji: '白', reading: 'しろ',   word: '白い' },
-    { kanji: '虫', reading: 'むし',   word: '虫歯',   wordKana: '□ば' },
-    { kanji: '年', reading: 'ねん',   word: '一年生', wordKana: 'いち□せい' },
-    { kanji: '先', reading: 'さき',   word: '先っぽ' },
-    { kanji: '学', reading: 'がく',   word: '学校',   wordKana: '□こう' },
-    { kanji: '校', reading: 'こう',   word: '学校',   wordKana: 'がっ□' },
-    { kanji: '生', reading: 'せい',   word: '先生',   wordKana: 'せん□' },
-    { kanji: '百', reading: 'ひゃく', word: '百円',   wordKana: '□えん' },
-    { kanji: '千', reading: 'せん',   word: '千円',   wordKana: '□えん' }
+    { kanji: '人', reading: 'ひと',   word: '人ごみ', wordKana: '□ごみ',   yomi: 'ひとごみ' },
+    { kanji: '口', reading: 'くち',   word: '口笛',   wordKana: '□ぶえ',   yomi: 'くちぶえ' },
+    { kanji: '手', reading: 'て',     word: '手足',   wordKana: '□あし',   yomi: 'てあし' },
+    { kanji: '目', reading: 'め',     word: '目玉',   wordKana: '□だま',   yomi: 'めだま' },
+    { kanji: '耳', reading: 'みみ',   word: '右耳',   wordKana: 'みぎ□',   yomi: 'みぎみみ' },
+    { kanji: '足', reading: 'あし',   word: '足音',   wordKana: '□おと',   yomi: 'あしおと' },
+    { kanji: '上', reading: 'うえ',   word: '山の上', wordKana: 'やまの□', yomi: 'やまのうえ' },
+    { kanji: '下', reading: 'した',   word: '木の下', wordKana: 'きの□',   yomi: 'きのした' },
+    { kanji: '左', reading: 'ひだり', word: '左手',   wordKana: '□て',     yomi: 'ひだりて' },
+    { kanji: '右', reading: 'みぎ',   word: '右手',   wordKana: '□て',     yomi: 'みぎて' },
+    { kanji: '中', reading: 'なか',   word: '川の中', wordKana: 'かわの□', yomi: 'かわのなか' },
+    { kanji: '大', reading: 'おお',   word: '大きい', wordKana: '□きい',   yomi: 'おおきい' },
+    { kanji: '小', reading: 'ちい',   word: '小さい', wordKana: '□さい',   yomi: 'ちいさい' },
+    { kanji: '石', reading: 'いし',   word: '石ころ', wordKana: '□ころ',   yomi: 'いしころ' },
+    { kanji: '車', reading: 'くるま', word: '車いす', wordKana: '□いす',   yomi: 'くるまいす' },
+    { kanji: '赤', reading: 'あか',   word: '赤ちゃん', wordKana: '□ちゃん', yomi: 'あかちゃん' },
+    { kanji: '白', reading: 'しろ',   word: '白い',   wordKana: '□い',     yomi: 'しろい' },
+    { kanji: '虫', reading: 'むし',   word: '虫歯',   wordKana: '□ば',     yomi: 'むしば' },
+    { kanji: '年', reading: 'ねん',   word: '一年生', wordKana: 'いち□せい', yomi: 'いちねんせい' },
+    { kanji: '先', reading: 'さき',   word: '先っぽ', wordKana: '□っぽ',   yomi: 'さきっぽ' },
+    { kanji: '学', reading: 'がく',   word: '学年',   wordKana: '□ねん',   yomi: 'がくねん' },
+    { kanji: '校', reading: 'こう',   word: '学校',   wordKana: 'がっ□',   yomi: 'がっこう' },
+    { kanji: '生', reading: 'せい',   word: '先生',   wordKana: 'せん□',   yomi: 'せんせい' },
+    { kanji: '百', reading: 'ひゃく', word: '百円',   wordKana: '□えん',   yomi: 'ひゃくえん' },
+    { kanji: '千', reading: 'せん',   word: '千円',   wordKana: '□えん',   yomi: 'せんえん' }
   ],
   3: [
     { kanji: '運', reading: 'うん', word: '運動会' },
@@ -158,7 +159,10 @@ function generateKanjiProblem(grade, diff = 1) {
     const correctChoice = `${correct.kanji} ${correct.reading}`;
     const maskedWord = correct.wordKana || correct.word.replace(correct.kanji, '□');
 
-    const distractorPool = shuffleArray(list.filter(item => item.kanji !== correct.kanji));
+    // 読みが同じ漢字（例：日と火＝どちらも「ひ」）は選択肢に混ぜない。
+    const distractorPool = shuffleArray(
+      list.filter(item => item.kanji !== correct.kanji && item.reading !== correct.reading)
+    );
     const distractors = [];
     const usedKanji = new Set([correct.kanji]);
     for (const item of distractorPool) {
@@ -169,8 +173,14 @@ function generateKanjiProblem(grade, diff = 1) {
     }
     const choices = shuffleArray([correctChoice, ...distractors]);
 
+    // 語の読み（yomi）を見せることで、答えが必ず1つに定まる。
+    // 例：「□だま」と かいて「めだま」→ 目（水玉=みずたま は読みが違うので除外）。
+    const question = correct.yomi
+      ? `「${maskedWord}」と かいて「${correct.yomi}」。\n□に はいる かんじは どれ？`
+      : `「${maskedWord}」の\n□に はいる かんじは どれ？`;
+
     return {
-      question: `「${maskedWord}」の\n□に はいる かんじは どれ？`,
+      question,
       type: 'choice',
       choices,
       answer: correctChoice,
