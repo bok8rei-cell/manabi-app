@@ -1,6 +1,6 @@
 // ===== BRAIN QUEST：零式 メインスクリプト =====
 
-const APP_VERSION = 'v36.4';
+const APP_VERSION = 'v36.5';
 const TOTAL_QUESTIONS = 10;
 const DONT_KNOW = '__DONTKNOW__';
 
@@ -196,7 +196,6 @@ function selectPlayerName(name) {
   localStorage.setItem('manabi_playername', state.playerName);
   playerNameInput.value = name;
   renderPlayerNameSaved();
-  if (cloudDb) performCloudSync().catch(() => {});
 }
 
 function deletePlayerName(name) {
@@ -254,7 +253,6 @@ playerNameInput.addEventListener('input', () => {
 });
 playerNameInput.addEventListener('change', () => {
   registerPlayerName(state.playerName);
-  if (cloudDb && state.playerName) performCloudSync().catch(() => {});
 });
 
 // ---- 画面切り替え ----
@@ -307,49 +305,10 @@ document.querySelectorAll('.grade-btn').forEach(btn => {
   });
 });
 
-// 画面を開く前に、同期コードが設定されていればクラウドの最新データを取り込む
-const SYNC_CONTENT_IDS = {
-  showReportScreen: 'report-content',
-  showRankingScreen: 'ranking-content',
-  showSpeedRankingScreen: 'speedranking-content'
-};
-
-async function syncBeforeShow(showFn) {
-  showFn(); // まず即座に画面を表示
-  const container = document.getElementById(SYNC_CONTENT_IDS[showFn.name]);
-  const syncCode = syncCodeInput.value.trim();
-
-  if (!getActiveSyncCode()) {
-    // なまえも同期コードも未設定 → 案内を表示
-    if (container) {
-      const notice = document.createElement('div');
-      notice.className = 'sync-notice';
-      notice.textContent = '💡 ホーム画面でなまえを入力すると、他の端末のデータも自動で見られます。';
-      container.prepend(notice);
-    }
-    return;
-  }
-
-  if (!cloudDb) return;
-
-  // 同期コードあり → ローディング表示してクラウド同期
-  let loadingEl = null;
-  if (container) {
-    loadingEl = document.createElement('div');
-    loadingEl.className = 'sync-loading';
-    loadingEl.textContent = '☁️ 最新データを取得中...';
-    container.prepend(loadingEl);
-  }
-
-  try {
-    await performCloudSync();
-    showFn(); // 同期後に再描画
-  } catch (e) {
-    if (loadingEl && loadingEl.parentNode) {
-      loadingEl.className = 'sync-notice sync-notice-error';
-      loadingEl.textContent = '⚠️ クラウドとの同期に失敗しました。通信環境を確認してください。';
-    }
-  }
+// 同期は「クラウドに送る／受け取る」ボタンを押したときだけ行う方針なので、
+// レポートや順位の画面を開いてもクラウド取得はせず、ローカルのデータを表示するだけにする。
+function syncBeforeShow(showFn) {
+  showFn();
 }
 
 document.getElementById('report-open-btn').addEventListener('click', () => {
@@ -671,30 +630,8 @@ document.getElementById('cloud-download-btn').addEventListener('click', async ()
   }
 });
 
-// 起動時に自動で1回クラウドと同期する（なまえ or 同期コードがあれば）
-if (cloudDb && getActiveSyncCode()) {
-  performCloudSync().catch(() => {});
-}
-
-// アプリに戻ってきたとき（タブ復帰・ホーム画面アプリ再表示）に自動同期する。
-// これがないと、相手が送ったデータは再読込やボタン操作をするまで反映されない。
-// 進捗マージは冪等（max）なので、何度走ってもデータが膨らまない。
-let _autoSyncing = false;
-function autoSync() {
-  if (_autoSyncing || !cloudDb || !getActiveSyncCode()) return;
-  _autoSyncing = true;
-  performCloudSync()
-    .then(() => {
-      // 開いている画面が最新を反映するよう、必要なら再描画
-      if (!document.getElementById('screen-report').classList.contains('hidden')) showReportScreen();
-    })
-    .catch(() => {})
-    .finally(() => { _autoSyncing = false; });
-}
-document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible') autoSync();
-});
-window.addEventListener('focus', autoSync);
+// クラウド同期は「☁️ クラウドに送る／受け取る」ボタンを押したときだけ行う。
+// 起動時・画面遷移・アプリ復帰などでの自動同期は行わない（全部手動）。
 
 document.getElementById('sync-import-btn').addEventListener('click', () => {
   const fileInput = document.getElementById('sync-import-file');
@@ -1091,10 +1028,6 @@ function finishQuiz() {
   const progress = saveProgress(state.grade, state.subject, state.correctCount, TOTAL_QUESTIONS);
   saveRankingEntry(state.grade, state.subject, state.correctCount, TOTAL_QUESTIONS);
 
-  if (cloudDb && getActiveSyncCode()) {
-    performCloudSync().catch(() => {});
-  }
-
   document.getElementById('result-score').textContent = `${state.correctCount} / ${TOTAL_QUESTIONS} もん せいかい！`;
 
   let message;
@@ -1341,10 +1274,6 @@ function finishSpeedQuiz() {
   }
 
   document.getElementById('speed-result-message').textContent = message;
-
-  if (cloudDb && getActiveSyncCode()) {
-    performCloudSync().catch(() => {});
-  }
 
   showScreen('speedresult');
 }
