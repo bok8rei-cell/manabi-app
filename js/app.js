@@ -448,16 +448,22 @@ function collectAllPlayersData() {
   return allData;
 }
 
-// クラウドに全プレイヤーデータを保存
+// クラウドにローカルストレージ全体を保存
 async function saveAllPlayersToCloud() {
   if (!cloudDb) return false;
 
-  const allData = collectAllPlayersData();
   const syncCode = '1'; // 固定で「1」を使用
 
   try {
+    // localStorage 全体を JSON で保存
+    const allData = {};
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      allData[key] = localStorage.getItem(key);
+    }
+
     const docRef = cloudDb.collection('syncCodes').doc(syncCode);
-    await docRef.set(allData);
+    await docRef.set({ version: 1, data: allData, timestamp: new Date().toISOString() });
     console.log('✓ 全プレイヤーデータをクラウドに保存しました');
     return true;
   } catch (e) {
@@ -485,31 +491,26 @@ function mergeProgress(a, b) {
 }
 
 function applySyncData(data) {
-  // 新しいデータ形式：allPlayers を含む
-  if (data.allPlayers && typeof data.allPlayers === 'object') {
-    Object.entries(data.allPlayers).forEach(([playerName, playerData]) => {
-      // 各プレイヤーの進捗データを復元
-      Object.entries(playerData.progress || {}).forEach(([key, value]) => {
-        const raw = localStorage.getItem(key);
-        const existing = raw ? JSON.parse(raw) : { correct: 0, total: 0, best: 0, streak: 0, lastDate: null };
-        localStorage.setItem(key, JSON.stringify(mergeProgress(existing, value)));
-      });
-
-      // 各プレイヤーのランキングを復元
-      Object.entries(playerData.ranking || {}).forEach(([key, value]) => {
-        const existing = JSON.parse(localStorage.getItem(key) || '[]');
-        const merged = [...existing, ...value];
-        merged.sort(rankingSortFn(key));
-        localStorage.setItem(key, JSON.stringify(merged.slice(0, 20)));
-      });
-
-      // プレイヤー名を登録
-      registerPlayerName(playerName);
+  // 新しいデータ形式：data フィールド（localStorage 全体）を含む
+  if (data.data && typeof data.data === 'object') {
+    // ローカルストレージ全体を復元
+    Object.entries(data.data).forEach(([key, value]) => {
+      localStorage.setItem(key, value);
     });
+
+    // 復元後、プレイヤー名を画面に反映
+    const savedPlayerName = localStorage.getItem('manabi_playername');
+    if (savedPlayerName) {
+      state.playerName = savedPlayerName;
+      document.getElementById('player-name').value = savedPlayerName;
+      registerPlayerName(savedPlayerName);
+    }
+
+    console.log('✓ クラウドからデータを復元しました');
     return;
   }
 
-  // 古いデータ形式：progress / ranking のトップレベル
+  // 古いデータ形式：progress / ranking のトップレベル（後方互換性）
   Object.entries(data.progress || {}).forEach(([key, value]) => {
     const raw = localStorage.getItem(key);
     const existing = raw ? JSON.parse(raw) : { correct: 0, total: 0, best: 0, streak: 0, lastDate: null };
