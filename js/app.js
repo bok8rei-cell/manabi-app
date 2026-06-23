@@ -1,6 +1,6 @@
 // ===== BRAIN QUEST：零式 メインスクリプト =====
 
-const APP_VERSION = 'v36';
+const APP_VERSION = 'v36.1';
 const TOTAL_QUESTIONS = 10;
 const DONT_KNOW = '__DONTKNOW__';
 
@@ -553,10 +553,20 @@ document.getElementById('sync-export-btn').addEventListener('click', () => {
 });
 
 // ---- クラウド同期（Firestore） ----
+// 同期コードを正規化する：全角英数字を半角へ、空白を除去。
+// これをしないと「１」(全角) と「1」(半角) が別のドキュメントになり、
+// 端末ごとにキーボードが違うとデータが共有されない。
+function normalizeSyncCode(s) {
+  return (s || '')
+    .replace(/[Ａ-Ｚａ-ｚ０-９]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0xFEE0))
+    .replace(/\s+/g, '')
+    .trim();
+}
+
 const syncCodeInput = document.getElementById('sync-code');
 syncCodeInput.value = localStorage.getItem('manabi_synccode') || '';
 syncCodeInput.addEventListener('input', () => {
-  localStorage.setItem('manabi_synccode', syncCodeInput.value.trim());
+  localStorage.setItem('manabi_synccode', normalizeSyncCode(syncCodeInput.value));
 });
 
 function mergeRankingList(existing, incoming, key) {
@@ -595,7 +605,7 @@ function cloudUnavailable(msg) {
 // 読み込み・書き込みをまとめて行い、ローカルとクラウドを同じ状態にする
 // 同期キー：手動の同期コードがあればそれを使い、なければプレイヤー名で自動同期
 function getActiveSyncCode() {
-  return (localStorage.getItem('manabi_synccode') || '').trim()
+  return normalizeSyncCode(localStorage.getItem('manabi_synccode') || '')
       || state.playerName.trim();
 }
 
