@@ -485,6 +485,31 @@ function mergeProgress(a, b) {
 }
 
 function applySyncData(data) {
+  // 新しいデータ形式：allPlayers を含む
+  if (data.allPlayers && typeof data.allPlayers === 'object') {
+    Object.entries(data.allPlayers).forEach(([playerName, playerData]) => {
+      // 各プレイヤーの進捗データを復元
+      Object.entries(playerData.progress || {}).forEach(([key, value]) => {
+        const raw = localStorage.getItem(key);
+        const existing = raw ? JSON.parse(raw) : { correct: 0, total: 0, best: 0, streak: 0, lastDate: null };
+        localStorage.setItem(key, JSON.stringify(mergeProgress(existing, value)));
+      });
+
+      // 各プレイヤーのランキングを復元
+      Object.entries(playerData.ranking || {}).forEach(([key, value]) => {
+        const existing = JSON.parse(localStorage.getItem(key) || '[]');
+        const merged = [...existing, ...value];
+        merged.sort(rankingSortFn(key));
+        localStorage.setItem(key, JSON.stringify(merged.slice(0, 20)));
+      });
+
+      // プレイヤー名を登録
+      registerPlayerName(playerName);
+    });
+    return;
+  }
+
+  // 古いデータ形式：progress / ranking のトップレベル
   Object.entries(data.progress || {}).forEach(([key, value]) => {
     const raw = localStorage.getItem(key);
     const existing = raw ? JSON.parse(raw) : { correct: 0, total: 0, best: 0, streak: 0, lastDate: null };
