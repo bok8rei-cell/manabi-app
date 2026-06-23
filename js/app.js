@@ -1,6 +1,6 @@
 // ===== BRAIN QUEST：零式 メインスクリプト =====
 
-const APP_VERSION = 'v36.3';
+const APP_VERSION = 'v36.4';
 const TOTAL_QUESTIONS = 10;
 const DONT_KNOW = '__DONTKNOW__';
 
@@ -489,9 +489,12 @@ function rankingSortFn(key) {
 }
 
 function mergeProgress(a, b) {
+  // 足し算ではなく「大きい方を採用」。こうしないと同期のたびに
+  // correct/total が二重加算されて水増しされる（同期を何回しても
+  // 結果が変わらない＝冪等になるようにする）。
   return {
-    correct: (a.correct || 0) + (b.correct || 0),
-    total: (a.total || 0) + (b.total || 0),
+    correct: Math.max(a.correct || 0, b.correct || 0),
+    total: Math.max(a.total || 0, b.total || 0),
     best: Math.max(a.best || 0, b.best || 0),
     streak: Math.max(a.streak || 0, b.streak || 0),
     lastDate: [a.lastDate, b.lastDate].filter(Boolean).sort().pop() || null
@@ -529,9 +532,7 @@ function applySyncData(data) {
 
   Object.entries(data.ranking || {}).forEach(([key, value]) => {
     const existing = JSON.parse(localStorage.getItem(key) || '[]');
-    const merged = [...existing, ...value];
-    merged.sort(rankingSortFn(key));
-    localStorage.setItem(key, JSON.stringify(merged.slice(0, 20)));
+    localStorage.setItem(key, JSON.stringify(mergeRankingList(existing, value, key)));
   });
 
   if (data.playerName && !state.playerName) {
@@ -584,8 +585,16 @@ syncCodeInput.addEventListener('input', () => {
 
 function mergeRankingList(existing, incoming, key) {
   const merged = [...existing, ...incoming];
-  merged.sort(rankingSortFn(key));
-  return merged.slice(0, 20);
+  // 同じ記録が同期のたびに重複して増えないよう、内容が同一の行を除去する。
+  const seen = new Set();
+  const deduped = merged.filter(e => {
+    const k = JSON.stringify([e.name, e.correct, e.total, e.rate, e.time, e.date]);
+    if (seen.has(k)) return false;
+    seen.add(k);
+    return true;
+  });
+  deduped.sort(rankingSortFn(key));
+  return deduped.slice(0, 20);
 }
 
 function mergeSyncData(a, b) {
@@ -666,6 +675,26 @@ document.getElementById('cloud-download-btn').addEventListener('click', async ()
 if (cloudDb && getActiveSyncCode()) {
   performCloudSync().catch(() => {});
 }
+
+// アプリに戻ってきたとき（タブ復帰・ホーム画面アプリ再表示）に自動同期する。
+// これがないと、相手が送ったデータは再読込やボタン操作をするまで反映されない。
+// 進捗マージは冪等（max）なので、何度走ってもデータが膨らまない。
+let _autoSyncing = false;
+function autoSync() {
+  if (_autoSyncing || !cloudDb || !getActiveSyncCode()) return;
+  _autoSyncing = true;
+  performCloudSync()
+    .then(() => {
+      // 開いている画面が最新を反映するよう、必要なら再描画
+      if (!document.getElementById('screen-report').classList.contains('hidden')) showReportScreen();
+    })
+    .catch(() => {})
+    .finally(() => { _autoSyncing = false; });
+}
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') autoSync();
+});
+window.addEventListener('focus', autoSync);
 
 document.getElementById('sync-import-btn').addEventListener('click', () => {
   const fileInput = document.getElementById('sync-import-file');
