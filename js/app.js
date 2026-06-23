@@ -1,6 +1,6 @@
 // ===== BRAIN QUEST：零式 メインスクリプト =====
 
-const APP_VERSION = 'v35';
+const APP_VERSION = 'v36';
 const TOTAL_QUESTIONS = 10;
 const DONT_KNOW = '__DONTKNOW__';
 
@@ -18,6 +18,12 @@ function checkAndUpdateServiceWorker() {
 }
 
 checkAndUpdateServiceWorker();
+
+// 画面にアプリのバージョンを表示（端末が最新版を読めているかの確認用）
+(function showAppVersion() {
+  const el = document.getElementById('app-version-label');
+  if (el) el.textContent = 'バージョン ' + APP_VERSION;
+})();
 
 const SUBJECTS = [
   { key: 'math',      label: '算数',          kanaLabel: 'さんすう',              cls: '' },
