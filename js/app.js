@@ -1,6 +1,6 @@
 // ===== BRAIN QUEST：零式 メインスクリプト =====
 
-const APP_VERSION = 'v36.7';
+const APP_VERSION = 'v36.8';
 const TOTAL_QUESTIONS = 10;
 const DONT_KNOW = '__DONTKNOW__';
 
@@ -25,19 +25,24 @@ checkAndUpdateServiceWorker();
   if (el) el.textContent = 'バージョン ' + APP_VERSION;
 })();
 
-// 旧形式（プレイヤー共通で全員合算・同期で水増しされていた）進捗を一度だけ削除し、
-// 名前別の進捗にリセットする。以降は manabi_progress_{なまえ}_g{学年}_{教科} を使う。
-(function migrateToPerPlayerProgress() {
-  if (localStorage.getItem('manabi_perplayer_migrated') === '1') return;
+// 旧形式（プレイヤー共通だった）進捗・難易度・昇段チャレンジを一度だけ削除し、
+// 名前別にリセットする。以降は manabi_*_{なまえ}_... を使う。
+(function migrateToPerPlayer() {
+  if (localStorage.getItem('manabi_perplayer_migrated') === '2') return;
+  const subj = '(math|kanji|kotowaza|rikashakai|eigo)';
+  const legacyProgress  = new RegExp(`^manabi_progress_g\\d+_${subj}$`);
+  const legacyDiff      = new RegExp(`^manabi_diff_\\d+_${subj}$`);
+  const legacyChallenge = new RegExp(`^manabi_challenge(_attempt)?_\\d+_${subj}_\\d+$`);
   const toDelete = [];
   for (let i = 0; i < localStorage.length; i++) {
     const key = localStorage.key(i);
-    if (key && /^manabi_progress_g\d+_(math|kanji|kotowaza|rikashakai|eigo)$/.test(key)) {
+    if (!key) continue;
+    if (legacyProgress.test(key) || legacyDiff.test(key) || legacyChallenge.test(key)) {
       toDelete.push(key);
     }
   }
   toDelete.forEach(k => localStorage.removeItem(k));
-  localStorage.setItem('manabi_perplayer_migrated', '1');
+  localStorage.setItem('manabi_perplayer_migrated', '2');
 })();
 
 // ===== 自動アップデート =====
@@ -107,13 +112,13 @@ const DIFF_LABELS = ['やさしい', 'ふつう', 'むずかしい'];
 const DIFF_STARS  = ['⭐', '⭐⭐', '⭐⭐⭐'];
 
 function getDiff(grade, subject) {
-  const raw = localStorage.getItem(`${DIFF_KEY}_${grade}_${subject}`);
+  const raw = localStorage.getItem(`${DIFF_KEY}_${playerTag()}_${grade}_${subject}`);
   return raw !== null ? parseInt(raw) : 1;
 }
 
 function setDiff(grade, subject, level) {
   const v = Math.max(0, Math.min(2, level));
-  localStorage.setItem(`${DIFF_KEY}_${grade}_${subject}`, String(v));
+  localStorage.setItem(`${DIFF_KEY}_${playerTag()}_${grade}_${subject}`, String(v));
   return v;
 }
 
@@ -132,11 +137,11 @@ const CHALLENGE_KEY = 'manabi_challenge';
 const CHALLENGE_ATTEMPT_KEY = 'manabi_challenge_attempt';
 
 function getChallengeKey(grade, subject, diffLevel) {
-  return `${CHALLENGE_KEY}_${grade}_${subject}_${diffLevel}`;
+  return `${CHALLENGE_KEY}_${playerTag()}_${grade}_${subject}_${diffLevel}`;
 }
 
 function getChallengeAttemptKey(grade, subject, diffLevel) {
-  return `${CHALLENGE_ATTEMPT_KEY}_${grade}_${subject}_${diffLevel}`;
+  return `${CHALLENGE_ATTEMPT_KEY}_${playerTag()}_${grade}_${subject}_${diffLevel}`;
 }
 
 function hasChallenge(grade, subject) {
@@ -309,12 +314,13 @@ function showScreen(name) {
 }
 
 // ---- 進捗の保存・読み込み（プレイヤーごとに分ける）----
-// なまえ未設定のときは共通の「_」バケツに入れる。
-function progressPlayerTag(name = state.playerName) {
+// なまえ未設定のときは共通の「_」バケツに入れる。プレイヤー識別はこの関数に統一
+// （進捗・難易度・昇段チャレンジで共通利用）。
+function playerTag(name = state.playerName) {
   return (name || '').trim() || '_';
 }
 function progressKey(grade, subject, name = state.playerName) {
-  return `manabi_progress_${progressPlayerTag(name)}_g${grade}_${subject}`;
+  return `manabi_progress_${playerTag(name)}_g${grade}_${subject}`;
 }
 // 旧形式（プレイヤー共通で全員合算されていた）進捗キーかどうか。
 // リセット対象であり、同期でも無視して水増しデータを復活させない。
