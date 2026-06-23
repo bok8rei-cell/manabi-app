@@ -1,6 +1,6 @@
 // ===== BRAIN QUEST：零式 メインスクリプト =====
 
-const APP_VERSION = 'v36.2';
+const APP_VERSION = 'v36.3';
 const TOTAL_QUESTIONS = 10;
 const DONT_KNOW = '__DONTKNOW__';
 
@@ -571,6 +571,7 @@ document.getElementById('sync-export-btn').addEventListener('click', () => {
 function normalizeSyncCode(s) {
   return (s || '')
     .replace(/[Ａ-Ｚａ-ｚ０-９]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0xFEE0))
+    .toLowerCase()       // 大文字小文字を区別しない（ABC と abc を同じ箱に）
     .replace(/\s+/g, '')
     .trim();
 }
