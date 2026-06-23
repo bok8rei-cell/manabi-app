@@ -1,6 +1,6 @@
 // ===== BRAIN QUEST：零式 メインスクリプト =====
 
-const APP_VERSION = 'v36.5';
+const APP_VERSION = 'v36.6';
 const TOTAL_QUESTIONS = 10;
 const DONT_KNOW = '__DONTKNOW__';
 
@@ -24,6 +24,38 @@ checkAndUpdateServiceWorker();
   const el = document.getElementById('app-version-label');
   if (el) el.textContent = 'バージョン ' + APP_VERSION;
 })();
+
+// ===== 自動アップデート =====
+// サーバーの version.json を必ずネットから取得し（HTTPキャッシュも回避）、
+// 今動いているコードが古ければ、SWとキャッシュを全部消して強制リロードする。
+// これで iOS のホーム画面アプリが古いまま固まっても、自力で最新へ更新できる。
+async function checkForUpdate() {
+  try {
+    const res = await fetch('version.json?cb=' + Date.now(), { cache: 'no-store' });
+    if (!res.ok) return;
+    const data = await res.json();
+    const latest = data && data.version;
+    if (!latest || latest === APP_VERSION) return;
+
+    // 同じバージョンへのリロードを何度も繰り返さないための安全弁
+    if (sessionStorage.getItem('manabi_updating_to') === latest) return;
+    sessionStorage.setItem('manabi_updating_to', latest);
+
+    if ('serviceWorker' in navigator) {
+      const regs = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map(r => r.unregister()));
+    }
+    if (window.caches) {
+      const keys = await caches.keys();
+      await Promise.all(keys.map(k => caches.delete(k)));
+    }
+    // ナビゲーションにユニークなクエリを付けて、HTTP/CDNキャッシュも確実に外す
+    location.replace(location.pathname + '?u=' + encodeURIComponent(latest) + '.' + Date.now());
+  } catch (e) {
+    // オフライン等は無視（次回オンライン時に再チェック）
+  }
+}
+checkForUpdate();
 
 const SUBJECTS = [
   { key: 'math',      label: '算数',          kanaLabel: 'さんすう',              cls: '' },
