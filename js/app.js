@@ -1,6 +1,6 @@
 // ===== BRAIN QUEST：零式 メインスクリプト =====
 
-const APP_VERSION = 'v36.1';
+const APP_VERSION = 'v36.2';
 const TOTAL_QUESTIONS = 10;
 const DONT_KNOW = '__DONTKNOW__';
 
@@ -367,7 +367,9 @@ document.getElementById('sync-open-btn').addEventListener('click', () => {
 
 // ---- 端末間のデータ同期（書き出し・読み込み） ----
 function collectSyncData() {
-  const data = { progress: {}, ranking: {}, playerName: state.playerName };
+  // playerNames（保存された名前の一覧）も含める。これを入れないと
+  // 同期しても「今選んでいる1人」しか相手の端末に渡らない。
+  const data = { progress: {}, ranking: {}, playerName: state.playerName, playerNames: loadPlayerNames() };
   ALL_GRADES.forEach(grade => {
     SUBJECTS.forEach(subj => {
       const key = progressKey(grade, subj.key);
@@ -509,8 +511,10 @@ function applySyncData(data) {
     if (savedPlayerName) {
       state.playerName = savedPlayerName;
       document.getElementById('player-name').value = savedPlayerName;
-      registerPlayerName(savedPlayerName);
     }
+    // 名前の一覧（チップ）を再描画。localStorage 全体を復元したので
+    // manabi_playernames も既に入っている。
+    renderPlayerNameSaved();
 
     console.log('✓ クラウドからデータを復元しました');
     return;
@@ -536,6 +540,14 @@ function applySyncData(data) {
     document.getElementById('player-name').value = state.playerName;
   }
   if (data.playerName) registerPlayerName(data.playerName);
+
+  // 名前の一覧を統合（相手の端末で登録された名前もチップに追加する）
+  const incomingNames = Array.isArray(data.playerNames) ? data.playerNames : [];
+  if (incomingNames.length) {
+    const mergedNames = Array.from(new Set([...loadPlayerNames(), ...incomingNames])).slice(0, 10);
+    localStorage.setItem('manabi_playernames', JSON.stringify(mergedNames));
+    renderPlayerNameSaved();
+  }
 }
 
 document.getElementById('sync-export-btn').addEventListener('click', () => {
@@ -587,6 +599,8 @@ function mergeSyncData(a, b) {
   rankingKeys.forEach(key => {
     merged.ranking[key] = mergeRankingList((a.ranking || {})[key] || [], (b.ranking || {})[key] || [], key);
   });
+  // 名前の一覧は両端末の和集合（重複を除いて最大10件）
+  merged.playerNames = Array.from(new Set([...(a.playerNames || []), ...(b.playerNames || [])])).slice(0, 10);
   return merged;
 }
 
