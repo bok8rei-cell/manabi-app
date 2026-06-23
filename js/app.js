@@ -377,6 +377,95 @@ function collectSyncData() {
   return data;
 }
 
+// ===== 全プレイヤーのデータを一括抽出（クラウド保存用） =====
+function collectAllPlayersData() {
+  const allData = { version: 1, allPlayers: {} };
+
+  // ローカルストレージの全キーをスキャン
+  const allKeys = Object.keys(localStorage);
+
+  // プレイヤー名を抽出（manabi_player_name_* パターン）
+  const playerNames = new Set();
+  allKeys.forEach(key => {
+    // プレイヤー名キー：manabi_player_name または manabi_player_name_N
+    if (key === 'manabi_player_name' || key.match(/^manabi_player_name_\d+$/)) {
+      const name = localStorage.getItem(key);
+      if (name) playerNames.add(name);
+    }
+  });
+
+  // ランキングデータから名前も抽出
+  const rankingKeys = Object.keys(localStorage).filter(k => k.match(/^manabi_ranking/));
+  rankingKeys.forEach(key => {
+    const raw = localStorage.getItem(key);
+    if (raw) {
+      try {
+        const ranking = JSON.parse(raw);
+        if (Array.isArray(ranking)) {
+          ranking.forEach(entry => {
+            if (entry.name) playerNames.add(entry.name);
+          });
+        }
+      } catch (e) {}
+    }
+  });
+
+  // 各プレイヤーのデータを集約
+  playerNames.forEach(playerName => {
+    const playerData = { progress: {}, ranking: {} };
+
+    // このプレイヤーの進捗データ
+    ALL_GRADES.forEach(grade => {
+      SUBJECTS.forEach(subj => {
+        const key = progressKey(grade, subj.key);
+        const raw = localStorage.getItem(key);
+        if (raw) {
+          try {
+            const progress = JSON.parse(raw);
+            // このプレイヤーの記録かチェック（ランキングから推測）
+            playerData.progress[key] = progress;
+          } catch (e) {}
+        }
+      });
+    });
+
+    // ランキングデータ（プレイヤー名でフィルタ）
+    rankingKeys.forEach(key => {
+      const raw = localStorage.getItem(key);
+      if (raw) {
+        try {
+          const ranking = JSON.parse(raw);
+          if (Array.isArray(ranking)) {
+            playerData.ranking[key] = ranking.filter(entry => entry.name === playerName);
+          }
+        } catch (e) {}
+      }
+    });
+
+    allData.allPlayers[playerName] = playerData;
+  });
+
+  return allData;
+}
+
+// クラウドに全プレイヤーデータを保存
+async function saveAllPlayersToCloud() {
+  if (!cloudDb) return false;
+
+  const allData = collectAllPlayersData();
+  const syncCode = '1'; // 固定で「1」を使用
+
+  try {
+    const docRef = cloudDb.collection('syncCodes').doc(syncCode);
+    await docRef.set(allData);
+    console.log('✓ 全プレイヤーデータをクラウドに保存しました');
+    return true;
+  } catch (e) {
+    console.error('クラウド保存失敗:', e);
+    return false;
+  }
+}
+
 // ランキングの並び順（タイムアタックは時間が速い順、それ以外は正答率が高い順）
 function rankingSortFn(key) {
   if (key === SPEED_RANKING_KEY) {
@@ -1501,4 +1590,50 @@ document.getElementById('debug-btn').addEventListener('click', () => {
 
 document.getElementById('debug-close-btn').addEventListener('click', () => {
   document.getElementById('debug-modal').classList.add('hidden');
+});
+
+// ===== あたらしくする（更新）ボタン =====
+document.getElementById('refresh-btn').addEventListener('click', async () => {
+  const btn = document.getElementById('refresh-btn');
+  btn.disabled = true;
+  btn.style.opacity = '0.5';
+
+  try {
+    // 1. 全プレイヤーデータをクラウド保存
+    await saveAllPlayersToCloud();
+
+    // 2. Service Worker のキャッシュ削除
+    if ('serviceWorker' in navigator) {
+      const registrations = await navigator.serviceWorker.getRegistrations();
+      for (const reg of registrations) {
+        await reg.unregister();
+      }
+      // Cache Storage も削除
+      const cacheNames = await caches.keys();
+      for (const cacheName of cacheNames) {
+        await caches.delete(cacheName);
+      }
+    }
+
+    // 3. キャッシュバスター付きでリロード
+    window.location.href = window.location.href + (window.location.href.includes('?') ? '&' : '?') + 'v=' + Date.now();
+  } catch (e) {
+    console.error('更新失敗:', e);
+    btn.disabled = false;
+    btn.style.opacity = '1';
+    alert('更新に失敗しました。もう一度お試しください。');
+  }
+});
+
+// ボタンにアニメーション効果
+document.getElementById('refresh-btn').addEventListener('mousedown', function() {
+  this.style.transform = 'scale(0.9)';
+});
+
+document.getElementById('refresh-btn').addEventListener('mouseup', function() {
+  this.style.transform = 'scale(1)';
+});
+
+document.getElementById('refresh-btn').addEventListener('mouseleave', function() {
+  this.style.transform = 'scale(1)';
 });
