@@ -1,6 +1,6 @@
 // ===== BRAIN QUEST：零式 メインスクリプト =====
 
-const APP_VERSION = 'v36.8';
+const APP_VERSION = 'v36.9';
 const TOTAL_QUESTIONS = 10;
 const DONT_KNOW = '__DONTKNOW__';
 
@@ -327,6 +327,10 @@ function progressKey(grade, subject, name = state.playerName) {
 function isLegacyProgressKey(key) {
   return /^manabi_progress_g\d+_(math|kanji|kotowaza|rikashakai|eigo)$/.test(key);
 }
+// 旧形式（プレイヤー共通）の難易度キーかどうか。同期でも無視する。
+function isLegacyDiffKey(key) {
+  return /^manabi_diff_\d+_(math|kanji|kotowaza|rikashakai|eigo)$/.test(key);
+}
 
 function loadProgress(grade, subject) {
   const raw = localStorage.getItem(progressKey(grade, subject));
@@ -390,14 +394,17 @@ document.getElementById('sync-open-btn').addEventListener('click', () => {
 function collectSyncData() {
   // playerNames（保存された名前の一覧）も含める。これを入れないと
   // 同期しても「今選んでいる1人」しか相手の端末に渡らない。
-  const data = { progress: {}, ranking: {}, playerName: state.playerName, playerNames: loadPlayerNames() };
-  // 全プレイヤーぶんの進捗を集める（名前別キーをまるごとスキャン）。
-  // 旧形式（全員合算）のキーは同期に乗せない。
+  const data = { progress: {}, ranking: {}, diff: {}, playerName: state.playerName, playerNames: loadPlayerNames() };
+  // 全プレイヤーぶんの進捗・難易度を集める（名前別キーをまるごとスキャン）。
+  // 旧形式（全員合算/共通）のキーは同期に乗せない。
   for (let i = 0; i < localStorage.length; i++) {
     const key = localStorage.key(i);
-    if (!key || key.indexOf('manabi_progress_') !== 0) continue;
-    if (isLegacyProgressKey(key)) continue;
-    try { data.progress[key] = JSON.parse(localStorage.getItem(key)); } catch (e) {}
+    if (!key) continue;
+    if (key.indexOf('manabi_progress_') === 0 && !isLegacyProgressKey(key)) {
+      try { data.progress[key] = JSON.parse(localStorage.getItem(key)); } catch (e) {}
+    } else if (key.indexOf('manabi_diff_') === 0 && !isLegacyDiffKey(key)) {
+      data.diff[key] = localStorage.getItem(key);
+    }
   }
   ALL_GRADES.forEach(grade => {
     const rKey = rankingKey(grade);
@@ -560,6 +567,15 @@ function applySyncData(data) {
     localStorage.setItem(key, JSON.stringify(mergeRankingList(existing, value, key)));
   });
 
+  // 難易度：ローカルとクラウドの高い方を採用
+  Object.entries(data.diff || {}).forEach(([key, value]) => {
+    if (isLegacyDiffKey(key)) return;
+    const cur = parseInt(localStorage.getItem(key));
+    const inc = parseInt(value);
+    const max = Math.max(isNaN(cur) ? -1 : cur, isNaN(inc) ? -1 : inc);
+    if (max >= 0) localStorage.setItem(key, String(max));
+  });
+
   if (data.playerName && !state.playerName) {
     state.playerName = data.playerName;
     localStorage.setItem('manabi_playername', state.playerName);
@@ -623,13 +639,21 @@ function mergeRankingList(existing, incoming, key) {
 }
 
 function mergeSyncData(a, b) {
-  const merged = { progress: {}, ranking: {}, playerName: a.playerName || b.playerName || '' };
+  const merged = { progress: {}, ranking: {}, diff: {}, playerName: a.playerName || b.playerName || '' };
   const progressKeys = new Set([...Object.keys(a.progress || {}), ...Object.keys(b.progress || {})]);
   progressKeys.forEach(key => {
     if (isLegacyProgressKey(key)) return; // 旧形式（全員合算）はクラウドからも捨てる
     const pa = (a.progress || {})[key] || { correct: 0, total: 0, best: 0, streak: 0, lastDate: null };
     const pb = (b.progress || {})[key] || { correct: 0, total: 0, best: 0, streak: 0, lastDate: null };
     merged.progress[key] = mergeProgress(pa, pb);
+  });
+  // 難易度は高い方（進んでいる方）を採用。冪等で水増しもしない。
+  const diffKeys = new Set([...Object.keys(a.diff || {}), ...Object.keys(b.diff || {})]);
+  diffKeys.forEach(key => {
+    if (isLegacyDiffKey(key)) return;
+    const va = parseInt((a.diff || {})[key]); const vb = parseInt((b.diff || {})[key]);
+    const max = Math.max(isNaN(va) ? -1 : va, isNaN(vb) ? -1 : vb);
+    if (max >= 0) merged.diff[key] = String(max);
   });
   const rankingKeys = new Set([...Object.keys(a.ranking || {}), ...Object.keys(b.ranking || {})]);
   rankingKeys.forEach(key => {
