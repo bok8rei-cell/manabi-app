@@ -1,6 +1,6 @@
 // ===== BRAIN QUEST：零式 メインスクリプト =====
 
-const APP_VERSION = 'v36.6';
+const APP_VERSION = 'v36.7';
 const TOTAL_QUESTIONS = 10;
 const DONT_KNOW = '__DONTKNOW__';
 
@@ -23,6 +23,21 @@ checkAndUpdateServiceWorker();
 (function showAppVersion() {
   const el = document.getElementById('app-version-label');
   if (el) el.textContent = 'バージョン ' + APP_VERSION;
+})();
+
+// 旧形式（プレイヤー共通で全員合算・同期で水増しされていた）進捗を一度だけ削除し、
+// 名前別の進捗にリセットする。以降は manabi_progress_{なまえ}_g{学年}_{教科} を使う。
+(function migrateToPerPlayerProgress() {
+  if (localStorage.getItem('manabi_perplayer_migrated') === '1') return;
+  const toDelete = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key && /^manabi_progress_g\d+_(math|kanji|kotowaza|rikashakai|eigo)$/.test(key)) {
+      toDelete.push(key);
+    }
+  }
+  toDelete.forEach(k => localStorage.removeItem(k));
+  localStorage.setItem('manabi_perplayer_migrated', '1');
 })();
 
 // ===== 自動アップデート =====
@@ -293,9 +308,18 @@ function showScreen(name) {
   document.getElementById(`screen-${name}`).classList.remove('hidden');
 }
 
-// ---- 進捗の保存・読み込み ----
-function progressKey(grade, subject) {
-  return `manabi_progress_g${grade}_${subject}`;
+// ---- 進捗の保存・読み込み（プレイヤーごとに分ける）----
+// なまえ未設定のときは共通の「_」バケツに入れる。
+function progressPlayerTag(name = state.playerName) {
+  return (name || '').trim() || '_';
+}
+function progressKey(grade, subject, name = state.playerName) {
+  return `manabi_progress_${progressPlayerTag(name)}_g${grade}_${subject}`;
+}
+// 旧形式（プレイヤー共通で全員合算されていた）進捗キーかどうか。
+// リセット対象であり、同期でも無視して水増しデータを復活させない。
+function isLegacyProgressKey(key) {
+  return /^manabi_progress_g\d+_(math|kanji|kotowaza|rikashakai|eigo)$/.test(key);
 }
 
 function loadProgress(grade, subject) {
@@ -361,12 +385,15 @@ function collectSyncData() {
   // playerNames（保存された名前の一覧）も含める。これを入れないと
   // 同期しても「今選んでいる1人」しか相手の端末に渡らない。
   const data = { progress: {}, ranking: {}, playerName: state.playerName, playerNames: loadPlayerNames() };
+  // 全プレイヤーぶんの進捗を集める（名前別キーをまるごとスキャン）。
+  // 旧形式（全員合算）のキーは同期に乗せない。
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (!key || key.indexOf('manabi_progress_') !== 0) continue;
+    if (isLegacyProgressKey(key)) continue;
+    try { data.progress[key] = JSON.parse(localStorage.getItem(key)); } catch (e) {}
+  }
   ALL_GRADES.forEach(grade => {
-    SUBJECTS.forEach(subj => {
-      const key = progressKey(grade, subj.key);
-      const raw = localStorage.getItem(key);
-      if (raw) data.progress[key] = JSON.parse(raw);
-    });
     const rKey = rankingKey(grade);
     const raw = localStorage.getItem(rKey);
     if (raw) data.ranking[rKey] = JSON.parse(raw);
@@ -516,6 +543,7 @@ function applySyncData(data) {
 
   // 古いデータ形式：progress / ranking のトップレベル（後方互換性）
   Object.entries(data.progress || {}).forEach(([key, value]) => {
+    if (isLegacyProgressKey(key)) return; // 旧形式（全員合算）は復活させない
     const raw = localStorage.getItem(key);
     const existing = raw ? JSON.parse(raw) : { correct: 0, total: 0, best: 0, streak: 0, lastDate: null };
     localStorage.setItem(key, JSON.stringify(mergeProgress(existing, value)));
@@ -592,6 +620,7 @@ function mergeSyncData(a, b) {
   const merged = { progress: {}, ranking: {}, playerName: a.playerName || b.playerName || '' };
   const progressKeys = new Set([...Object.keys(a.progress || {}), ...Object.keys(b.progress || {})]);
   progressKeys.forEach(key => {
+    if (isLegacyProgressKey(key)) return; // 旧形式（全員合算）はクラウドからも捨てる
     const pa = (a.progress || {})[key] || { correct: 0, total: 0, best: 0, streak: 0, lastDate: null };
     const pb = (b.progress || {})[key] || { correct: 0, total: 0, best: 0, streak: 0, lastDate: null };
     merged.progress[key] = mergeProgress(pa, pb);
@@ -776,6 +805,15 @@ function showRankingScreen() {
 function showReportScreen() {
   const container = document.getElementById('report-content');
   container.innerHTML = '';
+
+  // 誰の記録かを表示（進捗はプレイヤーごとに分かれている）
+  const whoEl = document.createElement('div');
+  whoEl.className = 'report-who';
+  whoEl.style.cssText = 'text-align:center; margin-bottom:10px; color:#e2e8f0; font-weight:bold;';
+  whoEl.textContent = state.playerName
+    ? `👤 ${state.playerName} のきろく`
+    : '👤 なまえ未設定（ホーム画面でなまえをえらぶと、その子の記録になります）';
+  container.appendChild(whoEl);
 
   ALL_GRADES.forEach(grade => {
     const card = document.createElement('div');
