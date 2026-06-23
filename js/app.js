@@ -1566,32 +1566,6 @@ document.getElementById('challenge-result-home-btn').addEventListener('click', (
   showSubjectScreen();
 });
 
-// ===== データ確認ボタン（デバッグ用） =====
-document.getElementById('debug-btn').addEventListener('click', () => {
-  const debugContent = document.getElementById('debug-content');
-  const lines = [];
-
-  lines.push('【 localStorage の内容 】\n');
-
-  const allKeys = Object.keys(localStorage).sort();
-  if (allKeys.length === 0) {
-    lines.push('（データなし）');
-  } else {
-    allKeys.forEach(key => {
-      const value = localStorage.getItem(key);
-      const preview = value.length > 100 ? value.substring(0, 100) + '...' : value;
-      lines.push(`${key}:\n${preview}\n`);
-    });
-  }
-
-  debugContent.textContent = lines.join('\n');
-  document.getElementById('debug-modal').classList.remove('hidden');
-});
-
-document.getElementById('debug-close-btn').addEventListener('click', () => {
-  document.getElementById('debug-modal').classList.add('hidden');
-});
-
 // ===== あたらしくする（更新）ボタン =====
 document.getElementById('refresh-btn').addEventListener('click', async () => {
   const btn = document.getElementById('refresh-btn');
