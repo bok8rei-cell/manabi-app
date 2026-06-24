@@ -146,6 +146,17 @@ const KANJI_DATA = {
   ]
 };
 
+// 1年生の穴埋めで、選択肢の読みを□に入れると「別の言葉」になってしまうものを
+// 除外するための語集合（例：□えん に 校(こう) を入れると こうえん＝公園 になり紛らわしい）。
+// データ中の全 yomi ＋ データに無いが子どもがよく知る紛らわしい語。
+// ※辞書ではないので網羅ではない。新たな紛らわしい語が見つかれば追記する。
+const KANJI1_TRAP_WORDS = new Set([
+  ...KANJI_DATA[1].map(e => e.yomi).filter(Boolean),
+  'こうえん',                                                    // 公園（校＝こう）
+  'いちえん', 'ごえん', 'じゅうえん',                              // お金（一円・五円・十円。百円千円は答えなので除外対象外）
+  'いちがつ', 'さんがつ', 'しがつ', 'ごがつ', 'ろくがつ', 'しちがつ' // 各月（数字＋がつ）
+]);
+
 function generateKanjiProblem(grade, diff = 1) {
   const list = KANJI_DATA[grade] || KANJI_DATA[1];
   const half = Math.ceil(list.length / 2);
@@ -168,6 +179,9 @@ function generateKanjiProblem(grade, diff = 1) {
     for (const item of distractorPool) {
       if (distractors.length >= 3) break;
       if (usedKanji.has(item.kanji)) continue;
+      // その読みを□に入れると別の言葉になる紛らわしい選択肢は出さない
+      // （例：□えん に 校(こう) → こうえん）。
+      if (KANJI1_TRAP_WORDS.has(maskedWord.replace('□', item.reading))) continue;
       usedKanji.add(item.kanji);
       distractors.push(`${item.kanji} ${item.reading}`);
     }

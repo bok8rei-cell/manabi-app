@@ -1,6 +1,6 @@
 // ===== BRAIN QUEST：零式 メインスクリプト =====
 
-const APP_VERSION = 'v36.11';
+const APP_VERSION = 'v36.12';
 const TOTAL_QUESTIONS = 10;
 const DONT_KNOW = '__DONTKNOW__';
 
