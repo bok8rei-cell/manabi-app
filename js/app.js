@@ -1,6 +1,6 @@
 // ===== BRAIN QUEST：零式 メインスクリプト =====
 
-const APP_VERSION = 'v36.12';
+const APP_VERSION = 'v36.13';
 const TOTAL_QUESTIONS = 10;
 const DONT_KNOW = '__DONTKNOW__';
 
@@ -1537,25 +1537,39 @@ function nextChallengeQuestion() {
   const choicesDiv = document.getElementById('challenge-choices');
   choicesDiv.innerHTML = '';
 
-  if (!problem.choices) {
-    console.error('チャレンジ問題にchoicesがありません:', problem);
-    choicesDiv.innerHTML = '<p style="color:red;">エラー: 問題データが不正です</p>';
-    return;
-  }
-
-  problem.choices.forEach((choice, i) => {
-    const btn = document.createElement('button');
-    btn.className = 'choice-btn';
-    btn.textContent = choice;
-    btn.addEventListener('click', () => {
-      challengeState.selectedChoice = choice;
-      btn.classList.add('selected');
-      document.querySelectorAll('#challenge-choices .choice-btn').forEach((b, idx) => {
-        if (idx !== i) b.classList.remove('selected');
+  if (problem.type === 'choice') {
+    if (!problem.choices) {
+      console.error('チャレンジ問題にchoicesがありません:', problem);
+      choicesDiv.innerHTML = '<p style="color:red;">エラー: 問題データが不正です</p>';
+      return;
+    }
+    problem.choices.forEach((choice, i) => {
+      const btn = document.createElement('button');
+      btn.className = 'choice-btn';
+      btn.textContent = choice;
+      btn.addEventListener('click', () => {
+        challengeState.selectedChoice = choice;
+        btn.classList.add('selected');
+        document.querySelectorAll('#challenge-choices .choice-btn').forEach((b, idx) => {
+          if (idx !== i) b.classList.remove('selected');
+        });
       });
+      choicesDiv.appendChild(btn);
     });
-    choicesDiv.appendChild(btn);
-  });
+  } else {
+    // 入力式（算数・数学）：選択肢ではなく入力欄を出す（通常クイズと同じ）。
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.id = 'challenge-answer-input';
+    input.inputMode = problem.inputType === 'number' ? 'numeric' : 'text';
+    input.placeholder = problem.isFraction ? 'れい：3/4' : 'こたえ';
+    input.style.cssText = 'grid-column:1/-1; font-size:1.4em; padding:12px; text-align:center; border:2px solid #cbd5e0; border-radius:10px;';
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') document.getElementById('challenge-quiz-action-btn').click();
+    });
+    choicesDiv.appendChild(input);
+    setTimeout(() => input.focus(), 0);
+  }
 
   document.getElementById('challenge-quiz-action-btn').textContent =
     challengeState.questionIndex + 1 < challengeState.problems.length ? 'こたえる' : 'けっかをみる';
@@ -1564,7 +1578,16 @@ function nextChallengeQuestion() {
 function answerChallengeQuestion() {
   const problem = challengeState.currentProblem;
   const isDontKnow = challengeState.selectedChoice === DONT_KNOW;
-  const correct = !isDontKnow && challengeState.selectedChoice === problem.answer;
+  let correct;
+  if (problem.type === 'choice') {
+    correct = !isDontKnow && challengeState.selectedChoice === problem.answer;
+  } else {
+    // 入力式（算数・数学）
+    const input = document.getElementById('challenge-answer-input');
+    const val = input ? input.value : '';
+    correct = isMathAnswerCorrect(problem, val);
+    if (input) input.disabled = true;
+  }
 
   challengeState.answered = true;
 
@@ -1649,9 +1672,18 @@ function finishChallengeQuiz() {
 
 document.getElementById('challenge-quiz-action-btn').addEventListener('click', () => {
   if (!challengeState.answered) {
-    if (!challengeState.selectedChoice) {
-      alert('こたえを えらんでください！');
-      return;
+    const problem = challengeState.currentProblem;
+    if (problem.type === 'choice') {
+      if (!challengeState.selectedChoice) {
+        alert('こたえを えらんでください！');
+        return;
+      }
+    } else {
+      const input = document.getElementById('challenge-answer-input');
+      if (!input || input.value.trim() === '') {
+        alert('こたえを かいてください！');
+        return;
+      }
     }
     answerChallengeQuestion();
   } else {
