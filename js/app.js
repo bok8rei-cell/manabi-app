@@ -1,6 +1,6 @@
 // ===== BRAIN QUEST：零式 メインスクリプト =====
 
-const APP_VERSION = 'v36.14';
+const APP_VERSION = 'v36.15';
 const TOTAL_QUESTIONS = 10;
 const DONT_KNOW = '__DONTKNOW__';
 
@@ -113,7 +113,9 @@ const DIFF_STARS  = ['⭐', '⭐⭐', '⭐⭐⭐'];
 
 function getDiff(grade, subject) {
   const raw = localStorage.getItem(`${DIFF_KEY}_${playerTag()}_${grade}_${subject}`);
-  return raw !== null ? parseInt(raw) : 1;
+  // 初期値は「やさしい(0)」。入門期は足場（1年漢字はふりがな付き）から始め、
+  // 昇段チャレンジで ふつう→むずかしい へ上げていく。
+  return raw !== null ? parseInt(raw) : 0;
 }
 
 function setDiff(grade, subject, level) {
