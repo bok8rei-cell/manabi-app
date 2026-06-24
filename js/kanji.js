@@ -165,9 +165,13 @@ function generateKanjiProblem(grade, diff = 1) {
                list;
   const correct = pool[randInt(0, pool.length - 1)];
 
-  // ===== 1年生：選択肢を「漢字＋ひらがな」形式にする =====
+  // ===== 1年生：選択肢を漢字で答える形式 =====
   if (grade === 1) {
-    const correctChoice = `${correct.kanji} ${correct.reading}`;
+    // diff 0（やさしい）だけ選択肢にふりがなを付ける。ふつう以上は漢字だけにして、
+    // 「かな照合で当てる（答えの露出）」のを防ぐ。問題文の読みは全難易度で表示する。
+    const showKana = diff === 0;
+    const fmt = (item) => showKana ? `${item.kanji} ${item.reading}` : item.kanji;
+    const correctChoice = fmt(correct);
     const maskedWord = correct.wordKana || correct.word.replace(correct.kanji, '□');
 
     // 読みが同じ漢字（例：日と火＝どちらも「ひ」）は選択肢に混ぜない。
@@ -183,7 +187,7 @@ function generateKanjiProblem(grade, diff = 1) {
       // （例：□えん に 校(こう) → こうえん）。
       if (KANJI1_TRAP_WORDS.has(maskedWord.replace('□', item.reading))) continue;
       usedKanji.add(item.kanji);
-      distractors.push(`${item.kanji} ${item.reading}`);
+      distractors.push(fmt(item));
     }
     const choices = shuffleArray([correctChoice, ...distractors]);
 
@@ -193,13 +197,14 @@ function generateKanjiProblem(grade, diff = 1) {
       ? `「${maskedWord}」と かいて「${correct.yomi}」。\n□に はいる かんじは どれ？`
       : `「${maskedWord}」の\n□に はいる かんじは どれ？`;
 
-    return {
+    const result = {
       question,
       type: 'choice',
       choices,
-      answer: correctChoice,
-      choiceFormat: 'kanji-kana'
+      answer: correctChoice
     };
+    if (showKana) result.choiceFormat = 'kanji-kana'; // ふりがな付きのときだけ漢字＋かな表示
+    return result;
   }
 
   // ===== 3年生以上：従来の形式 =====
