@@ -1,6 +1,6 @@
 // ===== BRAIN QUEST：零式 メインスクリプト =====
 
-const APP_VERSION = 'v36.15';
+const APP_VERSION = 'v36.16';
 const TOTAL_QUESTIONS = 10;
 const DONT_KNOW = '__DONTKNOW__';
 
@@ -1033,10 +1033,12 @@ function renderQuestion() {
       }
     });
     area.appendChild(input);
-    setTimeout(() => input.focus(), 0);
     input.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') document.getElementById('quiz-action-btn').click();
     });
+    // iOS は「タップ（ユーザー操作）と同じ実行の流れの中」で focus したときだけ
+    // 画面キーボードを出す。setTimeout で遅らせると出ないので、直接 focus する。
+    input.focus();
   }
 
   // 「わからない」ボタン（どの問題タイプでも選べる）
@@ -1570,7 +1572,8 @@ function nextChallengeQuestion() {
       if (e.key === 'Enter') document.getElementById('challenge-quiz-action-btn').click();
     });
     choicesDiv.appendChild(input);
-    setTimeout(() => input.focus(), 0);
+    // iOS でキーボードを出すため、タップの流れの中で直接 focus する（setTimeout だと出ない）。
+    input.focus();
   }
 
   document.getElementById('challenge-quiz-action-btn').textContent =
