@@ -235,17 +235,26 @@ function cloudUnavailable(msg) {
     return true;
   }
   if (!getActiveSyncCode()) {
-    msg.textContent = 'まずホーム画面でなまえを入力してください。';
+    msg.textContent = 'まず「あいことば」を入れてね。\n（「あたらしい あいことばを つくる」で作れます）';
     return true;
   }
   return false;
 }
 
 // 読み込み・書き込みをまとめて行い、ローカルとクラウドを同じ状態にする
-// 同期キー：手動の同期コードがあればそれを使い、なければプレイヤー名で自動同期
+// 同期キー：おうち共通の「あいことば」（同期コード）だけを使う。
+// 以前は未設定ならなまえを鍵にしていたが、同じなまえを入れた他人にデータを読み書きされる恐れがあり、
+// 子どもごとに別々の保存場所になって端末間で揃わなかったため、あいことば必須にした。
 function getActiveSyncCode() {
-  return normalizeSyncCode(localStorage.getItem('manabi_synccode') || '')
-      || state.playerName.trim();
+  return normalizeSyncCode(localStorage.getItem('manabi_synccode') || '');
+}
+
+// 推測されにくい、ランダムなあいことばを作る（まぎらわしい文字 i l o 0 1 は使わない）
+function generateSyncCode() {
+  const chars = 'abcdefghjkmnpqrstuvwxyz23456789';
+  const buf = new Uint32Array(8);
+  window.crypto.getRandomValues(buf);
+  return Array.from(buf, n => chars[n % chars.length]).join('');
 }
 
 async function performCloudSync() {
@@ -286,8 +295,47 @@ document.getElementById('cloud-download-btn').addEventListener('click', async ()
   }
 });
 
-// クラウド同期は「☁️ クラウドに送る／受け取る」ボタンを押したときだけ行う。
-// 起動時・画面遷移・アプリ復帰などでの自動同期は行わない（全部手動）。
+// あいことばが入っているときは、起動時と学習のおわりに、自動でクラウドと合わせる。
+// 合成は「大きい方・新しい方を採用」なので、何回やっても増えすぎない（ボタンでの手動同期も残してある）。
+let autoSyncRunning = false;
+async function autoSync() {
+  if (autoSyncRunning || !cloudDb || !getActiveSyncCode()) return;
+  if (typeof navigator !== 'undefined' && navigator.onLine === false) return;
+  autoSyncRunning = true;
+  try {
+    await performCloudSync();
+    localStorage.setItem('manabi_lastsync', new Date().toISOString());
+    if (typeof refreshHome === 'function') refreshHome();
+  } catch (e) {
+    // 通信できないときは何もしない（次に学習したときにまた合わせる）
+  } finally {
+    autoSyncRunning = false;
+  }
+}
+
+function lastSyncText() {
+  const raw = localStorage.getItem('manabi_lastsync');
+  if (!raw) return '';
+  const d = new Date(raw);
+  if (isNaN(d.getTime())) return '';
+  return `さいごの どうき：${d.getMonth() + 1}月${d.getDate()}日 ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+}
+
+document.getElementById('sync-code-gen-btn').addEventListener('click', () => {
+  const current = getActiveSyncCode();
+  const make = () => {
+    const code = generateSyncCode();
+    localStorage.setItem('manabi_synccode', code);
+    syncCodeInput.value = code;
+    document.getElementById('sync-message').textContent = `あいことばを つくったよ：${code}\nほかの iPad にも、おなじ あいことばを 入れてね。`;
+    autoSync();
+  };
+  if (current) {
+    askConfirm('あいことばを つくりなおすと、ほかの iPad も 入れなおす ひつようが あります。\nつくりなおす？', 'つくる', 'やめる', make);
+  } else {
+    make();
+  }
+});
 
 document.getElementById('sync-import-btn').addEventListener('click', () => {
   const fileInput = document.getElementById('sync-import-file');

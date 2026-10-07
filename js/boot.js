@@ -17,9 +17,10 @@ byId('sound-toggle').addEventListener('change', (e) => {
 });
 
 byId('sync-open-btn').addEventListener('click', () => {
-  byId('sync-message').textContent = '';
+  byId('sync-message').textContent = lastSyncText();
   showScreen('sync');
 });
 
 cleanOldMissions();
 showTab('home');
+autoSync();

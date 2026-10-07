@@ -416,6 +416,7 @@ function finishSession() {
 
   renderResult({ s, total, correct, rate, ev, passed, coins, missionBonus, award, day });
   showScreen('result');
+  autoSync(); // あいことばが入っていれば、ほかの iPad とも自動で合わせる
 }
 
 function renderResult(r) {
