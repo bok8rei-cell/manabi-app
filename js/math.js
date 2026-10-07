@@ -164,13 +164,92 @@ function genGrade1(diff = 1) {
 // ===== 3年生 =====
 function genGrade3(diff = 1) {
   const typePools = [
-    ['mul', 'div', 'addsub', 'mulWord'],
-    ['mul', 'div', 'addsub', 'decimal', 'mulWord', 'divRemainder', 'unit', 'time'],
-    ['mul', 'div', 'addsub', 'decimal', 'mulWord', 'divRemainder', 'unit', 'time']
+    ['mul', 'div', 'addsub', 'mulWord', 'divWord', 'priceWord', 'unknown'],
+    ['mul', 'div', 'addsub', 'decimal', 'mulWord', 'divRemainder', 'unit', 'time', 'divWord', 'priceWord', 'moneyWord', 'visitWord', 'timesWord', 'unknown'],
+    ['mul', 'div', 'addsub', 'decimal', 'mulWord', 'divRemainder', 'unit', 'time', 'divWord', 'priceWord', 'moneyWord', 'visitWord', 'timesWord', 'unknown']
   ];
   const types = typePools[diff];
   const type = types[randInt(0, types.length - 1)];
   const maxMul = [5, 9, 9][diff];
+
+  if (type === 'divWord') {
+    const b = randInt(2, 9);
+    const c = randInt(2, 9);
+    const items = [['あめ', 'こ'], ['色紙', 'まい'], ['シール', 'まい'], ['クッキー', 'こ']];
+    const [name, unit] = items[randInt(0, items.length - 1)];
+    return {
+      question: `${name}が ${b * c}${unit}あります。\n${b}人で同じ数ずつ分けると、1人分は何${unit}？`,
+      type: 'input',
+      inputType: 'number',
+      answer: `${c}`
+    };
+  }
+
+  if (type === 'priceWord') {
+    const hi = diff === 0 ? 5 : 9; // やさしいときは、小さい数だけ
+    const p = randInt(2, hi) * 10;
+    const n = randInt(2, hi);
+    return {
+      question: `1こ ${p}円のあめを ${n}こ買うと、代金は何円？`,
+      type: 'input',
+      inputType: 'number',
+      answer: `${p * n}`
+    };
+  }
+
+  if (type === 'moneyWord') {
+    const have = randInt(3, 10) * 100;
+    const cost = randInt(1, have / 10 - 1) * 10;
+    return {
+      question: `${have}円持っています。${cost}円のおかしを買うと、のこりは何円？`,
+      type: 'input',
+      inputType: 'number',
+      answer: `${have - cost}`
+    };
+  }
+
+  if (type === 'visitWord') {
+    const a = randInt(120, 480);
+    const b = randInt(110, 390);
+    return {
+      question: `朝は ${a}人、午後は ${b}人が図書館に来ました。\n1日で何人来ましたか？`,
+      type: 'input',
+      inputType: 'number',
+      answer: `${a + b}`
+    };
+  }
+
+  if (type === 'timesWord') {
+    const a = randInt(2, 9) * 5;
+    const k = randInt(2, 6);
+    return {
+      question: `赤いテープの長さは ${a}cm です。\n青いテープの長さは、赤いテープの ${k}倍です。\n青いテープは何cm？`,
+      type: 'input',
+      inputType: 'number',
+      answer: `${a * k}`
+    };
+  }
+
+  if (type === 'unknown') {
+    if (Math.random() < 0.5) {
+      const a = randInt(5, 60);
+      const b = randInt(5, 40);
+      return {
+        question: `□ ＋ ${b} = ${a + b}\n□に入る数は？`,
+        type: 'input',
+        inputType: 'number',
+        answer: `${a}`
+      };
+    }
+    const a = randInt(2, 9);
+    const b = randInt(2, 9);
+    return {
+      question: `□ × ${b} = ${a * b}\n□に入る数は？`,
+      type: 'input',
+      inputType: 'number',
+      answer: `${a}`
+    };
+  }
 
   if (type === 'mul') {
     const a = randInt(1, maxMul);
@@ -316,12 +395,80 @@ function genGrade3(diff = 1) {
 // ===== 5年生 =====
 function genGrade5(diff = 1) {
   const typePools = [
-    ['fraction', 'decimalMul', 'decimalDiv'],
-    ['fraction', 'decimalMul', 'decimalDiv', 'percent', 'area', 'average', 'circle', 'volume'],
-    ['fraction', 'decimalMul', 'decimalDiv', 'percent', 'area', 'average', 'circle', 'volume']
+    ['fraction', 'decimalMul', 'decimalDiv', 'oddEven', 'lcm'],
+    ['fraction', 'decimalMul', 'decimalDiv', 'percent', 'area', 'average', 'circle', 'volume', 'oddEven', 'lcm', 'gcd5', 'speedWord', 'discount', 'density'],
+    ['fraction', 'decimalMul', 'decimalDiv', 'percent', 'area', 'average', 'circle', 'volume', 'oddEven', 'lcm', 'gcd5', 'speedWord', 'discount', 'density']
   ];
   const types = typePools[diff];
   const type = types[randInt(0, types.length - 1)];
+
+  if (type === 'oddEven') {
+    const n = randInt(10, 99);
+    return {
+      question: `${n}は 偶数（ぐうすう）？ 奇数（きすう）？`,
+      type: 'choice',
+      choices: ['偶数（ぐうすう）', '奇数（きすう）'],
+      answer: n % 2 === 0 ? '偶数（ぐうすう）' : '奇数（きすう）'
+    };
+  }
+
+  if (type === 'lcm') {
+    const a = randInt(2, 9);
+    let b = randInt(2, 9);
+    while (b === a) b = randInt(2, 9);
+    return {
+      question: `${a}と ${b}の最小公倍数は？`,
+      type: 'input',
+      inputType: 'number',
+      answer: `${(a * b) / gcd(a, b)}`
+    };
+  }
+
+  if (type === 'gcd5') {
+    const g = randInt(2, 6);
+    const x = randInt(1, 5);
+    let y = randInt(1, 5);
+    while (y === x) y = randInt(1, 5);
+    return {
+      question: `${g * x}と ${g * y}の最大公約数は？`,
+      type: 'input',
+      inputType: 'number',
+      answer: `${gcd(g * x, g * y)}`
+    };
+  }
+
+  if (type === 'speedWord') {
+    const v = randInt(3, 12) * 10;
+    const h = randInt(2, 6);
+    return {
+      question: `時速 ${v}kmの電車が ${h}時間走ると、何km進む？`,
+      type: 'input',
+      inputType: 'number',
+      answer: `${v * h}`
+    };
+  }
+
+  if (type === 'discount') {
+    const price = randInt(2, 20) * 100;
+    const p = [10, 20, 25, 50][randInt(0, 3)];
+    return {
+      question: `定価 ${price}円の品物を ${p}％引きで買うと、代金は何円？`,
+      type: 'input',
+      inputType: 'number',
+      answer: `${(price * (100 - p)) / 100}`
+    };
+  }
+
+  if (type === 'density') {
+    const area = randInt(2, 9) * 10;
+    const per = randInt(2, 9) * 10;
+    return {
+      question: `面積 ${area}km²の町に、${area * per}人が住んでいます。\n1km²あたり何人？`,
+      type: 'input',
+      inputType: 'number',
+      answer: `${per}`
+    };
+  }
 
   if (type === 'fraction') {
     const denoms = diff === 0 ? [2, 3, 4, 5, 6] : [2, 3, 4, 5, 6, 8, 9, 10, 12];
@@ -476,12 +623,51 @@ function formatLinear(coef) {
 
 function genGrade7(diff = 1) {
   const typePools = [
-    ['negAddSub', 'literalSimplify', 'equation', 'absValue'],
-    ['negAddSub', 'negMulDiv', 'literalSimplify', 'literalSubstitute', 'equation', 'proportion', 'absValue'],
-    ['negAddSub', 'negMulDiv', 'literalSimplify', 'literalSubstitute', 'equation', 'proportion', 'absValue', 'expand']
+    ['negAddSub', 'literalSimplify', 'equation', 'absValue', 'tempWord', 'eqWord'],
+    ['negAddSub', 'negMulDiv', 'literalSimplify', 'literalSubstitute', 'equation', 'proportion', 'absValue', 'tempWord', 'eqWord', 'expressWord'],
+    ['negAddSub', 'negMulDiv', 'literalSimplify', 'literalSubstitute', 'equation', 'proportion', 'absValue', 'expand', 'tempWord', 'eqWord', 'expressWord']
   ];
   const types = typePools[diff];
   const type = types[randInt(0, types.length - 1)];
+
+  if (type === 'tempWord') {
+    const a = randInt(-8, 5);
+    let b = randInt(-9, 9);
+    if (b === 0) b = 3;
+    const move = b > 0 ? `${b}℃上がりました` : `${-b}℃下がりました`;
+    return {
+      question: `ある日の気温は ${a < 0 ? '－' + (-a) : a}℃でした。\n夜になって、${move}。\n夜の気温は何℃？（マイナスのときは「-」をつけてね）`,
+      type: 'input',
+      inputType: 'text',
+      answer: `${a + b}`
+    };
+  }
+
+  if (type === 'eqWord') {
+    const x = randInt(2, 12);
+    const a = randInt(2, 6);
+    const b = randInt(1, 15);
+    return {
+      question: `ある数の ${a}倍に ${b}をたすと ${a * x + b}になります。\nある数は？`,
+      type: 'input',
+      inputType: 'number',
+      answer: `${x}`
+    };
+  }
+
+  if (type === 'expressWord') {
+    const a = randInt(2, 9);
+    let b = randInt(2, 9);
+    while (b === a) b = randInt(2, 9);
+    const correct = `${a}x+${b}`;
+    const choices = shuffleArray([correct, `${b}x+${a}`, `${a + b}x`, `${a}x-${b}`]);
+    return {
+      question: `1個 ${a}円のりんごを x個と、${b}円の箱を1つ買いました。\n代金を x を使った式で表すと？`,
+      type: 'choice',
+      choices,
+      answer: correct
+    };
+  }
 
   if (type === 'negAddSub') {
     const a = randInt(-9, 9);
