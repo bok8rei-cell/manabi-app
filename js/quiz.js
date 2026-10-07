@@ -52,7 +52,7 @@ function startSession(opts) {
 }
 
 function startDrill(subject) {
-  startSession({ mode: 'drill', grade: state.grade, subject, total: TOTAL_QUESTIONS });
+  startSession({ mode: 'drill', grade: state.grade, subject, total: getDrillSize() });
 }
 
 function startMistakeReview(limit) {
@@ -388,10 +388,12 @@ function finishSession() {
   if (!s.fromMistakes && s.mode !== 'challenge') {
     saveProgress(s.grade, s.subject, correct, total);
   }
-  if (s.mode === 'drill') saveRankingEntry(s.grade, s.subject, correct, total);
+  // ランキングとレベル判定は、ふつうの10もんのときだけ（3もんでは不安定なので）
+  const fullDrill = s.mode === 'drill' && total === TOTAL_QUESTIONS;
+  if (fullDrill) saveRankingEntry(s.grade, s.subject, correct, total);
 
   let ev = null;
-  if (s.mode === 'drill') ev = teacherEvaluate(s.grade, s.subject, correct, total);
+  if (fullDrill) ev = teacherEvaluate(s.grade, s.subject, correct, total);
 
   let passed = false;
   if (s.mode === 'challenge') {
@@ -399,7 +401,7 @@ function finishSession() {
     if (passed) passChallengeAndUpgrade(s.grade, s.subject, s.diffLevel);
   }
 
-  let coins = correct * 3 + (rate >= 0.8 ? 20 : 0);
+  let coins = correct * 3 + (rate >= 0.8 && total >= 5 ? 20 : 0); // 3もんでは はやくかせげすぎないよう、ボーナスなし
   if (passed) coins += 50;
   let missionBonus = false;
   if (s.mode === 'mission' && s.missionItemId) {

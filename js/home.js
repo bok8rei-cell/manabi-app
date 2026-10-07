@@ -118,7 +118,19 @@ function renderHome() {
   body.appendChild(card);
 
   // 教科
-  body.appendChild(el('h3', 'section-title', 'すきな きょうかで あそぶ'));
+  const titleRow = el('div', 'title-row');
+  titleRow.appendChild(el('h3', 'section-title', 'きょうかを えらぶ'));
+  const seg = el('div', 'seg');
+  seg.setAttribute('role', 'group');
+  seg.setAttribute('aria-label', 'もんだいの かず');
+  [3, 10].forEach(n => {
+    const b = el('button', 'seg-btn' + (n === getDrillSize() ? ' active' : ''), `${n}もん`);
+    b.setAttribute('aria-pressed', n === getDrillSize() ? 'true' : 'false');
+    b.addEventListener('click', () => { setDrillSize(n); renderHome(); });
+    seg.appendChild(b);
+  });
+  titleRow.appendChild(seg);
+  body.appendChild(titleRow);
   const grid = el('div', 'subject-grid');
   SUBJECTS.forEach(subj => {
     if (subj.grades && !subj.grades.includes(grade)) return;

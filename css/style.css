@@ -231,6 +231,13 @@ h2, h3 { margin: 0; }
   border-bottom: 4px solid #E0B960;
 }
 
+.title-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin: 22px 0 10px; }
+.title-row .section-title { margin: 0; }
+.seg { display: flex; background: var(--card); border: 2px solid var(--line); border-radius: 20px; overflow: hidden; }
+.seg-btn { min-height: 36px; padding: 4px 14px; font-weight: 700; color: var(--sub); white-space: nowrap; }
+.title-row .section-title { white-space: nowrap; }
+.seg-btn.active { background: var(--ink); color: #fff; }
+
 /* ----- 進み具合バー ----- */
 .bar { flex: 1; height: 12px; background: var(--line); border-radius: 8px; overflow: hidden; }
 .bar-fill { height: 100%; background: var(--mint); border-radius: 8px; transition: width 0.3s; }

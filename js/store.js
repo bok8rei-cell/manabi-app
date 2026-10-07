@@ -157,3 +157,8 @@ function currentDayStreak() {
 }
 
 function studiedToday() { return loadDayStreak().last === localDateStr(); }
+
+// ---- ドリルの問題数（10もん／3もん）----
+function drillSizeKey() { return `manabi_drillsize_${playerTag()}`; }
+function getDrillSize() { return localStorage.getItem(drillSizeKey()) === '3' ? 3 : 10; }
+function setDrillSize(n) { try { localStorage.setItem(drillSizeKey(), n === 3 ? '3' : '10'); } catch (e) { /* 無視 */ } }
