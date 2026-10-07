@@ -321,6 +321,34 @@ function lastSyncText() {
   return `さいごの どうき：${d.getMonth() + 1}月${d.getDate()}日 ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
 }
 
+// 1台目でコピー → 2台目ではりつけ（同じ Apple ID なら iPad 同士でそのまま貼り付けられる）
+document.getElementById('sync-code-copy-btn').addEventListener('click', async () => {
+  const msg = document.getElementById('sync-message');
+  const code = getActiveSyncCode();
+  if (!code) { msg.textContent = 'まだ あいことばが ないよ。「あたらしい あいことばを つくる」を おしてね。'; return; }
+  try {
+    await navigator.clipboard.writeText(code);
+    msg.textContent = 'あいことばを コピーしたよ。ほかの iPad で「はりつけ」を おしてね。';
+  } catch (e) {
+    msg.textContent = `コピーできなかったよ。あいことばは「${code}」です。`;
+  }
+});
+
+document.getElementById('sync-code-paste-btn').addEventListener('click', async () => {
+  const msg = document.getElementById('sync-message');
+  try {
+    const text = normalizeSyncCode(await navigator.clipboard.readText());
+    if (!/^[a-z0-9]{6,20}$/.test(text)) { msg.textContent = 'コピーした あいことばが みつからないよ。もういちど コピーしてね。'; return; }
+    localStorage.setItem('manabi_synccode', text);
+    syncCodeInput.value = text;
+    msg.textContent = 'あいことばを いれたよ。どうきしているよ…';
+    await autoSync();
+    msg.textContent = 'つながったよ！ これからは じどうで そろいます。\n' + lastSyncText();
+  } catch (e) {
+    msg.textContent = 'はりつけできなかったよ。あいことばを 手で いれてね。';
+  }
+});
+
 document.getElementById('sync-code-gen-btn').addEventListener('click', () => {
   const current = getActiveSyncCode();
   const make = () => {

@@ -303,6 +303,8 @@ h2, h3 { margin: 0; }
 .version { margin-top: 10px; text-align: center; font-size: 0.78rem; color: var(--sub); }
 #refresh-btn.busy { opacity: 0.5; }
 .sync-message { text-align: center; font-weight: 700; color: var(--ok); margin-top: 12px; white-space: pre-line; min-height: 1.4em; }
+.btn-row { display: flex; gap: 8px; }
+.btn-row .sub-btn { flex: 1; }
 #sync-import-file { display: block; margin-bottom: 10px; max-width: 100%; }
 
 /* ----- クイズ ----- */
