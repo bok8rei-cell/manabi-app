@@ -52,7 +52,7 @@ const EIGO_DATA = {
     { emoji: '😢', en: 'sad', ja: 'かなしい' },
     { emoji: '😡', en: 'angry', ja: 'おこっている' },
     { emoji: '🏃', en: 'run', ja: 'はしる' },
-    { emoji: '🍳', en: 'cook', ja: 'りょうりする' },
+    { emoji: '🍲', en: 'cook', ja: 'りょうりする' },
     { emoji: '📖', en: 'read', ja: 'よむ' },
     { emoji: '✍️', en: 'write', ja: 'かく' },
     { emoji: '🎤', en: 'sing', ja: 'うたう' },
@@ -75,7 +75,7 @@ const EIGO_DATA = {
     { emoji: '📅', en: 'weekend', ja: 'しゅうまつ' },
     { emoji: '📝', en: 'homework', ja: 'しゅくだい' },
     { emoji: '🤝', en: 'friend', ja: 'ともだち' },
-    { emoji: '🧑‍🏫', en: 'teacher', ja: 'せんせい' },
+    { emoji: '👩‍🏫', en: 'teacher', ja: 'せんせい' },
     { emoji: '🏛️', en: 'museum', ja: 'はくぶつかん' },
     { emoji: '🔬', en: 'science', ja: 'りか' },
     { emoji: '⚽', en: 'sport', ja: 'スポーツ' },
@@ -103,8 +103,10 @@ function generateEigoProblem(grade) {
     shuffleArray(distractorPool);
     const distractors = distractorPool.slice(0, 3).map(item => item.en);
     const choices = shuffleArray([correct.en, ...distractors]);
+    // 1年生は絵だけ。3年生からは絵だと意味が決まりにくい言葉（cook・important など）が多いので、日本語のヒントを付ける。
+    const hint = grade === 1 ? '' : `「${correct.ja}」\n`;
     return {
-      question: `${correct.emoji}\nこれを えいごで いうと？`,
+      question: `${correct.emoji}\n${hint}これを えいごで いうと？`,
       type: 'choice',
       choices,
       answer: correct.en

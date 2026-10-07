@@ -1,10 +1,10 @@
 // ===== こくご：かんじクイズ =====
-// kanji: 漢字, reading: 出題する読み方(ひらがな), word: その読み方を含む熟語・例
+// kanji: 漢字, reading: 出題する読み方(ひらがな), word: その読み方を含む熟語・例（3年以上は穴埋めで□に置き換えて表示する。用例は、その学年までに習う漢字だけで作る）
 
 const KANJI_DATA = {
   1: [
     // やさしい前半 1〜25（数・自然・元素・天気・植物・動物）
-    // yomi = 語の全体の読み。wordKana の □ に reading を入れると yomi になる（答えが1つに定まる）。
+    // 1年生：yomi = 語の全体の読み。「yomi の reading を かんじで かくと？」と聞く（reading は必ず yomi の一部）。wordKana/word は参考データ。
     { kanji: '一', reading: 'いち',   word: '一日',   wordKana: '□にち',   yomi: 'いちにち' },
     { kanji: '二', reading: 'に',     word: '二月',   wordKana: '□がつ',   yomi: 'にがつ' },
     { kanji: '三', reading: 'さん',   word: '三角',   wordKana: '□かく',   yomi: 'さんかく' },
@@ -73,18 +73,18 @@ const KANJI_DATA = {
     { kanji: '急', reading: 'きゅう', word: '急行' },
     { kanji: '球', reading: 'きゅう', word: '野球' },
     { kanji: '去', reading: 'きょ', word: '去年' },
-    { kanji: '橋', reading: 'はし', word: '橋' },
-    { kanji: '業', reading: 'ぎょう', word: '授業' },
-    { kanji: '曲', reading: 'きょく', word: '曲がる' },
-    { kanji: '局', reading: 'きょく', word: '郵便局' },
+    { kanji: '橋', reading: 'はし', word: '橋の上' },
+    { kanji: '業', reading: 'ぎょう', word: '工業' },
+    { kanji: '曲', reading: 'ま', word: '曲がる' },
+    { kanji: '局', reading: 'きょく', word: 'ゆうびん局' },
     { kanji: '銀', reading: 'ぎん', word: '銀行' },
     { kanji: '区', reading: 'く', word: '区役所' },
-    { kanji: '苦', reading: 'く', word: '苦しい' },
+    { kanji: '苦', reading: 'く', word: '苦心' },
     { kanji: '具', reading: 'ぐ', word: '道具' },
-    { kanji: '君', reading: 'くん', word: '君たち' },
+    { kanji: '君', reading: 'くん', word: '山田君' },
     { kanji: '係', reading: 'かかり', word: '係員' },
-    { kanji: '軽', reading: 'けい', word: '軽い' },
-    { kanji: '血', reading: 'ち', word: '血液' },
+    { kanji: '軽', reading: 'けい', word: '軽音楽' },
+    { kanji: '血', reading: 'けつ', word: '出血' },
     { kanji: '決', reading: 'き', word: '決める' }
   ],
   5: [
@@ -104,7 +104,7 @@ const KANJI_DATA = {
     { kanji: '可', reading: 'か', word: '可能' },
     { kanji: '仮', reading: 'かり', word: '仮の話' },
     { kanji: '価', reading: 'か', word: '価格' },
-    { kanji: '河', reading: 'かわ', word: '河口' },
+    { kanji: '河', reading: 'か', word: '河口' },
     { kanji: '過', reading: 'す', word: '過ごす' },
     { kanji: '快', reading: 'かい', word: '快晴' },
     { kanji: '解', reading: 'かい', word: '理解' },
@@ -112,7 +112,7 @@ const KANJI_DATA = {
     { kanji: '確', reading: 'かく', word: '確認' },
     { kanji: '額', reading: 'がく', word: '金額' },
     { kanji: '刊', reading: 'かん', word: '夕刊' },
-    { kanji: '幹', reading: 'みき', word: '幹' },
+    { kanji: '幹', reading: 'みき', word: '木の幹' },
     { kanji: '基', reading: 'き', word: '基本' },
     { kanji: '寄', reading: 'き', word: '寄付' },
     { kanji: '規', reading: 'き', word: '規則' }
@@ -146,17 +146,6 @@ const KANJI_DATA = {
   ]
 };
 
-// 1年生の穴埋めで、選択肢の読みを□に入れると「別の言葉」になってしまうものを
-// 除外するための語集合（例：□えん に 校(こう) を入れると こうえん＝公園 になり紛らわしい）。
-// データ中の全 yomi ＋ データに無いが子どもがよく知る紛らわしい語。
-// ※辞書ではないので網羅ではない。新たな紛らわしい語が見つかれば追記する。
-const KANJI1_TRAP_WORDS = new Set([
-  ...KANJI_DATA[1].map(e => e.yomi).filter(Boolean),
-  'こうえん',                                                    // 公園（校＝こう）
-  'いちえん', 'ごえん', 'じゅうえん',                              // お金（一円・五円・十円。百円千円は答えなので除外対象外）
-  'いちがつ', 'さんがつ', 'しがつ', 'ごがつ', 'ろくがつ', 'しちがつ' // 各月（数字＋がつ）
-]);
-
 function generateKanjiProblem(grade, diff = 1) {
   const list = KANJI_DATA[grade] || KANJI_DATA[1];
   const half = Math.ceil(list.length / 2);
@@ -172,30 +161,25 @@ function generateKanjiProblem(grade, diff = 1) {
     const showKana = diff === 0;
     const fmt = (item) => showKana ? `${item.kanji} ${item.reading}` : item.kanji;
     const correctChoice = fmt(correct);
-    const maskedWord = correct.wordKana || correct.word.replace(correct.kanji, '□');
 
-    // 読みが同じ漢字（例：日と火＝どちらも「ひ」）は選択肢に混ぜない。
+    // 読みが同じ・読みの出だしが同じ漢字は選択肢に混ぜない（日と火、日と人（ひ／ひと）、手と天（て／てん）など）。
     const distractorPool = shuffleArray(
-      list.filter(item => item.kanji !== correct.kanji && item.reading !== correct.reading)
+      list.filter(item => item.kanji !== correct.kanji &&
+        !item.reading.startsWith(correct.reading) && !correct.reading.startsWith(item.reading))
     );
     const distractors = [];
     const usedKanji = new Set([correct.kanji]);
     for (const item of distractorPool) {
       if (distractors.length >= 3) break;
       if (usedKanji.has(item.kanji)) continue;
-      // その読みを□に入れると別の言葉になる紛らわしい選択肢は出さない
-      // （例：□えん に 校(こう) → こうえん）。
-      if (KANJI1_TRAP_WORDS.has(maskedWord.replace('□', item.reading))) continue;
       usedKanji.add(item.kanji);
       distractors.push(fmt(item));
     }
     const choices = shuffleArray([correctChoice, ...distractors]);
 
-    // 語の読み（yomi）を見せることで、答えが必ず1つに定まる。
-    // 例：「□だま」と かいて「めだま」→ 目（水玉=みずたま は読みが違うので除外）。
-    const question = correct.yomi
-      ? `「${maskedWord}」と かいて「${correct.yomi}」。\n□に はいる かんじは どれ？`
-      : `「${maskedWord}」の\n□に はいる かんじは どれ？`;
+    // 「ひだりて」の「ひだり」を かんじで かくと？ （□＋ひらがなの形はやめて、読みで聞く）
+    const question = `「${correct.yomi}」の「${correct.reading}」を
+かんじで かくと どれ？`;
 
     const result = {
       question,
@@ -234,7 +218,7 @@ function generateKanjiProblem(grade, diff = 1) {
     };
   }
 
-  const distractorPool = shuffleArray(list.filter(item => item.kanji !== correct.kanji));
+  const distractorPool = shuffleArray(list.filter(item => item.kanji !== correct.kanji && item.reading !== correct.reading));
   const distractors = [];
   const usedKanji = new Set([correct.kanji]);
   for (const item of distractorPool) {
@@ -274,27 +258,27 @@ function shuffleArray(arr) {
 const KOTOWAZA_DATA = {
   3: [
     // やさしい前半（有名なことわざ・穴埋め）
-    { q: '「花より（　）」の（　）に入る言葉は？', choices: ['まんじゅう', 'だんご', 'みかん', 'おかし'], a: 'だんご', read: { full: '花より団子', t: '花', y: 'はな', d: ['つき', 'ゆき', 'くさ'] } },
+    { q: '「花より（　）」の（　）に入る言葉は？', choices: ['まんじゅう', 'だんご', 'みかん', 'おかし'], a: 'だんご', read: { full: '花よりだんご', t: '花', y: 'はな', d: ['つき', 'ゆき', 'くさ'] } },
     { q: '「七転び（　）起き」の（　）に入る数字は？', choices: ['六', '七', '八', '九'], a: '八', read: { full: '七転び八起き', t: '七', y: 'なな', d: ['ここの', 'やっ', 'むい'] } },
     { q: '「石の上にも（　）年」の（　）は？', choices: ['一', '三', '五', '十'], a: '三', read: { full: '石の上にも三年', t: '石', y: 'いし', d: ['つち', 'すな', 'みず'] } },
-    { q: '「早起きは三文の（　）」の（　）は？', choices: ['そん', 'とく', 'いみ', 'かね'], a: 'とく', read: { full: '早起きは三文の得', t: '早', y: 'はや', d: ['おそ', 'あさ', 'よる'] } },
-    { q: '「（　）も木から落ちる」の（　）に入る動物は？', choices: ['ねこ', 'とり', 'さる', 'いぬ'], a: 'さる', read: { full: '猿も木から落ちる', t: '木', y: 'き', d: ['は', 'ね', 'えだ'] } },
-    { q: '「ちりも積もれば（　）となる」の（　）は？', choices: ['かわ', 'やま', 'うみ', 'そら'], a: 'やま', read: { full: 'ちりも積もれば山となる', t: '山', y: 'やま', d: ['かわ', 'たに', 'うみ'] } },
+    { q: '「早起きは三文の（　）」の（　）は？', choices: ['そん', 'とく', 'いみ', 'かね'], a: 'とく', read: { full: '早起きは三文のとく', t: '早', y: 'はや', d: ['おそ', 'あさ', 'よる'] } },
+    { q: '「（　）も木から落ちる」の（　）に入る動物は？', choices: ['ねこ', 'とり', 'さる', 'いぬ'], a: 'さる', read: { full: 'さるも木から落ちる', t: '木', y: 'き', d: ['は', 'ね', 'えだ'] } },
+    { q: '「ちりもつもれば（　）となる」の（　）は？', choices: ['かわ', 'やま', 'うみ', 'そら'], a: 'やま', read: { full: 'ちりもつもれば山となる', t: '山', y: 'やま', d: ['かわ', 'たに', 'うみ'] } },
     { q: '「時は（　）なり」の（　）は？', choices: ['いし', 'かね', 'やま', 'かわ'], a: 'かね', read: { full: '時は金なり', t: '金', y: 'かね', d: ['いし', 'つち', 'みず'] } },
-    { q: '「笑う門には（　）来たる」の（　）は？', choices: ['ゆき', 'かぜ', 'ふく', 'おに'], a: 'ふく', read: { full: '笑う門には福来たる', t: '福', y: 'ふく', d: ['とみ', 'さいわ', 'めぐみ'] } },
+    { q: '「わらう門には（　）来たる」の（　）は？', choices: ['ゆき', 'かぜ', 'ふく', 'おに'], a: 'ふく', read: { full: 'わらう門には福来たる', t: '福', y: 'ふく', d: ['とみ', 'さいわ', 'めぐみ'] } },
     { q: '「急がば（　）れ」の（　）は？', choices: ['はし', 'まわ', 'すす', 'とば'], a: 'まわ', read: { full: '急がば回れ', t: '急', y: 'いそ', d: ['はや', 'おそ', 'すす'] } },
-    { q: '「二（　）を追う者は一（　）をも得ず」の（　）に入る動物は？', choices: ['うさぎ', 'とり', 'ねこ', 'いぬ'], a: 'うさぎ', read: { full: '二兎を追う者は一兎をも得ず', t: '追', y: 'お', d: ['さ', 'と', 'ま'] } },
+    { q: '「二（　）を おう者は 一（　）を も えず」の（　）に入る動物は？', choices: ['うさぎ', 'とり', 'ねこ', 'いぬ'], a: 'うさぎ' },
     // むずかしい後半（意味を問う）
-    { q: '「犬も（　）けば棒にあたる」の（　）は？', choices: ['は', 'ね', 'ある', 'お'], a: 'ある', read: { full: '犬も歩けば棒に当たる', t: '犬', y: 'いぬ', d: ['ねこ', 'うし', 'とり'] } },
+    { q: '「犬も（　）けばぼうにあたる」の（　）は？', choices: ['は', 'ね', 'ある', 'お'], a: 'ある', read: { full: '犬も歩けばぼうに当たる', t: '犬', y: 'いぬ', d: ['ねこ', 'うし', 'とり'] } },
     { q: '「百聞は一（　）にしかず」の（　）は？', choices: ['もん', 'けん', 'ねん', 'さつ'], a: 'けん', read: { full: '百聞は一見にしかず', t: '百', y: 'ひゃく', d: ['せん', 'まん', 'じゅう'] } },
-    { q: '「蛙の子は蛙」の意味は？', choices: ['子どもは親に似る', '蛙は水が好き', '子どもは元気だ', '蛙は小さい'], a: '子どもは親に似る', read: { full: '蛙の子は蛙', t: '子', y: 'こ', d: ['て', 'め', 'き'] } },
-    { q: '「石橋をたたいて渡る」の意味は？', choices: ['石の橋を壊す', '慎重にものごとを行う', '橋を何度も渡る', '急いで渡る'], a: '慎重にものごとを行う', read: { full: '石橋をたたいて渡る', t: '渡', y: 'わた', d: ['ある', 'およ', 'はし'] } },
-    { q: '「のど元過ぎれば（　）を忘れる」の（　）は？', choices: ['あつさ', 'さむさ', 'いたさ', 'つらさ'], a: 'あつさ', read: { full: 'のど元過ぎれば熱さを忘れる', t: '熱', y: 'あつ', d: ['さむ', 'つめ', 'ぬる'] } },
+    { q: '「かえるの子はかえる」の意味は？', choices: ['子どもは親に似る', 'かえるは水が好き', '子どもは元気だ', 'かえるは小さい'], a: '子どもは親に似る', read: { full: 'かえるの子はかえる', t: '子', y: 'こ', d: ['て', 'め', 'き'] } },
+    { q: '「いし橋をたたいてわたる」の意味は？', choices: ['いしの橋をこわす', 'しんちょうにものごとを行う', '橋をなんどもわたる', 'いそいでわたる'], a: 'しんちょうにものごとを行う', read: { full: 'いし橋をたたいてわたる', t: '橋', y: 'はし', d: ['みち', 'いし', 'かわ'] } },
+    { q: '「のどもとすぎれば（　）をわすれる」の（　）は？', choices: ['あつさ', 'さむさ', 'いたさ', 'つらさ'], a: 'あつさ' },
   ],
   5: [
     // やさしい前半（有名な慣用句・意味を問う）
-    { q: '「猫の手も借りたい」の意味は？', choices: ['猫が好き', 'とても忙しくて誰の助けでも借りたい', '猫に頼む', '手が足りない'], a: 'とても忙しくて誰の助けでも借りたい', read: { full: '猫の手も借りたい', t: '借', y: 'か', d: ['と', 'ぬ', 'さ'] } },
-    { q: '「足をあらう」の意味は？', choices: ['足を洗う', '悪いことをやめる', '旅を終える', '疲れる'], a: '悪いことをやめる', read: { full: '足を洗う', t: '足', y: 'あし', d: ['て', 'あたま', 'ゆび'] } },
+    { q: '「ねこの手も借りたい」の意味は？', choices: ['ねこが好き', 'とても忙しくて誰の助けでも借りたい', 'ねこにたのむ', '手が足りない'], a: 'とても忙しくて誰の助けでも借りたい', read: { full: 'ねこの手も借りたい', t: '借', y: 'か', d: ['と', 'ぬ', 'さ'] } },
+    { q: '「足をあらう」の意味は？', choices: ['足をきれいにする', '悪いことをやめる', '旅を終える', '疲れる'], a: '悪いことをやめる', read: { full: '足をあらう', t: '足', y: 'あし', d: ['て', 'あたま', 'ゆび'] } },
     { q: '「口が軽い」の意味は？', choices: ['食べるのが速い', 'しゃべりすぎる', '口が小さい', '話すのが上手'], a: 'しゃべりすぎる', read: { full: '口が軽い', t: '軽', y: 'かる', d: ['おも', 'ふと', 'かた'] } },
     { q: '「手を貸す」の意味は？', choices: ['手をさわる', '物を渡す', '助ける', '手が届く'], a: '助ける', read: { full: '手を貸す', t: '貸', y: 'か', d: ['かえ', 'と', 'う'] } },
     { q: '「鼻が高い」の意味は？', choices: ['鼻が大きい', 'においがわかる', '得意になる・自慢に思う', '顔が高い'], a: '得意になる・自慢に思う', read: { full: '鼻が高い', t: '鼻', y: 'はな', d: ['みみ', 'め', 'くち'] } },

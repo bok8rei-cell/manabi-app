@@ -75,7 +75,7 @@ function genGrade1(diff = 1) {
   if (type === 'sub') {
     const maxSub = [8, 20, 18][diff];
     const a = randInt(2, maxSub);
-    const b = randInt(1, a);
+    const b = randInt(1, Math.min(a, 10)); // 1年生は 10 までの数をひく
     return {
       question: `${a} － ${b} = ？`,
       type: 'input',
@@ -93,7 +93,7 @@ function genGrade1(diff = 1) {
     const a = randInt(1, maxN);
     const b = randInt(1, maxN);
     return {
-      question: `${name}が ${a}${unit}あります。\n${b}${unit}もらうと、あわせてなん${unit}になる？`,
+      question: `${name}が ${a}${unit}${(unit === 'びき' || unit === 'わ') ? 'います' : 'あります'}。\n${b}${unit}もらうと、あわせてなん${unit}になる？`,
       type: 'input',
       inputType: 'number',
       answer: `${a + b}`
@@ -118,14 +118,18 @@ function genGrade1(diff = 1) {
   }
 
   if (type === 'subWord') {
+    // [名前, 単位, 減るときの言い方, 「ある」か「いる」か]
     const items = [
-      ['あめ', 'こ'], ['いろえんぴつ', '本'], ['とり', 'わ'], ['カード', 'まい']
+      ['あめ', 'こ', 'たべると', 'あります'],
+      ['いろえんぴつ', '本', 'つかうと', 'あります'],
+      ['とり', 'わ', 'とんでいくと', 'います'],
+      ['カード', 'まい', 'つかうと', 'あります']
     ];
-    const [name, unit] = items[randInt(0, items.length - 1)];
+    const [name, unit, verb, exist] = items[randInt(0, items.length - 1)];
     const a = randInt(5, 18);
-    const b = randInt(1, a - 1);
+    const b = randInt(1, Math.min(a - 1, 9));
     return {
-      question: `${name}が ${a}${unit}あります。\n${b}${unit}つかうと、なん${unit}のこる？`,
+      question: `${name}が ${a}${unit}${exist}。\n${b}${unit}${verb}、なん${unit}のこる？`,
       type: 'input',
       inputType: 'number',
       answer: `${a - b}`
@@ -342,7 +346,7 @@ function genGrade5(diff = 1) {
       opSymbol = '－';
       const reduced = reduceFraction(resultNum, lcd2);
       return {
-        question: `${bigN}/${bigD} ${opSymbol} ${smallN}/${smallD} = ？\n（やくぶんした　ぶんすうで こたえてね）`,
+        question: `${bigN}/${bigD} ${opSymbol} ${smallN}/${smallD} = ？\n（やくぶんした ぶんすうで こたえてね）`,
         type: 'input',
         inputType: 'text',
         answer: fractionToString(reduced),
@@ -351,7 +355,7 @@ function genGrade5(diff = 1) {
     }
     const reduced = reduceFraction(resultNum, lcd);
     return {
-      question: `${n1}/${d1} ${opSymbol} ${n2}/${d2} = ？\n（やくぶんした　ぶんすうで こたえてね）`,
+      question: `${n1}/${d1} ${opSymbol} ${n2}/${d2} = ？\n（やくぶんした ぶんすうで こたえてね）`,
       type: 'input',
       inputType: 'text',
       answer: fractionToString(reduced),
@@ -384,7 +388,7 @@ function genGrade5(diff = 1) {
   }
 
   if (type === 'percent') {
-    const total = randInt(2, 20) * 10; // 20〜200の10刻み
+    const total = randInt(1, 10) * 20; // 20〜200の20刻み（25％・75％でも答えがかならず整数になる）
     const percentages = [10, 20, 25, 50, 75];
     const p = percentages[randInt(0, percentages.length - 1)];
     const result = Math.round(total * p / 100);
@@ -415,25 +419,15 @@ function genGrade5(diff = 1) {
   }
 
   if (type === 'circle') {
+    // 円の面積は6年生で習うので、5年生は円周だけ
     const r = randInt(1, 10);
-    const isCircumference = Math.random() < 0.5;
-    if (isCircumference) {
-      const c = Math.round(2 * r * 3.14 * 100) / 100;
-      return {
-        question: `半径 ${r}cmの円の円周は何cm？\n（円周率は3.14とする）`,
-        type: 'input',
-        inputType: 'text',
-        answer: `${c}`
-      };
-    } else {
-      const area = Math.round(r * r * 3.14 * 100) / 100;
-      return {
-        question: `半径 ${r}cmの円の面積は何cm²？\n（円周率は3.14とする）`,
-        type: 'input',
-        inputType: 'text',
-        answer: `${area}`
-      };
-    }
+    const c = Math.round(2 * r * 3.14 * 100) / 100;
+    return {
+      question: `半径 ${r}cmの円の円周は何cm？\n（円周率は3.14とする）`,
+      type: 'input',
+      inputType: 'text',
+      answer: `${c}`
+    };
   }
 
   if (type === 'volume') {
@@ -653,6 +647,10 @@ function generateMathProblem(grade, diff = 1) {
 
 // ユーザー入力が正解かどうか判定
 function isMathAnswerCorrect(problem, userInput) {
+  // 全角の数字・記号（１２、３／４、－５、０．５）で入力されても同じに扱う
+  userInput = String(userInput)
+    .replace(/[０-９]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0xFEE0))
+    .replace(/[．。]/g, '.').replace(/／/g, '/').replace(/[－ー−]/g, '-');
   if (problem.type === 'choice') {
     return userInput === problem.answer;
   }
