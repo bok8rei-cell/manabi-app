@@ -312,6 +312,8 @@ h2, h3 { margin: 0; }
 .quiz-top .bar { height: 14px; }
 .quiz-top .count { font-weight: 700; font-size: 0.9rem; min-width: 3em; text-align: right; color: var(--sub); }
 .quiz-tag { text-align: center; font-size: 0.85rem; color: var(--sub); font-weight: 700; margin-top: 8px; }
+.quiz-emoji { text-align: center; font-size: 4.2rem; line-height: 1.2; margin-top: 10px; }
+.quiz-emoji + .quiz-question { margin-top: 4px; }
 .quiz-question {
   text-align: center;
   font-size: 1.7rem;

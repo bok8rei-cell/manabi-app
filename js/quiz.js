@@ -120,8 +120,11 @@ function renderQuestion() {
   byId('quiz-bar').style.width = `${pct}%`;
   byId('quiz-bar-wrap').setAttribute('aria-valuenow', String(pct));
   byId('quiz-tag').textContent = quizTagText();
+  byId('quiz-emoji').textContent = p.emoji || '';
+  byId('quiz-emoji').classList.toggle('hidden', !p.emoji);
   byId('quiz-question').textContent = p.question;
-  byId('quiz-read-btn').classList.toggle('hidden', !FX.canSpeak());
+  byId('quiz-read-btn').classList.toggle('hidden', !FX.canSpeak() || !!p.noRead);
+  byId('quiz-read-btn').textContent = p.speakEn ? '🔊 えいごを きく' : '🔊 よみあげ';
   byId('quiz-hint').textContent = '';
   const fb = byId('quiz-feedback');
   fb.className = 'feedback hidden';
@@ -244,7 +247,7 @@ function checkAnswer() {
     s.wrong++;
     s.combo = 0;
     FX.wrong();
-    s.wrongList.push({ q: p.question, a: p.answer });
+    s.wrongList.push({ q: (p.emoji ? p.emoji + ' ' : '') + p.question, a: p.answer });
   }
 
   // にがて：まちがえたら保存、復習問題は結果に応じて更新
@@ -312,7 +315,9 @@ byId('quiz-action-btn').addEventListener('click', () => {
 });
 
 byId('quiz-read-btn').addEventListener('click', () => {
-  if (session && session.current) FX.speak(session.current.question);
+  if (!session || !session.current) return;
+  if (session.current.speakEn) FX.speakEn(session.current.speakEn);
+  else FX.speak(session.current.question);
 });
 
 byId('quiz-quit-btn').addEventListener('click', () => {

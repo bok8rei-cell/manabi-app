@@ -132,6 +132,16 @@ const FX = (function () {
         window.speechSynthesis.speak(u);
       } catch (e) { /* 読み上げ失敗は無視 */ }
     },
+    speakEn(word) {
+      if (!this.canSpeak()) return;
+      try {
+        window.speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance(String(word));
+        u.lang = 'en-US';
+        u.rate = 0.8;
+        window.speechSynthesis.speak(u);
+      } catch (e) { /* 読み上げ失敗は無視 */ }
+    },
     stopSpeak() {
       try { if (this.canSpeak()) window.speechSynthesis.cancel(); } catch (e) { /* 無視 */ }
     }
