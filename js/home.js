@@ -227,6 +227,73 @@ function renderReport() {
   sum.appendChild(el('div', 'report-line', `💪 にがて：${mistakes.length}もん　🔥 れんぞく：${currentDayStreak()}日（さいこう ${playerBestStreak()}日）`));
   container.appendChild(sum);
 
+  // だれの きろくか えらべる（子どもが複数いるとき）
+  const names = loadPlayerNames();
+  if (names.length > 1) {
+    const chips = el('div', 'name-chips report-chips');
+    names.forEach(n => {
+      const b = el('button', 'name-chip' + (n === state.playerName ? ' selected' : ''), n);
+      b.addEventListener('click', () => { selectPlayerName(n); renderReport(); });
+      chips.appendChild(b);
+    });
+    container.insertBefore(chips, container.children[1]);
+  }
+
+  // この 1しゅうかん
+  const days = lastDays(7);
+  const weekQ = days.reduce((a, d) => a + d.q, 0);
+  const weekC = days.reduce((a, d) => a + d.c, 0);
+  const maxQ = Math.max(1, ...days.map(d => d.q));
+  const week = el('div', 'panel');
+  week.appendChild(el('h3', null, 'この 1しゅうかん'));
+  week.appendChild(el('div', 'report-line', weekQ > 0
+    ? `${weekQ}もん やって、${weekC}もん せいかい（${Math.round((weekC / weekQ) * 100)}%）　べんきょうした日：${days.filter(d => d.q > 0).length}日`
+    : 'まだ きろくが ありません。'));
+  const bars = el('div', 'week');
+  const DOW = ['日', '月', '火', '水', '木', '金', '土'];
+  days.forEach(d => {
+    const col = el('div', 'week-col' + (d.date === localDateStr() ? ' today' : ''));
+    col.appendChild(el('div', 'week-num', d.q > 0 ? String(d.q) : ''));
+    const bar = el('div', 'week-bar' + (d.q > 0 ? ' on' : ''));
+    bar.style.height = `${d.q > 0 ? Math.max(8, Math.round((d.q / maxQ) * 70)) : 4}px`;
+    col.appendChild(bar);
+    col.appendChild(el('div', 'week-dow', DOW[d.dow]));
+    col.setAttribute('aria-label', `${d.date} ${d.q}もん`);
+    bars.appendChild(col);
+  });
+  week.appendChild(bars);
+  container.appendChild(week);
+
+  // にがて（教科べつ）
+  const weak = el('div', 'panel');
+  weak.appendChild(el('h3', null, 'にがて（まちがえた もんだい）'));
+  if (mistakes.length === 0) {
+    weak.appendChild(el('div', 'report-empty', 'いまは にがてが ありません。'));
+  } else {
+    const bySubject = {};
+    mistakes.forEach(m => {
+      const key = `${m.grade}|${m.subject}`;
+      bySubject[key] = (bySubject[key] || 0) + 1;
+    });
+    Object.keys(bySubject).sort((a, b) => bySubject[b] - bySubject[a]).forEach(key => {
+      const [g, subj] = key.split('|');
+      const row = el('div', 'report-row');
+      row.appendChild(el('span', 'subject-name', `${gradeLabel(Number(g))} ${subjectNameOf(Number(g), subj)}`));
+      row.appendChild(el('span', 'subject-detail', `${bySubject[key]}もん`));
+      weak.appendChild(row);
+    });
+    const det = el('details', 'wrong-list');
+    det.appendChild(el('summary', null, 'もんだいを みる'));
+    mistakes.slice(0, 20).forEach(m => {
+      const row = el('div', 'wrong-row');
+      row.appendChild(el('div', 'wrong-q', (m.problem.emoji ? m.problem.emoji + ' ' : '') + m.problem.question));
+      row.appendChild(el('div', 'wrong-a', `こたえ：${m.problem.answer}`));
+      det.appendChild(row);
+    });
+    weak.appendChild(det);
+  }
+  container.appendChild(weak);
+
   ALL_GRADES.forEach(grade => {
     const card = el('div', 'report-card');
     card.appendChild(el('h3', null, gradeLabel(grade)));

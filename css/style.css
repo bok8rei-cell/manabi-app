@@ -289,6 +289,17 @@ h2, h3 { margin: 0; }
 .report-empty.pad { padding-top: 6px; }
 .ranking-rank { font-weight: 700; color: var(--main-d); min-width: 2.6em; }
 
+/* ----- 1しゅうかんの ぼうグラフ ----- */
+.week { display: flex; gap: 6px; align-items: flex-end; height: 120px; margin-top: 10px; }
+.week-col { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 3px; }
+.week-num { font-size: 0.72rem; color: var(--sub); min-height: 1em; }
+.week-bar { width: 100%; max-width: 30px; background: var(--line); border-radius: 6px 6px 3px 3px; }
+.week-bar.on { background: var(--mint); }
+.week-col.today .week-bar.on { background: var(--main); }
+.week-dow { font-size: 0.78rem; font-weight: 700; color: var(--sub); }
+.week-col.today .week-dow { color: var(--main-d); }
+.report-chips { justify-content: center; }
+
 /* ----- せってい・同期 ----- */
 .player-name-box { display: flex; align-items: center; gap: 10px; }
 .player-name-box label { font-weight: 700; white-space: nowrap; }

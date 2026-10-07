@@ -162,3 +162,37 @@ function studiedToday() { return loadDayStreak().last === localDateStr(); }
 function drillSizeKey() { return `manabi_drillsize_${playerTag()}`; }
 function getDrillSize() { return localStorage.getItem(drillSizeKey()) === '3' ? 3 : 10; }
 function setDrillSize(n) { try { localStorage.setItem(drillSizeKey(), n === 3 ? '3' : '10'); } catch (e) { /* 無視 */ } }
+
+// ---- 学習のようす（日ごとの問題数・正解数。保護者向けの「この1しゅうかん」用）----
+function historyKey(name) { return `manabi_history_${playerTag(name)}`; }
+
+function loadHistory(name) {
+  const h = readJSON(historyKey(name), {});
+  return h && typeof h === 'object' && !Array.isArray(h) ? h : {};
+}
+
+function recordHistory(correct, total) {
+  const h = loadHistory();
+  const today = localDateStr();
+  const e = h[today] || { q: 0, c: 0 };
+  e.q += total;
+  e.c += correct;
+  h[today] = e;
+  const limit = addDaysStr(today, -30);
+  Object.keys(h).forEach(d => { if (d < limit) delete h[d]; });
+  writeJSON(historyKey(), h);
+}
+
+// 今日までの n 日ぶん（古い順）。{ date, dow(0=日), q, c }
+function lastDays(n, name) {
+  const h = loadHistory(name);
+  const today = localDateStr();
+  const out = [];
+  for (let i = n - 1; i >= 0; i--) {
+    const date = addDaysStr(today, -i);
+    const [y, m, d] = date.split('-').map(Number);
+    const e = h[date] || { q: 0, c: 0 };
+    out.push({ date, dow: new Date(y, m - 1, d).getDay(), q: e.q, c: e.c });
+  }
+  return out;
+}

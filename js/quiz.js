@@ -389,6 +389,7 @@ function finishSession() {
   const rate = total ? correct / total : 0;
 
   const day = touchDayStreak();
+  recordHistory(correct, total);
 
   if (!s.fromMistakes && s.mode !== 'challenge') {
     saveProgress(s.grade, s.subject, correct, total);

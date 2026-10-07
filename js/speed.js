@@ -198,6 +198,7 @@ function finishSpeedQuiz() {
   }
 
   touchDayStreak();
+  recordHistory(state.speedCorrect, SPEED_QUESTIONS);
   document.getElementById('speed-result-message').textContent = message;
 
   showScreen('speedresult');
