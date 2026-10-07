@@ -2,109 +2,97 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<meta http-equiv="Pragma" content="no-cache">
-<meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>BRAIN QUEST：零式</title>
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#050d1a">
+<meta name="theme-color" content="#FFF8EC">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="BRAIN QUEST：零式">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="BRAIN QUEST">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/style.css?v=37.0">
 </head>
 <body>
-<canvas id="stars-canvas"></canvas>
 <div id="app">
 
-  <!-- ホーム画面：だれが べんきょうする？ -->
+  <!-- ホーム -->
   <section id="screen-home" class="screen">
-    <h1>BRAIN QUEST：零式</h1>
-    <svg class="robot-mascot" viewBox="0 0 120 160" xmlns="http://www.w3.org/2000/svg" width="90" height="115">
-      <defs>
-        <filter id="glow"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-        <filter id="glow2"><feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-      </defs>
-      <!-- antenna -->
-      <line x1="60" y1="22" x2="60" y2="7" stroke="#00d4ff" stroke-width="2.5" stroke-linecap="round"/>
-      <circle cx="60" cy="4" r="5" fill="#00d4ff" filter="url(#glow2)"/>
-      <!-- head -->
-      <rect x="24" y="22" width="72" height="55" rx="13" fill="#081e38" stroke="#00d4ff" stroke-width="2"/>
-      <!-- eye sockets -->
-      <circle cx="43" cy="46" r="11" fill="#030e1e"/>
-      <circle cx="77" cy="46" r="11" fill="#030e1e"/>
-      <!-- eyes glow -->
-      <circle cx="43" cy="46" r="8" fill="#00d4ff" filter="url(#glow)" opacity="0.95"/>
-      <circle cx="77" cy="46" r="8" fill="#00d4ff" filter="url(#glow)" opacity="0.95"/>
-      <circle cx="43" cy="46" r="3.5" fill="#fff"/>
-      <circle cx="77" cy="46" r="3.5" fill="#fff"/>
-      <!-- mouth -->
-      <path d="M 38 62 Q 60 74 82 62" stroke="#00d4ff" fill="none" stroke-width="2.5" stroke-linecap="round" filter="url(#glow)"/>
-      <!-- neck -->
-      <rect x="48" y="77" width="24" height="12" rx="5" fill="#081e38" stroke="#00d4ff" stroke-width="1.5"/>
-      <!-- body -->
-      <rect x="13" y="89" width="94" height="62" rx="15" fill="#081e38" stroke="#00d4ff" stroke-width="2"/>
-      <!-- chest lights -->
-      <circle cx="40" cy="109" r="5.5" fill="#ff4081" filter="url(#glow)"/>
-      <circle cx="60" cy="109" r="5.5" fill="#fbbf24" filter="url(#glow)"/>
-      <circle cx="80" cy="109" r="5.5" fill="#69ff47" filter="url(#glow)"/>
-      <!-- display panel -->
-      <rect x="33" y="122" width="54" height="18" rx="5" fill="#020d1c" stroke="#00d4ff" stroke-width="1"/>
-      <line x1="40" y1="131" x2="80" y2="131" stroke="#00d4ff" stroke-width="2" stroke-dasharray="5,3" opacity="0.8"/>
-      <!-- left arm -->
-      <rect x="0" y="94" width="13" height="42" rx="6" fill="#081e38" stroke="#00d4ff" stroke-width="1.5"/>
-      <circle cx="6" cy="140" r="7" fill="#081e38" stroke="#00d4ff" stroke-width="1.5"/>
-      <!-- right arm -->
-      <rect x="107" y="94" width="13" height="42" rx="6" fill="#081e38" stroke="#00d4ff" stroke-width="1.5"/>
-      <circle cx="114" cy="140" r="7" fill="#081e38" stroke="#00d4ff" stroke-width="1.5"/>
-    </svg>
-    <button id="refresh-btn" style="position:absolute; top:20px; right:20px; width:50px; padding:8px; border-radius:12px; background:linear-gradient(135deg,#00d4ff,#0099cc); border:none; color:#fff; cursor:pointer; font-size:24px; box-shadow:0 4px 12px rgba(0,212,255,0.3); transition:all 0.2s;" title="あたらしくする">🔄</button>
-    <div id="refresh-label" style="position:absolute; top:75px; right:12px; color:#e2e8f0; font-size:10px; width:70px; text-align:center; pointer-events:none;">あたらしく<br>する</div>
-    <div class="player-name-box">
-      <label for="player-name">なまえ：</label>
-      <input type="text" id="player-name" placeholder="なまえを にゅうりょく" maxlength="30">
+    <header class="home-top">
+      <div class="hello" id="home-hello">こんにちは</div>
+      <div class="streak-chip" id="home-streak" aria-label="れんぞく日数"></div>
+    </header>
+    <div class="name-chips" id="player-name-saved" aria-label="だれが べんきょうする？"></div>
+    <div class="pet-row">
+      <div class="pet-box" id="home-pet"></div>
+      <div class="bubble" id="home-bubble"></div>
     </div>
-    <div class="player-name-saved" id="player-name-saved"></div>
-    <p class="lead">だれが べんきょうする？</p>
-    <div class="grade-select">
-      <button class="grade-btn g1" data-grade="1">🏠 1年生 🏫</button>
-      <button class="grade-btn g3" data-grade="3">📖 3年生 📚</button>
-      <button class="grade-btn g5" data-grade="5">🌍 5年生 🔭</button>
-      <button class="grade-btn g7" data-grade="7">🧭 中学1年生 ⚙️</button>
-    </div>
-    <button class="speed-btn" id="speed-open-btn">⚡ 1けたの数 10問タイムアタック</button>
-    <button class="sub-btn report-btn" id="report-open-btn">📊 がくしゅう状況をみる（保護者用）</button>
-    <button class="sub-btn ranking-btn" id="ranking-open-btn">🏆 みんなの順位をみる</button>
-    <button class="sub-btn sync-btn" id="sync-open-btn">🔄 他の端末とデータを同期</button>
-    <div id="app-version-label" style="margin-top:18px; color:#64748b; font-size:11px; text-align:center; letter-spacing:0.05em;"></div>
+    <div id="home-body"></div>
   </section>
 
-  <!-- 学習状況レポート画面 -->
+  <!-- ずかん（ポコ・バッジ） -->
+  <section id="screen-zukan" class="screen hidden">
+    <h2 class="page-title">ポコの ずかん</h2>
+    <div id="zukan-content"></div>
+  </section>
+
+  <!-- きろく -->
   <section id="screen-report" class="screen hidden">
-    <button class="back-btn" data-back="home">← もどる</button>
-    <h2>がくしゅう状況</h2>
+    <h2 class="page-title">がくしゅうの きろく</h2>
     <div id="report-content"></div>
   </section>
 
-  <!-- みんなの順位画面 -->
+  <!-- せってい -->
+  <section id="screen-settings" class="screen hidden">
+    <h2 class="page-title">せってい</h2>
+
+    <div class="panel">
+      <h3>なまえ</h3>
+      <p class="panel-desc">なまえを いれると、その子の きろくや ポコが つくられるよ。ホームの なまえを ながおしすると けせます。</p>
+      <div class="player-name-box">
+        <label for="player-name">なまえ</label>
+        <input type="text" id="player-name" placeholder="なまえを いれてね" maxlength="30" autocomplete="off">
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>おと・よみあげ</h3>
+      <label class="switch-row">
+        <span>こうかおん</span>
+        <input type="checkbox" id="sound-toggle" role="switch">
+      </label>
+    </div>
+
+    <div class="panel">
+      <h3>データの どうき</h3>
+      <p class="panel-desc">べつの たんまつと きろくを やりとりします。</p>
+      <button class="sub-btn wide" id="sync-open-btn">🔄 データを どうきする</button>
+    </div>
+
+    <div class="panel">
+      <h3>アプリを あたらしくする</h3>
+      <p class="panel-desc">うごきが おかしいときに おしてね。きろくは きえません。</p>
+      <button class="sub-btn wide" id="refresh-btn">🔄 あたらしくする</button>
+      <div class="version" id="app-version-label"></div>
+    </div>
+  </section>
+
+  <!-- みんなの順位 -->
   <section id="screen-ranking" class="screen hidden">
-    <button class="back-btn" data-back="home">← もどる</button>
-    <h2>🏆 みんなの順位</h2>
+    <button class="back-btn" data-back="report">← もどる</button>
+    <h2 class="page-title">🏆 この たんまつの ランキング</h2>
     <div id="ranking-content"></div>
   </section>
 
   <!-- タイムアタック：説明画面 -->
   <section id="screen-speed" class="screen hidden">
     <button class="back-btn" data-back="home">← もどる</button>
-    <h2>⚡ タイムアタック</h2>
+    <h2 class="page-title">⚡ タイムアタック</h2>
     <p class="lead">1けた＋1けたの たし算が 10問！<br>なんびょうで できるか チャレンジしよう！</p>
     <div class="result-buttons">
       <button class="main-btn" id="speed-start-btn">スタート！</button>
-      <button class="sub-btn" id="speed-ranking-open-btn">🏆 タイムランキングをみる</button>
+      <button class="sub-btn wide" id="speed-ranking-open-btn">🏆 タイムランキングをみる</button>
     </div>
   </section>
 
@@ -118,225 +106,134 @@
     <div class="quiz-card">
       <div class="quiz-question" id="speed-question"></div>
       <div class="speed-choices" id="speed-choice-area"></div>
-      <div class="quiz-feedback" id="speed-feedback"></div>
+      <div class="quiz-feedback" id="speed-feedback" aria-live="polite"></div>
     </div>
   </section>
 
   <!-- タイムアタック：結果画面 -->
   <section id="screen-speedresult" class="screen hidden">
-    <h2>けっか</h2>
+    <h2 class="page-title">けっか</h2>
     <div class="result-card">
       <div class="result-score" id="speed-result-time"></div>
       <div class="result-message" id="speed-result-message"></div>
     </div>
     <div class="result-buttons">
       <button class="main-btn" id="speed-retry-btn">もういちど</button>
-      <button class="sub-btn" id="speed-ranking-btn">🏆 ランキングをみる</button>
-      <button class="sub-btn" id="speed-home-btn">ホームへ</button>
+      <button class="sub-btn wide" id="speed-ranking-btn">🏆 ランキングをみる</button>
+      <button class="sub-btn wide" id="speed-home-btn">ホームへ</button>
     </div>
   </section>
 
   <!-- タイムアタック：ランキング画面 -->
   <section id="screen-speedranking" class="screen hidden">
     <button class="back-btn" data-back="home">← もどる</button>
-    <h2>🏆 タイムランキング</h2>
-    <p class="lead" style="font-size:0.9em;">（10問ぜんぶ せいかいした人の中で、はやい順）</p>
+    <h2 class="page-title">🏆 タイムランキング</h2>
+    <p class="lead small">（10問ぜんぶ せいかいした人の中で、はやい順）</p>
     <div id="speedranking-content"></div>
   </section>
 
   <!-- データ同期画面 -->
   <section id="screen-sync" class="screen hidden">
-    <button class="back-btn" data-back="home">← もどる</button>
-    <h2>🔄 データの同期</h2>
-    <div class="sync-section">
+    <button class="back-btn" data-back="settings">← もどる</button>
+    <h2 class="page-title">🔄 データの どうき</h2>
+    <div class="panel">
       <h3>書き出す</h3>
       <p class="sync-desc">このきき（タブレットなど）のがくしゅうデータをファイルにほぞんします。</p>
       <button class="main-btn" id="sync-export-btn">📤 ファイルに書き出す</button>
     </div>
-    <div class="sync-section">
+    <div class="panel">
       <h3>読み込む</h3>
       <p class="sync-desc">書き出したファイルを選ぶと、このきき（PCなど）にデータをとりこめます。</p>
       <input type="file" id="sync-import-file" accept="application/json">
       <button class="main-btn" id="sync-import-btn">📥 読み込む</button>
     </div>
-    <div class="sync-message" id="sync-message"></div>
-
-    <div class="sync-section">
-      <h3>☁️ クラウドで同期</h3>
+    <div class="sync-message" id="sync-message" aria-live="polite"></div>
+    <div class="panel">
+      <h3>☁️ クラウドで どうき</h3>
       <p class="sync-desc">両方の端末で同じ「同期コード」を入力すると、ファイルなしでクラウド経由でデータをやり取りできます。</p>
       <div class="player-name-box">
-        <label for="sync-code">同期コード：</label>
-        <input type="text" id="sync-code" placeholder="例：sakura123" maxlength="20">
+        <label for="sync-code">同期コード</label>
+        <input type="text" id="sync-code" placeholder="例：sakura123" maxlength="20" autocomplete="off">
       </div>
       <button class="main-btn" id="cloud-upload-btn">☁️ クラウドに送る</button>
       <button class="main-btn" id="cloud-download-btn">☁️ クラウドから受け取る</button>
     </div>
   </section>
 
-  <!-- 教科選択画面 -->
-  <section id="screen-subject" class="screen hidden">
-    <button class="back-btn" data-back="home">← もどる</button>
-    <h2 id="subject-title"></h2>
-<div class="subject-select" id="subject-buttons"></div>
-  </section>
-
-  <!-- ドリル画面 -->
+  <!-- クイズ（ドリル・ミッション・ふくしゅう・チャレンジ共通） -->
   <section id="screen-quiz" class="screen hidden">
-    <button class="back-btn" data-back="subject">← もどる</button>
-    <div class="quiz-header">
-      <div class="quiz-progress" id="quiz-progress"></div>
-      <div class="quiz-stats">
-        <span class="stat-correct">⭕ <span id="quiz-correct">0</span></span>
-        <span class="stat-incorrect">❌ <span id="quiz-incorrect">0</span></span>
-        <span class="stat-rate">せいとう率 <span id="quiz-rate">0</span>%</span>
-      </div>
+    <div class="quiz-top">
+      <button class="icon-btn" id="quiz-quit-btn" aria-label="やめる">✕</button>
+      <div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" id="quiz-bar-wrap"><div class="bar-fill" id="quiz-bar"></div></div>
+      <div class="count" id="quiz-count"></div>
     </div>
-    <div class="quiz-card">
-      <div class="quiz-question" id="quiz-question"></div>
-      <div class="quiz-answer-area" id="quiz-answer-area"></div>
-      <div class="quiz-feedback" id="quiz-feedback"></div>
+    <div class="quiz-tag" id="quiz-tag"></div>
+    <div class="quiz-question" id="quiz-question"></div>
+    <button class="read-btn hidden" id="quiz-read-btn">🔊 よみあげ</button>
+    <div class="quiz-answer-area" id="quiz-answer-area"></div>
+    <div class="hint" id="quiz-hint" aria-live="polite"></div>
+    <div class="feedback hidden" id="quiz-feedback" aria-live="polite"></div>
+    <div class="quiz-actions">
       <button class="main-btn" id="quiz-action-btn">こたえる</button>
     </div>
   </section>
 
-  <!-- 結果画面 -->
+  <!-- 結果 -->
   <section id="screen-result" class="screen hidden">
-    <h2>けっか</h2>
-    <div class="result-card">
-      <div class="result-score" id="result-score"></div>
-      <div class="result-message" id="result-message"></div>
-    </div>
-    <div class="teacher-eval">
-      <div class="teacher-eval-header">
-        <svg viewBox="0 0 60 60" width="36" height="36" style="flex-shrink:0">
-          <rect x="12" y="10" width="36" height="28" rx="7" fill="#081e38" stroke="#00d4ff" stroke-width="1.5"/>
-          <circle cx="22" cy="23" r="5" fill="#00d4ff" opacity="0.9"/>
-          <circle cx="38" cy="23" r="5" fill="#00d4ff" opacity="0.9"/>
-          <circle cx="22" cy="23" r="2" fill="#fff"/>
-          <circle cx="38" cy="23" r="2" fill="#fff"/>
-          <path d="M19 33 Q30 39 41 33" stroke="#00d4ff" fill="none" stroke-width="1.5" stroke-linecap="round"/>
-          <line x1="30" y1="10" x2="30" y2="4" stroke="#00d4ff" stroke-width="1.5"/>
-          <circle cx="30" cy="3" r="2.5" fill="#00d4ff"/>
-        </svg>
-        <div>
-          <div class="teacher-comment" id="teacher-comment"></div>
-          <div class="teacher-badge" id="teacher-badge"></div>
-        </div>
-      </div>
-      <div class="teacher-level" id="teacher-level"></div>
-    </div>
-    <div class="result-buttons">
-      <button class="main-btn" id="challenge-btn" style="display:none;">🚀 チャレンジ</button>
-      <button class="main-btn" id="retry-btn">もういちど</button>
-      <button class="sub-btn" id="home-btn">きょうかをえらぶ</button>
-    </div>
-  </section>
-
-  <!-- チャレンジ確認ポップアップ -->
-  <div id="challenge-modal" class="modal hidden">
-    <div class="modal-content">
-      <div class="modal-text" id="challenge-modal-text"></div>
-      <div class="modal-buttons">
-        <button class="main-btn" id="challenge-confirm-btn">やる</button>
-        <button class="sub-btn" id="challenge-cancel-btn">もどる</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- チャレンジテスト画面 -->
-  <section id="screen-challenge-quiz" class="screen hidden">
-    <button class="back-btn" id="challenge-quit-btn">← やめる</button>
-    <div class="quiz-header">
-      <h3 id="challenge-title">🚀 チャレンジ</h3>
-      <div class="quiz-stats">
-        <span id="challenge-progress"></span>
-      </div>
-    </div>
-    <div class="quiz-container">
-      <div class="quiz-problem" id="challenge-problem"></div>
-      <div class="quiz-choices" id="challenge-choices"></div>
-      <div class="quiz-feedback" id="challenge-feedback"></div>
-      <button class="main-btn" id="challenge-quiz-action-btn">こたえる</button>
-    </div>
-  </section>
-
-  <!-- チャレンジテスト結果画面 -->
-  <section id="screen-challenge-result" class="screen hidden">
-    <h2 id="challenge-result-title">チャレンジ ぐあい</h2>
-    <div class="result-card">
-      <div class="result-score" id="challenge-result-score"></div>
-      <div class="result-message" id="challenge-result-message"></div>
-    </div>
-    <div class="teacher-eval">
-      <div class="teacher-eval-header">
-        <svg viewBox="0 0 60 60" width="36" height="36" style="flex-shrink:0">
-          <rect x="12" y="10" width="36" height="28" rx="7" fill="#081e38" stroke="#00d4ff" stroke-width="1.5"/>
-          <circle cx="22" cy="23" r="5" fill="#00d4ff" opacity="0.9"/>
-          <circle cx="38" cy="23" r="5" fill="#00d4ff" opacity="0.9"/>
-          <circle cx="22" cy="23" r="2" fill="#fff"/>
-          <circle cx="38" cy="23" r="2" fill="#fff"/>
-          <path d="M19 33 Q30 39 41 33" stroke="#00d4ff" fill="none" stroke-width="1.5" stroke-linecap="round"/>
-          <line x1="30" y1="10" x2="30" y2="4" stroke="#00d4ff" stroke-width="1.5"/>
-          <circle cx="30" cy="3" r="2.5" fill="#00d4ff"/>
-        </svg>
-        <div>
-          <div class="teacher-comment" id="challenge-teacher-comment"></div>
-          <div class="teacher-badge" id="challenge-teacher-badge"></div>
-        </div>
-      </div>
-      <div class="teacher-level" id="challenge-teacher-level"></div>
-    </div>
-    <div class="result-buttons">
-      <button class="main-btn" id="challenge-result-next-btn">つぎのレベルへ</button>
-      <button class="sub-btn" id="challenge-result-retry-btn">もういちど チャレンジ</button>
-      <button class="sub-btn" id="challenge-result-home-btn">きょうかをえらぶ</button>
-    </div>
+    <div id="result-content"></div>
+    <div class="result-buttons" id="result-buttons"></div>
   </section>
 
 </div>
 
+<!-- 下のタブ -->
+<nav id="tabbar" class="tabbar" aria-label="メニュー">
+  <button class="tab-btn" data-tab="home"><span class="ico">🏠</span>ホーム</button>
+  <button class="tab-btn" data-tab="zukan"><span class="ico">🐾</span>ずかん</button>
+  <button class="tab-btn" data-tab="report"><span class="ico">📊</span>きろく</button>
+  <button class="tab-btn" data-tab="settings"><span class="ico">⚙️</span>せってい</button>
+</nav>
+
+<!-- 確認ダイアログ -->
+<div id="modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modal-text">
+  <div class="modal-card">
+    <div class="modal-text" id="modal-text"></div>
+    <div class="modal-buttons">
+      <button class="main-btn" id="modal-ok">OK</button>
+      <button class="sub-btn" id="modal-cancel">もどる</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast hidden" role="status"></div>
+<canvas id="fx-canvas" aria-hidden="true"></canvas>
+
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
 <!-- ?v= はキャッシュ破棄用。デプロイのたびに APP_VERSION と同じ番号へ更新する -->
-<script src="js/firebase-config.js?v=36.16"></script>
-<script src="js/math.js?v=36.16"></script>
-<script src="js/kanji.js?v=36.16"></script>
-<script src="js/rikashakai.js?v=36.16"></script>
-<script src="js/eigo.js?v=36.16"></script>
-<script src="js/app.js?v=36.16"></script>
+<script src="js/firebase-config.js?v=37.0"></script>
+<script src="js/math.js?v=37.0"></script>
+<script src="js/kanji.js?v=37.0"></script>
+<script src="js/rikashakai.js?v=37.0"></script>
+<script src="js/eigo.js?v=37.0"></script>
+<script src="js/store.js?v=37.0"></script>
+<script src="js/core.js?v=37.0"></script>
+<script src="js/fx.js?v=37.0"></script>
+<script src="js/pet.js?v=37.0"></script>
+<script src="js/explain.js?v=37.0"></script>
+<script src="js/sync.js?v=37.0"></script>
+<script src="js/ranking.js?v=37.0"></script>
+<script src="js/speed.js?v=37.0"></script>
+<script src="js/quiz.js?v=37.0"></script>
+<script src="js/home.js?v=37.0"></script>
+<script src="js/update.js?v=37.0"></script>
+<script src="js/boot.js?v=37.0"></script>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
       navigator.serviceWorker.register('sw.js').catch(() => {});
     });
   }
-</script>
-<script>
-(function() {
-  const c = document.getElementById('stars-canvas');
-  const ctx = c.getContext('2d');
-  function resize() { c.width = innerWidth; c.height = innerHeight; }
-  resize();
-  window.addEventListener('resize', resize);
-  const stars = Array.from({length: 200}, () => ({
-    x: Math.random(), y: Math.random(),
-    r: Math.random() * 1.4 + 0.2,
-    speed: Math.random() * 0.006 + 0.002,
-    phase: Math.random() * Math.PI * 2
-  }));
-  function draw(t) {
-    ctx.clearRect(0, 0, c.width, c.height);
-    stars.forEach(s => {
-      const alpha = 0.2 + 0.8 * Math.abs(Math.sin(t * s.speed * 0.001 + s.phase));
-      ctx.beginPath();
-      ctx.arc(s.x * c.width, s.y * c.height, s.r, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(255,255,255,${alpha})`;
-      ctx.fill();
-    });
-    requestAnimationFrame(draw);
-  }
-  requestAnimationFrame(draw);
-})();
 </script>
 </body>
 </html>

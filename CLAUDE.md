@@ -84,9 +84,20 @@ GitHub Pages: `https://bok8rei-cell.github.io/manabi-app/`
 
 | ファイル | 役割 |
 |---|---|
-| `index.html` | 全画面のHTML（SPA） |
-| `css/style.css` | 全スタイル（末尾にダークテーマ追加済み） |
-| `js/app.js` | メインロジック・画面遷移・クラウド同期 |
+| `index.html` | 全画面のHTML（SPA）。下タブ: ホーム/ずかん/きろく/せってい |
+| `css/style.css` | 全スタイル（v37〜 明るい「おもちゃ箱」テーマ。ダークテーマは廃止） |
+| `js/store.js` | 日付(ローカル日付)・にがて復習・今日のミッション・毎日の連続日数 |
+| `js/core.js` | バージョン・自動更新・教科/難易度・チャレンジ管理・なまえ・進捗・showScreen |
+| `js/quiz.js` | 学習セッション共通（ドリル/ミッション/にがて復習/チャレンジ）と結果画面 |
+| `js/home.js` | ホーム・ずかん・きろく・せってい画面、showTab |
+| `js/pet.js` | ポコ（育成キャラ）・コイン・バッジ |
+| `js/fx.js` | 効果音・ふるえ・よみあげ・紙ふぶき |
+| `js/explain.js` | 算数の「やさしい解説」を問題文から生成（答えが一致したときだけ表示） |
+| `js/sync.js` | ファイル/クラウド同期（ポコ・にがて・連続日数も同期） |
+| `js/ranking.js` | この端末のランキング |
+| `js/speed.js` | タイムアタック |
+| `js/update.js` | 「あたらしくする」ボタン |
+| `js/boot.js` | 起動時の配線 |
 | `js/math.js` | 算数問題生成 |
 | `js/kanji.js` | 国語（漢字）問題生成・KANJI_DATA |
 | `js/rikashakai.js` | 理科・社会問題生成 |
@@ -133,4 +144,6 @@ Agent ツールで以下を実行：
 
 - iOS でPWAをホーム画面から削除すると localStorage が消えるが、プレイヤー名を再入力すれば Firestore から復元できる
 - Service Worker のキャッシュバージョンを上げないと端末に古いバージョンが残る
-- `sw.js` 現在のバージョン：v24
+- バージョンは `js/core.js` の APP_VERSION・`version.json`・`sw.js` の CACHE_NAME・`index.html` の `?v=` を同じ番号にそろえて上げる（現在 v37.0）
+- 日付は `localDateStr()`（js/store.js）を使う。`toISOString()` は UTC なので日本時間の朝に1日ずれる
+- `explain.js` を変更したら、先生エージェントに審査を依頼する（問題データと同じ扱い）
