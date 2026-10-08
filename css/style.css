@@ -300,6 +300,18 @@ h2, h3 { margin: 0; }
 .week-col.today .week-dow { color: var(--main-d); }
 .report-chips { justify-content: center; }
 
+/* ----- おうちの人の画面 ----- */
+.child-card { margin-top: 14px; }
+.child-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.child-head h3 { font-size: 1.15rem; margin: 0; }
+.child-sub { font-size: 0.8rem; color: var(--sub); }
+.today-line { margin: 8px 0 4px; padding: 8px 12px; border-radius: 12px; font-weight: 700; }
+.today-line.ok { background: var(--ok-bg); color: #14573F; }
+.today-line.wait { background: #FFF1DA; color: #6B4200; }
+.today-line.warn { background: var(--ng-bg); color: var(--ng); }
+.child-section { margin-top: 12px; font-weight: 700; font-size: 0.92rem; }
+.child-card .report-line { margin-top: 6px; font-weight: 400; font-size: 0.9rem; }
+
 /* ----- せってい・同期 ----- */
 .player-name-box { display: flex; align-items: center; gap: 10px; }
 .player-name-box label { font-weight: 700; white-space: nowrap; }

@@ -34,8 +34,8 @@ const REVIEW_STEPS = [1, 3, 7];
 
 function mistakesKey(name) { return `manabi_mistakes_${playerTag(name)}`; }
 
-function loadMistakes() {
-  const list = readJSON(mistakesKey(), []);
+function loadMistakes(name) {
+  const list = readJSON(mistakesKey(name), []);
   return Array.isArray(list) ? list : [];
 }
 
@@ -131,8 +131,8 @@ function cleanOldMissions() {
 // ---- 毎日つづけた日数（なまえごと・教科をまたいで数える）----
 function dayStreakKey(name) { return `manabi_daystreak_${playerTag(name)}`; }
 
-function loadDayStreak() {
-  const s = readJSON(dayStreakKey(), null);
+function loadDayStreak(name) {
+  const s = readJSON(dayStreakKey(name), null);
   return Object.assign({ last: null, count: 0, best: 0 }, s || {});
 }
 
@@ -149,8 +149,8 @@ function touchDayStreak() {
 }
 
 // 今表示すべき連続日数（きのうまで続いていれば、今日まだでも途切れていない）
-function currentDayStreak() {
-  const s = loadDayStreak();
+function currentDayStreak(name) {
+  const s = loadDayStreak(name);
   const today = localDateStr();
   if (s.last === today || s.last === addDaysStr(today, -1)) return s.count;
   return 0;

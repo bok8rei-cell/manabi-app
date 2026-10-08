@@ -21,6 +21,14 @@ byId('sync-open-btn').addEventListener('click', () => {
   showScreen('sync');
 });
 
+// おうちの人用の端末は、最初に「おうちの人の画面」を出す
+byId('parent-open-btn').addEventListener('click', () => showTab('parent'));
+const parentToggle = byId('parent-mode-toggle');
+parentToggle.checked = localStorage.getItem('manabi_parentmode') === '1';
+parentToggle.addEventListener('change', (e) => {
+  try { localStorage.setItem('manabi_parentmode', e.target.checked ? '1' : '0'); } catch (err) { /* 無視 */ }
+});
+
 cleanOldMissions();
-showTab('home');
+showTab(localStorage.getItem('manabi_parentmode') === '1' ? 'parent' : 'home');
 autoSync();

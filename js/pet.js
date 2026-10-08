@@ -10,8 +10,8 @@ const PET_STAGES = [
 
 function petKey(name) { return `manabi_pet_${playerTag(name)}`; }
 
-function loadPet() {
-  return Object.assign({ xp: 0, coins: 0, perfects: 0, missions: 0, cleared: 0 }, readJSON(petKey(), null) || {});
+function loadPet(name) {
+  return Object.assign({ xp: 0, coins: 0, perfects: 0, missions: 0, cleared: 0 }, readJSON(petKey(name), null) || {});
 }
 
 function petStage(xp) {

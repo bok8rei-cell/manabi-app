@@ -1,6 +1,6 @@
 // ===== BRAIN QUEST：零式 メインスクリプト =====
 
-const APP_VERSION = 'v37.9';
+const APP_VERSION = 'v38.0';
 const TOTAL_QUESTIONS = 10;
 const DONT_KNOW = '__DONTKNOW__';
 
@@ -313,7 +313,7 @@ playerNameInput.addEventListener('change', () => {
 
 // ---- 画面切り替え ----
 // 下のタブバーを出す画面
-const TAB_SCREENS = ['home', 'zukan', 'report', 'settings'];
+const TAB_SCREENS = ['home', 'zukan', 'report', 'settings', 'parent'];
 
 function showScreen(name) {
   document.querySelectorAll('.screen').forEach(el => el.classList.add('hidden'));
@@ -348,8 +348,8 @@ function isLegacyDiffKey(key) {
   return /^manabi_diff_\d+_(math|kanji|kotowaza|rikashakai|eigo)$/.test(key);
 }
 
-function loadProgress(grade, subject) {
-  const raw = localStorage.getItem(progressKey(grade, subject));
+function loadProgress(grade, subject, name = state.playerName) {
+  const raw = localStorage.getItem(progressKey(grade, subject, name));
   if (!raw) return { correct: 0, total: 0, best: 0, streak: 0, lastDate: null };
   try {
     return JSON.parse(raw);

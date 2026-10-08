@@ -3,10 +3,10 @@
 const GRADE_PILL_LABEL = { 1: '1年生', 3: '3年生', 5: '5年生', 7: '中1' };
 const SUBJECT_ICON = { math: '🔢', kanji: '✏️', kotowaza: '📜', rikashakai: '🔬', eigo: '🔤' };
 
-function gradeKey() { return `manabi_grade_${playerTag()}`; }
+function gradeKey(name) { return `manabi_grade_${playerTag(name)}`; }
 
-function loadGrade() {
-  const g = Number(localStorage.getItem(gradeKey()));
+function loadGrade(name) {
+  const g = Number(localStorage.getItem(gradeKey(name)));
   return ALL_GRADES.includes(g) ? g : null;
 }
 
@@ -19,12 +19,15 @@ function showTab(name) {
   else if (name === 'zukan') renderZukan();
   else if (name === 'report') { renderReport(); }
   else if (name === 'settings') renderSettings();
+  else if (name === 'parent') { renderParent(); autoSync(); }
   showScreen(name);
 }
 
 function refreshHome() {
   const home = byId('screen-home');
   if (home && !home.classList.contains('hidden')) renderHome();
+  const parent = byId('screen-parent');
+  if (parent && !parent.classList.contains('hidden')) renderParent();
 }
 
 function timeGreeting() {
@@ -243,25 +246,12 @@ function renderReport() {
   const days = lastDays(7);
   const weekQ = days.reduce((a, d) => a + d.q, 0);
   const weekC = days.reduce((a, d) => a + d.c, 0);
-  const maxQ = Math.max(1, ...days.map(d => d.q));
   const week = el('div', 'panel');
   week.appendChild(el('h3', null, 'この 1しゅうかん'));
   week.appendChild(el('div', 'report-line', weekQ > 0
     ? `${weekQ}もん やって、${weekC}もん せいかい（${Math.round((weekC / weekQ) * 100)}%）　べんきょうした日：${days.filter(d => d.q > 0).length}日`
     : 'まだ きろくが ありません。'));
-  const bars = el('div', 'week');
-  const DOW = ['日', '月', '火', '水', '木', '金', '土'];
-  days.forEach(d => {
-    const col = el('div', 'week-col' + (d.date === localDateStr() ? ' today' : ''));
-    col.appendChild(el('div', 'week-num', d.q > 0 ? String(d.q) : ''));
-    const bar = el('div', 'week-bar' + (d.q > 0 ? ' on' : ''));
-    bar.style.height = `${d.q > 0 ? Math.max(8, Math.round((d.q / maxQ) * 70)) : 4}px`;
-    col.appendChild(bar);
-    col.appendChild(el('div', 'week-dow', DOW[d.dow]));
-    col.setAttribute('aria-label', `${d.date} ${d.q}もん`);
-    bars.appendChild(col);
-  });
-  week.appendChild(bars);
+  week.appendChild(buildWeekBars(days));
   container.appendChild(week);
 
   // にがて（教科べつ）
@@ -338,4 +328,125 @@ function showReportScreen() {
 function renderSettings() {
   playerNameInput.value = state.playerName;
   byId('sound-toggle').checked = FX.soundOn();
+}
+
+// ---- 1しゅうかんのぼうグラフ（きろく・おうちの人の画面で共通）----
+function buildWeekBars(days) {
+  const maxQ = Math.max(1, ...days.map(d => d.q));
+  const bars = el('div', 'week');
+  const DOW = ['日', '月', '火', '水', '木', '金', '土'];
+  days.forEach(d => {
+    const col = el('div', 'week-col' + (d.date === localDateStr() ? ' today' : ''));
+    col.appendChild(el('div', 'week-num', d.q > 0 ? String(d.q) : ''));
+    const bar = el('div', 'week-bar' + (d.q > 0 ? ' on' : ''));
+    bar.style.height = `${d.q > 0 ? Math.max(8, Math.round((d.q / maxQ) * 70)) : 4}px`;
+    col.appendChild(bar);
+    col.appendChild(el('div', 'week-dow', DOW[d.dow]));
+    col.setAttribute('aria-label', `${d.date} ${d.q}もん`);
+    bars.appendChild(col);
+  });
+  return bars;
+}
+
+// ---- おうちの人の画面：子ども全員のようすを1画面で ----
+function formatDay(dateStr) {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  const dow = ['日', '月', '火', '水', '木', '金', '土'][new Date(y, m - 1, d).getDay()];
+  return `${m}月${d}日（${dow}）`;
+}
+
+function renderParent() {
+  const root = byId('parent-content');
+  root.innerHTML = '';
+  const today = localDateStr();
+
+  // どうきの ようす・いますぐ さいしんにする
+  const head = el('div', 'panel');
+  const hasCode = !!getActiveSyncCode();
+  const err = localStorage.getItem('manabi_lasterr');
+  head.appendChild(el('div', 'report-line', hasCode
+    ? (err ? 'どうきが できていません（くわしくは「せってい」→「どうき」）' : (lastSyncText() || 'まだ どうきしていません'))
+    : 'あいことばが まだ ありません。「せってい」→「データを どうきする」で いれてね。'));
+  const refresh = el('button', 'sub-btn wide', '🔄 いま さいしんに する');
+  refresh.addEventListener('click', async () => {
+    refresh.disabled = true;
+    refresh.textContent = 'どうきしています…';
+    await autoSync();
+    renderParent();
+  });
+  head.appendChild(refresh);
+  root.appendChild(head);
+
+  const names = loadPlayerNames();
+  if (names.length === 0) {
+    root.appendChild(el('div', 'panel', 'まだ 子どもの きろくが ありません。あいことばを いれて「いま さいしんに する」を おしてね。'));
+    return;
+  }
+
+  names.forEach(name => {
+    const card = el('div', 'panel child-card');
+    const grade = loadGrade(name);
+    const pet = loadPet(name);
+    const streakInfo = loadDayStreak(name);
+    const hist = loadHistory(name);
+    const todayQ = (hist[today] || { q: 0 }).q;
+    const days = lastDays(7, name);
+    const weekQ = days.reduce((a, d) => a + d.q, 0);
+    const weekC = days.reduce((a, d) => a + d.c, 0);
+
+    const title = el('div', 'child-head');
+    title.appendChild(el('h3', null, name));
+    title.appendChild(el('span', 'child-sub', `${grade ? gradeLabel(grade) : '学年 みせってい'} ・ ${PET_STAGES[petStage(pet.xp)].name}`));
+    card.appendChild(title);
+
+    // きょう
+    const doneToday = streakInfo.last === today;
+    const daysAgo = streakInfo.last ? Math.round((new Date(today) - new Date(streakInfo.last)) / 86400000) : null;
+    let todayText, todayCls;
+    if (doneToday) { todayText = `✅ きょうは やりました（${todayQ}もん）`; todayCls = 'ok'; }
+    else if (daysAgo === null) { todayText = '⏳ まだ いちども やっていません'; todayCls = 'wait'; }
+    else if (daysAgo <= 1) { todayText = '⏳ きょうは まだ です'; todayCls = 'wait'; }
+    else { todayText = `⚠️ ${daysAgo}日 やっていません`; todayCls = 'warn'; }
+    card.appendChild(el('div', 'today-line ' + todayCls, todayText));
+
+    card.appendChild(el('div', 'report-line', `🔥 れんぞく ${currentDayStreak(name)}日（さいこう ${Math.max(streakInfo.best, currentDayStreak(name))}日）　📅 さいごに やった日：${streakInfo.last ? formatDay(streakInfo.last) : 'まだ'}`));
+
+    // この1しゅうかん
+    card.appendChild(el('div', 'report-line', weekQ > 0
+      ? `この 1しゅうかん：${weekQ}もん（せいかい ${Math.round((weekC / weekQ) * 100)}%）　${days.filter(d => d.q > 0).length}日 べんきょう`
+      : 'この 1しゅうかん：まだ やっていません'));
+    card.appendChild(buildWeekBars(days));
+
+    // 教科べつ（せいかいりつ）
+    const rows = [];
+    ALL_GRADES.forEach(g => SUBJECTS.forEach(subj => {
+      if (subj.grades && !subj.grades.includes(g)) return;
+      const p = loadProgress(g, subj.key, name);
+      if (p.total > 0) rows.push({ g, subj, p });
+    }));
+    if (rows.length > 0) {
+      card.appendChild(el('div', 'child-section', '教科べつの せいかいりつ'));
+      rows.sort((x, y) => y.p.total - x.p.total).slice(0, 6).forEach(({ g, subj, p }) => {
+        const rate = Math.round((p.correct / p.total) * 100);
+        const row = el('div', 'report-row');
+        row.appendChild(el('span', 'subject-name', `${gradeLabel(g)} ${subjectLabel(g, subj)}`));
+        const detail = el('span', 'subject-detail', `${p.total}もん中 `);
+        detail.appendChild(el('span', 'subject-rate ' + (rate >= 80 ? 'high' : rate >= 50 ? 'mid' : 'low'), `${rate}%`));
+        row.appendChild(detail);
+        card.appendChild(row);
+      });
+    }
+
+    // にがて
+    const mistakes = loadMistakes(name);
+    if (mistakes.length > 0) {
+      const by = {};
+      mistakes.forEach(m => { const k = `${m.grade}|${m.subject}`; by[k] = (by[k] || 0) + 1; });
+      const top = Object.keys(by).sort((x, y) => by[y] - by[x]).slice(0, 3)
+        .map(k => { const [g, subj] = k.split('|'); return `${subjectNameOf(Number(g), subj)} ${by[k]}もん`; });
+      card.appendChild(el('div', 'child-section', `💪 にがて ${mistakes.length}もん`));
+      card.appendChild(el('div', 'report-line', top.join('　')));
+    }
+    root.appendChild(card);
+  });
 }
