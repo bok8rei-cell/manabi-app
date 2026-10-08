@@ -237,6 +237,25 @@ function mergeSyncData(a, b) {
   return merged;
 }
 
+// クラウドのエラーを、原因が分かる言葉にする（以前は何があっても「通信環境を確認」と出していた）
+function describeCloudError(e) {
+  const code = (e && e.code) ? String(e.code) : '';
+  const detail = code ? `（${code}）` : (e && e.message ? `（${String(e.message).slice(0, 80)}）` : '');
+  if (code === 'permission-denied') {
+    return 'クラウドの「ルール」で、とめられています。おうちの人が Firebase の ルールを なおす ひつようが あります。' + detail;
+  }
+  if (code === 'unavailable' || code === 'deadline-exceeded') {
+    return 'クラウドに つながりません。ネットを たしかめて、あとで もういちど ためしてね。' + detail;
+  }
+  if (code === 'not-found' || code === 'failed-precondition') {
+    return 'クラウド（Firestore）が まだ つかえるように なっていません。おうちの人が Firebase で Firestore を つくる ひつようが あります。' + detail;
+  }
+  if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+    return 'ネットに つながっていません。' + detail;
+  }
+  return 'どうきに しっぱいしました。' + detail;
+}
+
 function cloudUnavailable(msg) {
   if (!cloudDb) {
     msg.textContent = 'クラウド同期が設定されていません。js/firebase-config.jsに設定を入力してください。';
@@ -286,7 +305,8 @@ document.getElementById('cloud-upload-btn').addEventListener('click', async () =
     await performCloudSync();
     msg.textContent = '☁️ クラウドに送りました！';
   } catch (e) {
-    msg.textContent = '送信に失敗しました。通信環境を確認してください。';
+    msg.textContent = describeCloudError(e);
+    console.error('クラウド同期の失敗:', e);
   }
 });
 
@@ -299,7 +319,8 @@ document.getElementById('cloud-download-btn').addEventListener('click', async ()
     msg.textContent = '☁️ クラウドから受け取りました！';
     if (!document.getElementById('screen-report').classList.contains('hidden')) showReportScreen();
   } catch (e) {
-    msg.textContent = '受信に失敗しました。通信環境を確認してください。';
+    msg.textContent = describeCloudError(e);
+    console.error('クラウド同期の失敗:', e);
   }
 });
 
@@ -313,16 +334,21 @@ async function autoSync() {
   try {
     await performCloudSync();
     localStorage.setItem('manabi_lastsync', new Date().toISOString());
+    localStorage.removeItem('manabi_lasterr');
     if (typeof refreshHome === 'function') refreshHome();
   } catch (e) {
-    // 通信できないときは何もしない（次に学習したときにまた合わせる）
+    // ふだんは静かに失敗する（次に学習したときにまた合わせる）。理由は同期画面で見られるように残す。
+    try { localStorage.setItem('manabi_lasterr', describeCloudError(e)); } catch (err) { /* 無視 */ }
+    console.error('自動同期の失敗:', e);
   } finally {
     autoSyncRunning = false;
   }
 }
 
 function lastSyncText() {
+  const err = localStorage.getItem('manabi_lasterr');
   const raw = localStorage.getItem('manabi_lastsync');
+  if (err) return '自動どうきが できていません：' + err + (raw ? '\n' + '（さいごに できた日：' + new Date(raw).toLocaleDateString('ja-JP') + '）' : '');
   if (!raw) return '';
   const d = new Date(raw);
   if (isNaN(d.getTime())) return '';
@@ -359,12 +385,16 @@ document.getElementById('sync-code-paste-btn').addEventListener('click', async (
 
 document.getElementById('sync-code-gen-btn').addEventListener('click', () => {
   const current = getActiveSyncCode();
-  const make = () => {
+  const make = async () => {
     const code = generateSyncCode();
     localStorage.setItem('manabi_synccode', code);
     syncCodeInput.value = code;
-    document.getElementById('sync-message').textContent = `あいことばを つくったよ：${code}\nほかの iPad にも、おなじ あいことばを 入れてね。`;
-    autoSync();
+    const msg = document.getElementById('sync-message');
+    msg.textContent = `あいことばを つくったよ：${code}\nほかの iPad にも、おなじ あいことばを 入れてね。\nクラウドに おくっています…`;
+    await autoSync();
+    const err = localStorage.getItem('manabi_lasterr');
+    msg.textContent = `あいことばを つくったよ：${code}\nほかの iPad にも、おなじ あいことばを 入れてね。\n` +
+      (err ? `でも、クラウドに おくれませんでした：${err}` : 'クラウドにも おくったよ。');
   };
   if (current) {
     askConfirm('あいことばを つくりなおすと、ほかの iPad も 入れなおす ひつようが あります。\nつくりなおす？', 'つくる', 'やめる', make);
