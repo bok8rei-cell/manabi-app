@@ -1,7 +1,7 @@
 {
-  "name": "BRAIN QUEST：零式",
-  "short_name": "零式",
-  "description": "1年生・3年生・5年生むけ さんすう・こくご・りかしゃかい・えいごの学習アプリ",
+  "name": "まなびポコ",
+  "short_name": "まなびポコ",
+  "description": "1年生・3年生・5年生・中1の さんすう・こくご・りか・しゃかい・えいごの がくしゅうアプリ",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
@@ -23,7 +23,14 @@
     {
       "src": "icons/icon-512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }
