@@ -15,11 +15,23 @@ const GROWTH_AMOUNT_TARGET = 15;   // この数 せいかいした日は、そ�
 function petKey(name) { return `manabi_pet_${playerTag(name)}`; }
 
 function loadPet(name) {
-  const p = Object.assign({ xp: 0, coins: 0, perfects: 0, missions: 0, cleared: 0 }, readJSON(petKey(name), null) || {});
+  const p = Object.assign({ xp: 0, coins: 0, spent: 0, perfects: 0, missions: 0, cleared: 0 }, readJSON(petKey(name), null) || {});
   // 前の育ち方（せいかいした数で進化）からの引きつぎ：ポコのすぐ手前から、あらためて そだてる
   if (typeof p.growth !== 'number') p.growth = Math.min(Math.floor((p.xp || 0) / 15), PET_STAGES[1].min - 1);
   if (!p.growthDay || typeof p.growthDay !== 'object') p.growthDay = { date: '', base: false, amount: false, mission: false, c: 0 };
   return p;
+}
+
+// いま つかえる コイン（もらった合計 － つかった合計）
+function petBalance(p) { return Math.max(0, (p.coins || 0) - (p.spent || 0)); }
+
+// コインを つかう。たりなければ false
+function spendCoins(n, name) {
+  const p = loadPet(name);
+  if (petBalance(p) < n) return false;
+  p.spent = (p.spent || 0) + n;
+  writeJSON(petKey(name), p);
+  return true;
 }
 
 function petStage(growth) {

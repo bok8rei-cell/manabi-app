@@ -97,6 +97,11 @@ ${a - 10}と ${10 - b}で ${diff}。`;
 
 function explainProblem(problem, subject, grade) {
   if (!problem || !problem.question || subject !== 'math') return '';
+  // 種類ごとの「解き方」があれば それを使う（js/steps.js）。なければ、下の問題文から読みとる方式。
+  if (typeof mathSteps === 'function') {
+    const steps = mathSteps(problem, grade);
+    if (steps) return steps.join('\n');
+  }
   try {
     const q = problem.question;
     const answer = problem.answer;

@@ -202,7 +202,7 @@ function renderZukan() {
   bar.appendChild(fill);
   hero.appendChild(bar);
   hero.appendChild(el('div', 'pet-note', prog.need > 0 ? `そだち ${prog.have}/${prog.span}　まいにち つづけると しんかするよ` : 'いちばん おおきく そだったよ！'));
-  const coin = el('div', 'zukan-coin', `💰 ${pet.coins} コイン`);
+  const coin = el('div', 'zukan-coin', `💰 ${petBalance(pet)} コイン`);
   hero.appendChild(coin);
   root.appendChild(hero);
 

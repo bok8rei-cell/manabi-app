@@ -40,7 +40,7 @@ function mergeExtra(key, rawA, rawB) {
   if (key.indexOf('manabi_pet_') === 0) {
     const a = parseJSONOr(rawA, {}), b = parseJSONOr(rawB, {});
     const out = {};
-    ['xp', 'coins', 'perfects', 'missions', 'cleared', 'growth'].forEach(f => { out[f] = Math.max(a[f] || 0, b[f] || 0); });
+    ['xp', 'coins', 'spent', 'perfects', 'missions', 'cleared', 'growth'].forEach(f => { out[f] = Math.max(a[f] || 0, b[f] || 0); });
     const ga = a.growthDay || { date: '' }, gb = b.growthDay || { date: '' };
     out.growthDay = ga.date > gb.date ? ga : (gb.date > ga.date ? gb : {
       date: ga.date, base: !!(ga.base || gb.base), amount: !!(ga.amount || gb.amount), mission: !!(ga.mission || gb.mission), c: Math.max(ga.c || 0, gb.c || 0)

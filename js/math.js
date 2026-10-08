@@ -797,7 +797,8 @@ function genGrade7(diff = 1) {
     if (isDirect) {
       const a = randInt(2, 9);
       const x1 = randInt(1, 10);
-      const x2 = randInt(1, 10);
+      let x2 = randInt(1, 10);
+      while (x2 === x1) x2 = randInt(1, 10);
       return {
         question: `yはxに比例し、x = ${x1} のとき y = ${a * x1} です。\nx = ${x2} のときの y の値は？`,
         type: 'input',
@@ -809,7 +810,7 @@ function genGrade7(diff = 1) {
       const y1 = randInt(1, 6);
       const k = x1 * y1;
       const divisors = [];
-      for (let d = 1; d <= k; d++) if (k % d === 0) divisors.push(d);
+      for (let d = 1; d <= k; d++) if (k % d === 0 && d !== x1) divisors.push(d);
       const x2 = divisors[randInt(0, divisors.length - 1)];
       return {
         question: `yはxに反比例し、x = ${x1} のとき y = ${y1} です。\nx = ${x2} のときの y の値は？`,

@@ -92,6 +92,7 @@ GitHub Pages: `https://bok8rei-cell.github.io/manabi-app/`
 | `js/core.js` | バージョン・自動更新・教科/難易度・チャレンジ管理・なまえ・進捗・showScreen |
 | `js/quiz.js` | 学習セッション共通（ドリル/ミッション/にがて復習/チャレンジ）と結果画面 |
 | `js/home.js` | ホーム・ずかん・きろく・せってい画面、showTab |
+| `js/steps.js` | 算数の全種類の「解き方」（なぜ）とヒントの材料。答えが一致したときだけ使う。ヒントは答えが出る手前まで（hintPlan / MATH_HINT_MAX） |
 | `js/recommend.js` | 正解率が低い教科は、前の学年に もどって ふくしゅうをすすめる（最近20もん／12問以上／6割未満） |
 | `js/pet.js` | ポコ（育成キャラ）・コイン・バッジ |
 | `js/fx.js` | 効果音・ふるえ・よみあげ・紙ふぶき |
@@ -147,6 +148,6 @@ Agent ツールで以下を実行：
 
 - iOS でPWAをホーム画面から削除すると localStorage が消えるが、プレイヤー名を再入力すれば Firestore から復元できる
 - Service Worker のキャッシュバージョンを上げないと端末に古いバージョンが残る
-- バージョンは `js/core.js` の APP_VERSION・`version.json`・`sw.js` の CACHE_NAME・`index.html` の `?v=` を同じ番号にそろえて上げる（現在 v38.4）
+- バージョンは `js/core.js` の APP_VERSION・`version.json`・`sw.js` の CACHE_NAME・`index.html` の `?v=` を同じ番号にそろえて上げる（現在 v38.5）
 - 日付は `localDateStr()`（js/store.js）を使う。`toISOString()` は UTC なので日本時間の朝に1日ずれる
 - `explain.js` を変更したら、先生エージェントに審査を依頼する（問題データと同じ扱い）

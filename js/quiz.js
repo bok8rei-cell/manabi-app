@@ -3,6 +3,8 @@
 const byId = (id) => document.getElementById(id);
 
 const CHALLENGE_QUESTION_COUNTS = { 0: 15, 1: 20, 2: 25 };
+const HINT_COST = 100;   // ヒント1回のコイン
+const HINT_MAX = 3;      // 1もんで つかえる ヒントの回数（さいだい 300コイン）
 const CORRECT_WORDS = ['せいかい！', 'やったね！', 'すごい！', 'いいね！'];
 
 let session = null;
@@ -43,6 +45,7 @@ function startSession(opts) {
     index: 0, correct: 0, wrong: 0, combo: 0,
     newMistakes: 0, cleared: 0, wrongList: [],
     answered: false, selected: null, current: null, currentSubject: null, currentId: null,
+    hintStage: 0, hintTexts: [], hintsUsed: 0, hintCost: 0,
     missionItemId: null, fromMistakes: false
   }, opts);
   state.grade = opts.grade;
@@ -173,6 +176,11 @@ function renderQuestion() {
   byId('quiz-read-btn').classList.toggle('hidden', !FX.canSpeak() || !!p.noRead);
   byId('quiz-read-btn').textContent = p.speakEn ? '🔊 えいごを きく' : '🔊 よみあげ';
   byId('quiz-hint').textContent = '';
+  s.hintStage = 0;
+  s.hintTexts = [];
+  s.hint = computeHint(s);
+  byId('quiz-hintbox').classList.add('hidden');
+  byId('quiz-hintbox').textContent = '';
   const fb = byId('quiz-feedback');
   fb.className = 'feedback hidden';
   fb.innerHTML = '';
@@ -255,7 +263,93 @@ function renderQuestion() {
   area.appendChild(nl);
 
   byId('quiz-action-btn').textContent = 'こたえる';
+  updateHintUI();
 }
+
+
+// ---- ヒント（コインを つかう。1もんで 3回まで。チャレンジでは つかえない）----
+// このもんだいで、ヒントを どう出すか：{ mode: 'steps' | 'choice' | null, lines, max }
+//  steps … 算数の「解き方」を、考え方 → 途中 の じゅんに 見せる（答えが出てしまう 手前まで）
+//  choice … えらぶ問題は、まちがいの選択肢を けしていく（4つの とき 3回まで）
+function computeHint(s) {
+  if (!s || s.mode === 'challenge' || !s.current) return { mode: null, lines: null, max: 0 };
+  const lines = s.currentSubject === 'math' ? mathSteps(s.current, s.grade) : null;
+  if (lines) {
+    const plan = hintPlan(lines, s.current.answer);
+    if (plan > 0) return { mode: 'steps', lines, max: Math.min(HINT_MAX, plan) };
+  }
+  if (s.current.type === 'choice') {
+    const n = s.current.choices.length;
+    // 答えが1もじのとき、3回目は 新しい情報が ないので 2回まで
+    const one = String(s.current.answer).trim().length <= 1;
+    const max = n >= 4 ? (one ? 2 : 3) : (n === 3 ? 1 : 0);
+    if (max > 0) return { mode: 'choice', lines: null, max };
+  }
+  return { mode: null, lines: null, max: 0 };
+}
+
+function updateHintUI() {
+  const s = session;
+  const btn = byId('quiz-hintbtn');
+  if (!s || s.answered || !s.hint || s.hint.max === 0 || s.hintStage >= s.hint.max) { btn.classList.add('hidden'); return; }
+  const left = s.hint.max - s.hintStage;
+  const have = petBalance(loadPet());
+  btn.innerHTML = '';
+  btn.appendChild(document.createTextNode(`💡 ${s.hintStage === 0 ? 'ヒント' : 'つぎの ヒント'}（${HINT_COST}コイン）`));
+  const sub = document.createElement('span');
+  sub.className = 'coins';
+  sub.textContent = `のこり ${left}かい ／ いま ${have}コイン`;
+  btn.appendChild(sub);
+  btn.classList.remove('hidden');
+}
+
+function useHint() {
+  const s = session;
+  if (!s || s.answered || !s.hint || s.hint.max === 0 || s.hintStage >= s.hint.max) return;
+  const have = petBalance(loadPet());
+  if (have < HINT_COST) {
+    showToast(`コインが たりないよ（あと ${HINT_COST - have}コイン）。「わからない」を おすと こたえが みられるよ`);
+    return;
+  }
+  if (!spendCoins(HINT_COST)) return;
+  s.hintStage++;
+  s.hintsUsed++;
+  s.hintCost += HINT_COST;
+  FX.tap();
+
+  let text;
+  if (s.hint.mode === 'steps') {
+    text = hintLines(s.hint.lines, s.hintStage).join('\n');
+  } else {
+    // えらぶ問題：まちがいの選択肢を けしていく → 3回目は こたえの はじめの もじ（1もじの答えなら のこりの数）
+    const area = byId('quiz-answer-area');
+    if (s.hintStage <= 2) {
+      const wrongs = [...area.querySelectorAll('.choice-btn')].filter(b => b.dataset.value !== s.current.answer && !b.classList.contains('eliminated'));
+      if (wrongs.length > 1) {
+        const b = wrongs[Math.floor(Math.random() * wrongs.length)];
+        b.classList.add('eliminated');
+        b.disabled = true;
+        if (s.selected === b.dataset.value) { s.selected = null; b.classList.remove('selected'); }
+      }
+      s.hintTexts.push(s.hintStage === 1 ? 'まちがいの こたえを 1つ けしたよ' : 'もう 1つ けしたよ');
+    } else {
+      const ans = String(s.current.answer).trim();
+      s.hintTexts.push(ans.length <= 1 ? 'のこった 2つから えらぼう' : `こたえは「${ans.charAt(0)}」から はじまるよ`);
+    }
+    text = s.hintTexts.join('\n');
+  }
+  const box = byId('quiz-hintbox');
+  box.innerHTML = '';
+  const title = document.createElement('div');
+  title.className = 'hint-title';
+  title.textContent = `💡 ヒント ${s.hintStage}/${s.hint.max}`;
+  box.appendChild(title);
+  box.appendChild(document.createTextNode(text));
+  box.classList.remove('hidden');
+  updateHintUI();
+}
+
+byId('quiz-hintbtn').addEventListener('click', useHint);
 
 function checkAnswer() {
   const s = session;
@@ -281,7 +375,8 @@ function checkAnswer() {
   }
 
   s.answered = true;
-  if (!s.fromMistakes) recordRecent(s.currentSubject, s.grade, ok);   // 最近の正解率（ふくしゅうのおすすめ用）
+  if (!s.fromMistakes) recordRecent(s.currentSubject, s.grade, ok && s.hintStage === 0);   // 最近の正解率（ヒントを使って正解したぶんは、自力ではないので 数えない）
+  updateHintUI();
 
   // 選択肢の色づけ・入力欄のロック
   byId('quiz-answer-area').querySelectorAll('.choice-btn').forEach(b => {
@@ -307,7 +402,7 @@ function checkAnswer() {
 
   // にがて：まちがえたら保存、復習問題は結果に応じて更新
   if (s.fromMistakes) {
-    if (s.currentId && resolveMistake(s.currentId, ok) === 'cleared') s.cleared++;
+    if (s.currentId && resolveMistake(s.currentId, ok && s.hintStage === 0) === 'cleared') s.cleared++;
   } else if (!ok) {
     recordMistake(s.grade, s.currentSubject, p);
     s.newMistakes++;
@@ -471,7 +566,7 @@ function finishSession() {
       missionBonus = true;
     }
   }
-  const perfect = correct === total && total >= 5 && !s.fromMistakes;
+  const perfect = correct === total && total >= 5 && !s.fromMistakes && s.hintsUsed === 0;
   const award = awardPet({ xp: correct, coins, perfect, mission: missionBonus, cleared: s.cleared });
 
   if (award.levelUp) FX.levelUp();
@@ -526,6 +621,7 @@ function renderResult(r) {
   chips.appendChild(streak);
   root.appendChild(chips);
 
+  if (s.hintCost > 0) root.appendChild(el('div', 'note', `💡 ヒントで ${s.hintCost}コイン つかったよ（${s.hintsUsed}かい）`));
   if (missionBonus) root.appendChild(el('div', 'note gold', '🎊 きょうの ミッション ぜんぶ クリア！ ボーナス +30コイン'));
 
   // ポコ
