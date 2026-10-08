@@ -86,6 +86,53 @@ function startMissionItem(item) {
   startSession({ mode: 'mission', grade, subject: item.subject, total: item.n, missionItemId: item.id });
 }
 
+// 「まだ ならってない」ものとして しるしのついた種類は、しばらく出さない
+function makeProblem(grade, subject, diff) {
+  let p;
+  for (let i = 0; i < 100; i++) {
+    p = GENERATORS[subject](grade, diff);
+    if (!isSkipped(subject, grade, p.key)) break;
+  }
+  return p;
+}
+
+// 「まだ ならってない」：まちがいにも わからないにも数えず、おなじ種類を しばらく出さない
+function notLearned() {
+  const s = session;
+  if (!s || s.answered) return;
+  FX.stopSpeak();
+  const p = s.current;
+  const subject = s.currentSubject;
+  if (p.key === undefined || p.key === null || p.key === '') {
+    showToast('この もんだいは、つぎに すすんでね');
+    return;
+  }
+  setSkip(subject, s.grade, p.key, p.unitLabel, true);
+  showToast(`「${p.unitLabel || 'この もんだい'}」は、「せってい」で もどすまで ださないよ`);
+
+  if (s.fromMistakes) {
+    // にがてからも のぞく
+    if (s.currentId) removeMistake(s.currentId);
+    s.problems.splice(s.index, 1);
+    s.total--;
+    if (s.total <= 0) {
+      // ふくしゅうする にがてが のこっていない：ミッションの「にがて」は クリア あつかいにして、ホームへ
+      if (s.missionItemId) completeMissionItem(s.grade, s.missionItemId);
+      session = null;
+      showTab('home');
+      return;
+    }
+    if (s.index >= s.total) { finishSession(); return; }
+    nextQuestion();
+    return;
+  }
+  if (s.problems) {
+    // チャレンジ：同じ番号に、べつの問題を入れかえる
+    s.problems[s.index] = { problem: makeProblem(s.grade, s.subject, s.diffLevel), subject: s.subject };
+  }
+  nextQuestion();
+}
+
 function nextQuestion() {
   session.answered = false;
   session.selected = null;
@@ -96,7 +143,7 @@ function nextQuestion() {
     session.currentId = entry.id || null;
   } else {
     const diff = getDiff(session.grade, session.subject);
-    session.current = GENERATORS[session.subject](session.grade, diff);
+    session.current = makeProblem(session.grade, session.subject, diff);
     session.currentSubject = session.subject;
     session.currentId = null;
   }
@@ -201,6 +248,12 @@ function renderQuestion() {
   });
   area.appendChild(dk);
 
+  const nl = document.createElement('button');
+  nl.className = 'notlearned-btn';
+  nl.textContent = 'まだ ならってない';
+  nl.addEventListener('click', () => notLearned());
+  area.appendChild(nl);
+
   byId('quiz-action-btn').textContent = 'こたえる';
 }
 
@@ -238,6 +291,7 @@ function checkAnswer() {
   const input = byId('answer-input');
   if (input) input.disabled = true;
   byId('quiz-answer-area').querySelector('.dontknow-btn').disabled = true;
+  byId('quiz-answer-area').querySelector('.notlearned-btn').disabled = true;
 
   if (ok) {
     s.correct++;
@@ -269,7 +323,7 @@ function showFeedback(ok, isDK, p) {
 
   const pet = document.createElement('div');
   pet.className = 'fb-pet';
-  pet.innerHTML = petSVG(petStage(loadPet().xp), ok ? 'cheer' : 'think', 44);
+  pet.innerHTML = petSVG(petStage(loadPet().growth), ok ? 'cheer' : 'think', 44);
 
   const body = document.createElement('div');
   body.className = 'fb-body';
@@ -360,7 +414,7 @@ function startChallenge(grade, subject, diffLevel) {
   markChallengeAttempt(grade, subject, diffLevel);
   const total = CHALLENGE_QUESTION_COUNTS[diffLevel] || 15;
   const problems = Array.from({ length: total }, () => ({
-    problem: GENERATORS[subject](grade, diffLevel),
+    problem: makeProblem(grade, subject, diffLevel),
     subject
   }));
   startSession({ mode: 'challenge', grade, subject, total, problems, diffLevel });
@@ -474,7 +528,7 @@ function renderResult(r) {
   if (missionBonus) root.appendChild(el('div', 'note gold', '🎊 きょうの ミッション ぜんぶ クリア！ ボーナス +30コイン'));
 
   // ポコ
-  const prog = petProgress(award.pet.xp);
+  const prog = petProgress(award.pet.growth);
   const petCard = el('div', 'panel pet-card');
   const petImg = el('div', 'pet-img');
   petImg.innerHTML = petSVG(award.after, rate >= 0.8 ? 'cheer' : 'happy', 56);
@@ -485,7 +539,7 @@ function renderResult(r) {
   fill.style.width = `${prog.pct}%`;
   bar.appendChild(fill);
   petInfo.appendChild(bar);
-  petInfo.appendChild(el('div', 'pet-note', prog.need > 0 ? `あと ${prog.need}もんで しんか` : 'いちばん おおきく そだったよ！'));
+  petInfo.appendChild(el('div', 'pet-note', (prog.need > 0 ? `そだち ${prog.have}/${prog.span}${award.gain > 0 ? `（きょう +${award.gain}）` : ''}　まいにち つづけると しんか` : 'いちばん おおきく そだったよ！')));
   petCard.appendChild(petImg);
   petCard.appendChild(petInfo);
   root.appendChild(petCard);

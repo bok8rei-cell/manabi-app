@@ -511,7 +511,9 @@ function generateKanjiProblem(grade, diff = 1) {
       question,
       type: 'choice',
       choices,
-      answer: correctChoice
+      answer: correctChoice,
+      key: correct.kanji,
+      unitLabel: `漢字「${correct.kanji}」`
     };
     if (showKana) result.choiceFormat = 'kanji-kana'; // ふりがな付きのときだけ漢字＋かな表示
     return result;
@@ -540,7 +542,9 @@ function generateKanjiProblem(grade, diff = 1) {
       question: `「${correct.word}」の\n「${correct.kanji}」の よみかたは？`,
       type: 'choice',
       choices,
-      answer: correct.reading
+      answer: correct.reading,
+      key: correct.kanji,
+      unitLabel: `漢字「${correct.kanji}」`
     };
   }
 
@@ -564,7 +568,9 @@ function generateKanjiProblem(grade, diff = 1) {
     question: `「${maskedWord}」の「${correct.reading}」に\nあてはまる漢字は？`,
     type: 'choice',
     choices,
-    answer: correct.kanji
+    answer: correct.kanji,
+    key: correct.kanji,
+    unitLabel: `漢字「${correct.kanji}」`
   };
 }
 
@@ -695,7 +701,9 @@ function generateKotowazaProblem(grade, diff = 1) {
       question: `「${r.full}」の\n「${r.t}」は なんと よむ？`,
       type: 'choice',
       choices: shuffleArray([r.y, ...r.d]),
-      answer: r.y
+      answer: r.y,
+      key: item.q,
+      unitLabel: `ことわざ：${item.q.replace(/[「」]/g, '').slice(0, 16)}`
     };
   }
 
@@ -703,6 +711,8 @@ function generateKotowazaProblem(grade, diff = 1) {
     question: item.q,
     type: 'choice',
     choices: shuffleArray([...item.choices]),
-    answer: item.a
+    answer: item.a,
+    key: item.q,
+    unitLabel: `ことわざ：${item.q.replace(/[「」]/g, '').slice(0, 16)}`
   };
 }

@@ -1,46 +1,66 @@
 // ===== ポコ（育てるキャラ）・コイン・バッジ =====
 
+// ポコは「毎日つづけること」で そだつ。たくさん やっても、すぐには進化しない（やりすぎても、やめても よい）。
+// そだちポイント：その日はじめて べんきょうした +1／その日 15もん せいかいした +1／きょうのミッションぜんぶ +1
+// （1日さいだい3ポイント。毎日10もん くらいなら、ポコまで 約1週間、ポコっちまで 約1か月、ポコまるまで 約3か月、ポコキングまで 約8か月）
 const PET_STAGES = [
   { min: 0,   name: 'ポコの たまご' },
-  { min: 15,  name: 'ポコ' },
-  { min: 80,  name: 'ポコっち' },
-  { min: 250, name: 'ポコまる' },
-  { min: 600, name: 'ポコキング' }
+  { min: 8,   name: 'ポコ' },
+  { min: 40,  name: 'ポコっち' },
+  { min: 120, name: 'ポコまる' },
+  { min: 300, name: 'ポコキング' }
 ];
+const GROWTH_AMOUNT_TARGET = 15;   // この数 せいかいした日は、そだちポイント +1
 
 function petKey(name) { return `manabi_pet_${playerTag(name)}`; }
 
 function loadPet(name) {
-  return Object.assign({ xp: 0, coins: 0, perfects: 0, missions: 0, cleared: 0 }, readJSON(petKey(name), null) || {});
+  const p = Object.assign({ xp: 0, coins: 0, perfects: 0, missions: 0, cleared: 0 }, readJSON(petKey(name), null) || {});
+  // 前の育ち方（せいかいした数で進化）からの引きつぎ：ポコのすぐ手前から、あらためて そだてる
+  if (typeof p.growth !== 'number') p.growth = Math.min(Math.floor((p.xp || 0) / 15), PET_STAGES[1].min - 1);
+  if (!p.growthDay || typeof p.growthDay !== 'object') p.growthDay = { date: '', base: false, amount: false, mission: false, c: 0 };
+  return p;
 }
 
-function petStage(xp) {
+function petStage(growth) {
   let stage = 0;
-  PET_STAGES.forEach((s, i) => { if (xp >= s.min) stage = i; });
+  PET_STAGES.forEach((s, i) => { if (growth >= s.min) stage = i; });
   return stage;
 }
 
-// 次の進化までの進み具合（pct: 0〜100, need: あと何もん）
-function petProgress(xp) {
-  const stage = petStage(xp);
+// 次の進化までの進み具合（pct: 0〜100, need: あと何ポイント, have/span: いまの段階での進み）
+function petProgress(growth) {
+  const stage = petStage(growth);
   const next = PET_STAGES[stage + 1];
-  if (!next) return { stage, pct: 100, need: 0 };
+  if (!next) return { stage, pct: 100, need: 0, have: 0, span: 0 };
   const cur = PET_STAGES[stage];
-  return { stage, pct: Math.round(((xp - cur.min) / (next.min - cur.min)) * 100), need: next.min - xp };
+  return { stage, pct: Math.round(((growth - cur.min) / (next.min - cur.min)) * 100), need: next.min - growth, have: growth - cur.min, span: next.min - cur.min };
 }
 
 // ごほうびを加算する。進化したかどうかも返す。
 function awardPet({ xp = 0, coins = 0, perfect = false, mission = false, cleared = 0 }) {
   const p = loadPet();
-  const before = petStage(p.xp);
-  p.xp += xp;
+  const before = petStage(p.growth);
+  p.xp += xp;                       // xp：これまでの せいかい数（バッジ用。そのまま たまる）
   p.coins += coins;
   if (perfect) p.perfects += 1;
   if (mission) p.missions += 1;
   p.cleared += cleared;
+
+  // そだちポイント：その日はじめて +1／15もん せいかい +1／ミッションぜんぶ +1
+  const today = localDateStr();
+  if (p.growthDay.date !== today) p.growthDay = { date: today, base: false, amount: false, mission: false, c: 0 };
+  const day = p.growthDay;
+  let gain = 0;
+  if (!day.base) { day.base = true; gain += 1; }
+  day.c += xp;
+  if (!day.amount && day.c >= GROWTH_AMOUNT_TARGET) { day.amount = true; gain += 1; }
+  if (mission && !day.mission) { day.mission = true; gain += 1; }
+  p.growth += gain;
   writeJSON(petKey(), p);
-  const after = petStage(p.xp);
-  return { pet: p, before, after, levelUp: after > before };
+
+  const after = petStage(p.growth);
+  return { pet: p, before, after, levelUp: after > before, gain };
 }
 
 // ポコの絵。stage: 0=たまご 1〜4=せいちょう / mood: happy | cheer | think

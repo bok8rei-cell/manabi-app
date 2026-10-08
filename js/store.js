@@ -55,7 +55,7 @@ function recordMistake(grade, subject, problem) {
 function dueMistakes(grade) {
   const today = localDateStr();
   return loadMistakes()
-    .filter(m => m.due <= today && (grade == null || m.grade === grade))
+    .filter(m => m.due <= today && (grade == null || m.grade === grade) && !isSkipped(m.subject, m.grade, m.problem && m.problem.key))
     .sort((a, b) => (a.due < b.due ? -1 : a.due > b.due ? 1 : 0));
 }
 
@@ -195,4 +195,28 @@ function lastDays(n, name) {
     out.push({ date, dow: new Date(y, m - 1, d).getDay(), q: e.q, c: e.c });
   }
   return out;
+}
+
+function removeMistake(id) { saveMistakes(loadMistakes().filter(m => m.id !== id)); }
+
+// ---- 「まだ ならってない」ものを出さない（子どもがボタンで決める。せっていで もどせる）----
+function skipStoreKey(name) { return `manabi_skip_${playerTag(name)}`; }
+
+function loadSkips(name) {
+  const s = readJSON(skipStoreKey(name), {});
+  return s && typeof s === 'object' && !Array.isArray(s) ? s : {};
+}
+
+function skipId(subject, grade, key) { return `${subject}|${grade}|${key}`; }
+
+function isSkipped(subject, grade, key) {
+  if (key === undefined || key === null || key === '') return false;
+  const e = loadSkips()[skipId(subject, grade, key)];
+  return !!(e && e.on);
+}
+
+function setSkip(subject, grade, key, label, on) {
+  const s = loadSkips();
+  s[skipId(subject, grade, key)] = { on: !!on, t: Date.now(), label: label || '' };
+  writeJSON(skipStoreKey(), s);
 }

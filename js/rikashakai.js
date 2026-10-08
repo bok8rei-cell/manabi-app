@@ -180,6 +180,8 @@ function generateRikaShakaiProblem(grade) {
     question: item.q,
     type: 'choice',
     choices,
-    answer: item.a
+    answer: item.a,
+    key: item.q,
+    unitLabel: item.q.slice(0, 18)
   };
 }

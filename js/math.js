@@ -4,6 +4,21 @@ function randInt(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
+// 算数の問題の種類（「まだ ならってない」で けすときの名前）
+let lastMathType = '';
+const MATH_UNIT_LABELS = {
+  add: 'たしざん', sub: 'ひきざん', compare: 'おおきさくらべ', tens: '10に なる かず', addWord: 'たしざんの もんだい', subWord: 'ひきざんの もんだい',
+  bigAdd: 'くりあがりの たしざん', bigAddWord: 'くりあがりの もんだい',
+  mul: 'かけ算', div: 'わり算', addsub: '3けた・4けたのたし算ひき算', decimal: '小数のたし算ひき算', mulWord: 'かけ算の文章題',
+  divRemainder: 'あまりのあるわり算', unit: '長さ・かさ・重さの たんい', time: '時こくと時間', divWord: 'わり算の文章題', priceWord: '代金の問題',
+  moneyWord: 'おつりの問題', visitWord: '人数のたし算', timesWord: '○倍の問題', unknown: '□を使った式',
+  fraction: '分数のたし算ひき算', decimalMul: '小数のかけ算', decimalDiv: '小数のわり算', percent: 'わりあい（％）', area: '面積',
+  average: '平均', circle: '円周', volume: '体積', oddEven: 'ぐう数・き数', lcm: '最小公倍数', gcd5: '最大公約数', speedWord: '速さ',
+  discount: '○％引き', density: '人口みつど',
+  negAddSub: '正負の数のたし算ひき算', negMulDiv: '正負の数のかけ算わり算', literalSimplify: '文字式の計算', literalSubstitute: '文字式に数を入れる',
+  equation: '方程式', proportion: '比例・反比例', absValue: '絶対値', expand: '式の展開', tempWord: '気温の変化', eqWord: '方程式の文章題', expressWord: '文字式で表す'
+};
+
 function gcd(a, b) {
   a = Math.abs(a); b = Math.abs(b);
   while (b) { [a, b] = [b, a % b]; }
@@ -48,6 +63,7 @@ function genGrade1(diff = 1) {
   ];
   const types = typePools[diff];
   const type = types[randInt(0, types.length - 1)];
+  lastMathType = type;
   const maxN = [4, 9, 9][diff];
 
   if (type === 'add') {
@@ -170,6 +186,7 @@ function genGrade3(diff = 1) {
   ];
   const types = typePools[diff];
   const type = types[randInt(0, types.length - 1)];
+  lastMathType = type;
   const maxMul = [5, 9, 9][diff];
 
   if (type === 'divWord') {
@@ -401,6 +418,7 @@ function genGrade5(diff = 1) {
   ];
   const types = typePools[diff];
   const type = types[randInt(0, types.length - 1)];
+  lastMathType = type;
 
   if (type === 'oddEven') {
     const n = randInt(10, 99);
@@ -629,6 +647,7 @@ function genGrade7(diff = 1) {
   ];
   const types = typePools[diff];
   const type = types[randInt(0, types.length - 1)];
+  lastMathType = type;
 
   if (type === 'tempWord') {
     const a = randInt(-8, 5);
@@ -825,10 +844,10 @@ function genGrade7(diff = 1) {
 }
 
 function generateMathProblem(grade, diff = 1) {
-  if (grade === 1) return genGrade1(diff);
-  if (grade === 3) return genGrade3(diff);
-  if (grade === 5) return genGrade5(diff);
-  return genGrade7(diff);
+  const p = grade === 1 ? genGrade1(diff) : grade === 3 ? genGrade3(diff) : grade === 5 ? genGrade5(diff) : genGrade7(diff);
+  p.key = lastMathType;
+  p.unitLabel = MATH_UNIT_LABELS[lastMathType] || '';
+  return p;
 }
 
 // ユーザー入力が正解かどうか判定

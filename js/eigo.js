@@ -285,14 +285,18 @@ function generateAlphabetProblem() {
       question: `「${l.toUpperCase()}」の 小文字は どれ？`,
       type: 'choice',
       choices: shuffleArray([l, ...others]),
-      answer: l
+      answer: l,
+      key: 'alphabet',
+      unitLabel: 'アルファベット'
     };
   }
   return {
     question: `「${l}」の 大文字は どれ？`,
     type: 'choice',
     choices: shuffleArray([l, ...others].map(x => x.toUpperCase())),
-    answer: l.toUpperCase()
+    answer: l.toUpperCase(),
+    key: 'alphabet',
+    unitLabel: 'アルファベット'
   };
 }
 
@@ -320,7 +324,9 @@ function generateEigoProblem(grade) {
       type: 'choice',
       choices,
       answer: correctLabel,
-      noRead: true
+      noRead: true,
+      key: correct.en,
+      unitLabel: `えいご「${correct.en}」`
     };
     if (useKana) result.choiceFormat = 'kanji-kana'; // 「apple アップル」を、つづり＋小さい読みで表示
     return result;
@@ -337,6 +343,8 @@ function generateEigoProblem(grade) {
     type: 'choice',
     choices,
     answer: correct.ja,
-    speakEn: correct.en
+    speakEn: correct.en,
+    key: correct.en,
+    unitLabel: `えいご「${correct.en}」`
   };
 }

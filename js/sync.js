@@ -27,7 +27,7 @@ function collectSyncData() {
 }
 
 // ---- ポコ・にがて・毎日の連続日数も同期する ----
-const EXTRA_PREFIXES = ['manabi_pet_', 'manabi_mistakes_', 'manabi_daystreak_', 'manabi_history_', 'manabi_grade_'];
+const EXTRA_PREFIXES = ['manabi_pet_', 'manabi_mistakes_', 'manabi_daystreak_', 'manabi_history_', 'manabi_grade_', 'manabi_skip_'];
 
 function parseJSONOr(raw, fallback) {
   try { return raw ? JSON.parse(raw) : fallback; } catch (e) { return fallback; }
@@ -40,13 +40,26 @@ function mergeExtra(key, rawA, rawB) {
   if (key.indexOf('manabi_pet_') === 0) {
     const a = parseJSONOr(rawA, {}), b = parseJSONOr(rawB, {});
     const out = {};
-    ['xp', 'coins', 'perfects', 'missions', 'cleared'].forEach(f => { out[f] = Math.max(a[f] || 0, b[f] || 0); });
+    ['xp', 'coins', 'perfects', 'missions', 'cleared', 'growth'].forEach(f => { out[f] = Math.max(a[f] || 0, b[f] || 0); });
+    const ga = a.growthDay || { date: '' }, gb = b.growthDay || { date: '' };
+    out.growthDay = ga.date > gb.date ? ga : (gb.date > ga.date ? gb : {
+      date: ga.date, base: !!(ga.base || gb.base), amount: !!(ga.amount || gb.amount), mission: !!(ga.mission || gb.mission), c: Math.max(ga.c || 0, gb.c || 0)
+    });
     return JSON.stringify(out);
   }
   if (key.indexOf('manabi_daystreak_') === 0) {
     const a = parseJSONOr(rawA, {}), b = parseJSONOr(rawB, {});
     const newer = ((a.last || '') > (b.last || '')) ? a : (((a.last || '') < (b.last || '')) ? b : (a.count >= b.count ? a : b));
     return JSON.stringify({ last: newer.last || null, count: newer.count || 0, best: Math.max(a.best || 0, b.best || 0) });
+  }
+  if (key.indexOf('manabi_skip_') === 0) {
+    const a = parseJSONOr(rawA, {}), b = parseJSONOr(rawB, {});
+    const out = {};
+    new Set([...Object.keys(a), ...Object.keys(b)]).forEach(k => {
+      const x = a[k], y = b[k];
+      out[k] = !x ? y : (!y ? x : ((y.t || 0) > (x.t || 0) ? y : x));   // あたらしい方（もどした／けした）を採用
+    });
+    return JSON.stringify(out);
   }
   if (key.indexOf('manabi_history_') === 0) {
     const a = parseJSONOr(rawA, {}), b = parseJSONOr(rawB, {});

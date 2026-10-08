@@ -52,7 +52,7 @@ function renderHome() {
   chip.textContent = streak > 0 ? `🔥 ${streak}日れんぞく` : '🔥 きょうから スタート';
   chip.classList.toggle('dim', streak === 0);
 
-  byId('home-pet').innerHTML = petSVG(petStage(pet.xp), allDone ? 'cheer' : 'happy', 84);
+  byId('home-pet').innerHTML = petSVG(petStage(pet.growth), allDone ? 'cheer' : 'happy', 84);
   let say;
   if (!name) say = 'なまえを おしえてね！\n「せってい」で いれられるよ。';
   else if (!grade) say = 'まず 学年を えらんでね！';
@@ -174,7 +174,7 @@ function renderZukan() {
   const root = byId('zukan-content');
   root.innerHTML = '';
   const pet = loadPet();
-  const prog = petProgress(pet.xp);
+  const prog = petProgress(pet.growth);
 
   const hero = el('div', 'zukan-hero');
   const img = el('div', 'zukan-pet');
@@ -186,7 +186,7 @@ function renderZukan() {
   fill.style.width = `${prog.pct}%`;
   bar.appendChild(fill);
   hero.appendChild(bar);
-  hero.appendChild(el('div', 'pet-note', prog.need > 0 ? `あと ${prog.need}もん せいかいすると しんか！` : 'いちばん おおきく そだったよ！'));
+  hero.appendChild(el('div', 'pet-note', prog.need > 0 ? `そだち ${prog.have}/${prog.span}　まいにち つづけると しんかするよ` : 'いちばん おおきく そだったよ！'));
   const coin = el('div', 'zukan-coin', `💰 ${pet.coins} コイン`);
   hero.appendChild(coin);
   root.appendChild(hero);
@@ -328,6 +328,33 @@ function showReportScreen() {
 function renderSettings() {
   playerNameInput.value = state.playerName;
   byId('sound-toggle').checked = FX.soundOn();
+  renderSkipList();
+}
+
+// 「まだ ならってない」で けしたものの一覧（もどす）
+function renderSkipList() {
+  const box = byId('skip-list');
+  box.innerHTML = '';
+  const entries = Object.entries(loadSkips()).filter(([, e]) => e && e.on);
+  if (entries.length === 0) {
+    box.appendChild(el('div', 'report-empty', 'いまは ありません。'));
+    return;
+  }
+  entries.forEach(([id, e]) => {
+    const parts = id.split('|');
+    const subject = parts[0];
+    const grade = parts[1];
+    const key = parts.slice(2).join('|');
+    const row = el('div', 'skip-row');
+    row.appendChild(el('span', 'skip-name', `${gradeLabel(Number(grade))} ${subjectNameOf(Number(grade), subject)}：${e.label || key}`));
+    const b = el('button', 'sub-btn', 'もどす');
+    b.addEventListener('click', () => {
+      setSkip(subject, grade, key, e.label, false);
+      renderSkipList();
+    });
+    row.appendChild(b);
+    box.appendChild(row);
+  });
 }
 
 // ---- 1しゅうかんのぼうグラフ（きろく・おうちの人の画面で共通）----
@@ -396,7 +423,7 @@ function renderParent() {
 
     const title = el('div', 'child-head');
     title.appendChild(el('h3', null, name));
-    title.appendChild(el('span', 'child-sub', `${grade ? gradeLabel(grade) : '学年 みせってい'} ・ ${PET_STAGES[petStage(pet.xp)].name}`));
+    title.appendChild(el('span', 'child-sub', `${grade ? gradeLabel(grade) : '学年 みせってい'} ・ ${PET_STAGES[petStage(pet.growth)].name}`));
     card.appendChild(title);
 
     // きょう
