@@ -169,6 +169,8 @@ h2, h3 { margin: 0; }
 .grade-pills { display: flex; gap: 6px; margin-top: 14px; }
 .pill {
   flex: 1;
+  min-width: 0;
+  padding: 0 2px;
   min-height: 44px;
   border-radius: 22px;
   background: var(--card);
@@ -231,6 +233,11 @@ h2, h3 { margin: 0; }
   border-bottom: 4px solid #E0B960;
 }
 
+.rec-card { margin-top: 14px; padding: 12px 14px 14px; background: #FFF8DC; border: 2px solid #F5D77A; border-radius: var(--radius); }
+.rec-title { font-weight: 700; margin-bottom: 4px; }
+.rec-text { font-size: 0.92rem; margin-top: 8px; }
+.rec-card .sub-btn { margin-top: 8px; }
+.parent-rec { margin-top: 6px; padding: 6px 10px; border-radius: 10px; background: #FFF8DC; font-size: 0.88rem; }
 .title-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin: 22px 0 10px; }
 .title-row .section-title { margin: 0; }
 .seg { display: flex; background: var(--card); border: 2px solid var(--line); border-radius: 20px; overflow: hidden; }

@@ -51,8 +51,8 @@ function startSession(opts) {
   nextQuestion();
 }
 
-function startDrill(subject) {
-  startSession({ mode: 'drill', grade: state.grade, subject, total: getDrillSize() });
+function startDrill(subject, grade) {
+  startSession({ mode: 'drill', grade: grade || state.grade, subject, total: getDrillSize() });
 }
 
 function startMistakeReview(limit) {
@@ -281,6 +281,7 @@ function checkAnswer() {
   }
 
   s.answered = true;
+  if (!s.fromMistakes) recordRecent(s.currentSubject, s.grade, ok);   // 最近の正解率（ふくしゅうのおすすめ用）
 
   // 選択肢の色づけ・入力欄のロック
   byId('quiz-answer-area').querySelectorAll('.choice-btn').forEach(b => {
@@ -593,12 +594,23 @@ function renderResult(r) {
 
   if (s.mode === 'drill') {
     if (ev && ev.showChallenge) add('🚀 チャレンジ', 'main-btn', confirmChallenge);
-    add('もういちど', (ev && ev.showChallenge) ? 'sub-btn wide' : 'main-btn', () => startDrill(s.subject));
+    add('もういちど', (ev && ev.showChallenge) ? 'sub-btn wide' : 'main-btn', () => startDrill(s.subject, s.grade));
   } else if (s.mode === 'mission') {
     const next = getMission(s.grade).items.find(it => !it.done);
     if (next) add('つぎの ミッション', 'main-btn', () => startMissionItem(next));
   } else if (s.mode === 'review') {
     if (dueMistakes(s.grade).length > 0) add('つづけて ふくしゅう', 'main-btn', () => startMistakeReview(10));
+  }
+  // 前の学年で ふくしゅう中に、よくできるようになったら「もとの学年にもどろう」
+  if (s.mode === 'drill') {
+    const own = loadGrade();
+    const next = readyToAdvance(s.subject, s.grade, own, state.playerName);
+    if (next) {
+      const toOwn = next === own;
+      const note = el('div', 'note gold', `✨ ${gradeLabel(s.grade)}の ${subjectNameOf(s.grade, s.subject)}は、よく できているよ！ ${toOwn ? `${gradeLabel(own)}に もどって` : `つぎは ${gradeLabel(next)}で`} ちょうせんしよう`);
+      byId('result-content').appendChild(note);
+      add(`${gradeLabel(next)}の ${subjectNameOf(next, s.subject)}に ${toOwn ? 'もどる' : 'すすむ'}`, 'main-btn', () => startDrill(s.subject, next));
+    }
   }
   add('ホームへ', btns.children.length ? 'sub-btn wide' : 'main-btn', () => showTab('home'));
 }

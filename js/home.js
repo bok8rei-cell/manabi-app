@@ -1,6 +1,6 @@
 // ===== ホーム・ずかん・きろく・せってい =====
 
-const GRADE_PILL_LABEL = { 1: '1年生', 3: '3年生', 5: '5年生', 7: '中1' };
+const GRADE_PILL_LABEL = { 1: '1年', 2: '2年', 3: '3年', 4: '4年', 5: '5年', 6: '6年', 7: '中1' };
 const SUBJECT_ICON = { math: '🔢', kanji: '✏️', kotowaza: '📜', rikashakai: '🔬', eigo: '🔤' };
 
 function gradeKey(name) { return `manabi_grade_${playerTag(name)}`; }
@@ -119,6 +119,21 @@ function renderHome() {
     card.appendChild(el('div', 'mission-clear', '🎉 ぜんぶ クリア！ また あした！'));
   }
   body.appendChild(card);
+
+  // ふくしゅうの おすすめ（正解率が低い教科は、前の学年に もどって ふくしゅう）
+  const recs = getRecommendations(state.playerName, grade).slice(0, 2);
+  if (recs.length > 0) {
+    const rc = el('div', 'rec-card');
+    rc.appendChild(el('div', 'rec-title', '💡 ふくしゅうの おすすめ'));
+    recs.forEach(rec => {
+      rc.appendChild(el('div', 'rec-text', recommendText(rec)));
+      const label = rec.to ? `${gradeLabel(rec.to)}の ${subjectNameOf(rec.to, rec.subject)}を やってみる` : 'にがてを ふくしゅうする';
+      const b = el('button', 'sub-btn wide', label);
+      b.addEventListener('click', () => (rec.to ? startDrill(rec.subject, rec.to) : startMistakeReview(10)));
+      rc.appendChild(b);
+    });
+    body.appendChild(rc);
+  }
 
   // 教科
   const titleRow = el('div', 'title-row');
@@ -436,6 +451,9 @@ function renderParent() {
     else { todayText = `⚠️ ${daysAgo}日 やっていません`; todayCls = 'warn'; }
     card.appendChild(el('div', 'today-line ' + todayCls, todayText));
 
+    getRecommendations(name, grade).slice(0, 3).forEach(rec => {
+      card.appendChild(el('div', 'parent-rec', '💡 ' + recommendText(rec)));
+    });
     card.appendChild(el('div', 'report-line', `🔥 れんぞく ${currentDayStreak(name)}日（さいこう ${Math.max(streakInfo.best, currentDayStreak(name))}日）　📅 さいごに やった日：${streakInfo.last ? formatDay(streakInfo.last) : 'まだ'}`));
 
     // この1しゅうかん

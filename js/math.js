@@ -15,6 +15,13 @@ const MATH_UNIT_LABELS = {
   fraction: '分数のたし算ひき算', decimalMul: '小数のかけ算', decimalDiv: '小数のわり算', percent: 'わりあい（％）', area: '面積',
   average: '平均', circle: '円周', volume: '体積', oddEven: 'ぐう数・き数', lcm: '最小公倍数', gcd5: '最大公約数', speedWord: '速さ',
   discount: '○％引き', density: '人口みつど',
+  add2: 'たし算（2けた）', sub2: 'ひき算（2けた）', add3: 'たし算（3けた）', sub3: 'ひき算（3けた）', mul9: 'かけ算（九九）', mulWord2: 'かけ算の もんだい',
+  addWord2: 'たし算の もんだい', subWord2: 'ひき算の もんだい', lengthUnit: '長さの たんい', minUnit: '時間と分', volumeUnit: 'かさの たんい', fraction2: '分数（2分の1など）',
+  bigNumber: '大きな数（億・万）', div4: 'わり算（筆算）', divRem4: 'あまりのある わり算', div2digit: '2けたでわるわり算', mul4: 'かけ算（筆算）',
+  decAdd4: '小数のたし算ひき算', decMul4: '小数×整数', decDiv4: '小数÷整数', frac4: '分数のたし算ひき算', order4: '計算のじゅんじょ', areaUnit4: '面積の たんい',
+  area4: '面積', angle4: '角の大きさ', round4: 'がい数', divWord4: 'わり算の もんだい', mulWord4: 'かけ算の もんだい',
+  fracMul6: '分数のかけ算', fracDiv6: '分数のわり算', literal6: '文字を使った式', prop6: '比例', inverse6: '反比例', ratio6: '比', ratioVal6: '比の値',
+  circleArea6: '円の面積', prism6: '角柱の体積', speed6: '速さ', time6: '速さと時間', median6: '中央値', mode6: '最頻値（さいひんち）', perm6: '並べ方', comb6: '組み合わせ',
   negAddSub: '正負の数のたし算ひき算', negMulDiv: '正負の数のかけ算わり算', literalSimplify: '文字式の計算', literalSubstitute: '文字式に数を入れる',
   equation: '方程式', proportion: '比例・反比例', absValue: '絶対値', expand: '式の展開', tempWord: '気温の変化', eqWord: '方程式の文章題', expressWord: '文字式で表す'
 };
@@ -843,8 +850,318 @@ function genGrade7(diff = 1) {
   };
 }
 
+// ===== 2年生 =====
+function genGrade2(diff = 1) {
+  const typePools = [
+    ['add2', 'sub2', 'mul9', 'mulWord2', 'lengthUnit', 'minUnit'],
+    ['add2', 'sub2', 'mul9', 'mulWord2', 'lengthUnit', 'minUnit', 'addWord2', 'subWord2', 'volumeUnit', 'fraction2', 'add3'],
+    ['add2', 'sub2', 'mul9', 'mulWord2', 'lengthUnit', 'minUnit', 'addWord2', 'subWord2', 'volumeUnit', 'fraction2', 'add3', 'sub3']
+  ];
+  const types = typePools[diff];
+  const type = types[randInt(0, types.length - 1)];
+  lastMathType = type;
+  const items = [['りんご', 'こ'], ['あめ', 'こ'], ['シール', 'まい'], ['えんぴつ', '本'], ['ビーだま', 'こ'], ['いろがみ', 'まい']];
+  const input = (question, answer) => ({ question, type: 'input', inputType: 'number', answer: String(answer) });
+
+  if (type === 'add2') {
+    let a, b;
+    do {
+      a = randInt(11, diff === 0 ? 60 : 90);
+      b = randInt(2, Math.min(diff === 0 ? 39 : 70, 99 - a));
+    } while (a + b >= 100 || (diff === 0 && (a % 10) + (b % 10) >= 10));
+    return input(`${a} ＋ ${b} = ？`, a + b);
+  }
+  if (type === 'sub2') {
+    let a, b;
+    do {
+      a = randInt(20, 99);
+      b = randInt(2, a - 1);
+    } while (diff === 0 && (b % 10) > (a % 10));
+    return input(`${a} － ${b} = ？`, a - b);
+  }
+  if (type === 'add3') {
+    const a = randInt(100, 499);
+    const b = randInt(100, 499);
+    return input(`${a} ＋ ${b} = ？`, a + b);
+  }
+  if (type === 'sub3') {
+    const a = randInt(300, 999);
+    const b = randInt(100, a - 100);
+    return input(`${a} － ${b} = ？`, a - b);
+  }
+  if (type === 'mul9') {
+    const a = randInt(2, diff === 0 ? 5 : 9);
+    const b = randInt(1, 9);
+    return input(`${a} × ${b} = ？`, a * b);
+  }
+  if (type === 'mulWord2') {
+    const [name, unit] = items[randInt(0, items.length - 1)];
+    const a = randInt(2, 9);
+    const b = randInt(2, 9);
+    return input(`1つの ふくろに ${name}が ${a}${unit}ずつ 入っています。\n${b}ふくろ では、ぜんぶで なん${unit}？`, a * b);
+  }
+  if (type === 'addWord2') {
+    const [name, unit] = items[randInt(0, items.length - 1)];
+    const a = randInt(11, 60);
+    const b = randInt(11, Math.min(39, 99 - a));
+    return input(`${name}が ${a}${unit} あります。\n${b}${unit} もらうと、ぜんぶで なん${unit}？`, a + b);
+  }
+  if (type === 'subWord2') {
+    const [name, unit] = [['えんぴつ', '本'], ['シール', 'まい'], ['いろがみ', 'まい']][randInt(0, 2)];
+    const a = randInt(31, 99);
+    const b = randInt(11, a - 1);
+    return input(`${name}が ${a}${unit} あります。\n${b}${unit} つかうと、のこりは なん${unit}？`, a - b);
+  }
+  if (type === 'lengthUnit') {
+    if (Math.random() < 0.5) {
+      const m = randInt(1, 5);
+      const c = randInt(1, 19) * 5;
+      return input(`${m}m ${c}cm は、なんcm？`, m * 100 + c);
+    }
+    const n = randInt(2, 20);
+    return input(`${n}cm は、なんmm？`, n * 10);
+  }
+  if (type === 'minUnit') {
+    const h = randInt(1, 3);
+    const m = randInt(1, 11) * 5;
+    return input(`${h}時間 ${m}分 は、なん分？`, h * 60 + m);
+  }
+  if (type === 'volumeUnit') {
+    const a = randInt(1, 9);
+    return Math.random() < 0.5 ? input(`${a}L は、なんdL？`, a * 10) : input(`${a}L は、なんmL？`, a * 1000);
+  }
+  // fraction2
+  const n = [2, 3, 4][randInt(0, 2)];
+  return {
+    question: `まるい ケーキを おなじ 大きさに ${n}つに わけました。\n1つぶんを 分数で いうと？`,
+    type: 'choice',
+    choices: ['2分の1', '3分の1', '4分の1', '8分の1'],
+    answer: `${n}分の1`
+  };
+}
+
+// ===== 4年生 =====
+function fmtDec(x) { return String(Math.round(x * 100) / 100); }
+
+function genGrade4(diff = 1) {
+  const base = ['bigNumber', 'div4', 'mul4', 'area4', 'angle4', 'round4'];
+  const mid = ['decAdd4', 'decMul4', 'decDiv4', 'frac4', 'order4', 'areaUnit4', 'divRem4', 'divWord4', 'mulWord4'];
+  const typePools = [base, [...base, ...mid], [...base, ...mid, 'div2digit']];
+  const types = typePools[diff];
+  const type = types[randInt(0, types.length - 1)];
+  lastMathType = type;
+  const input = (question, answer, extra) => Object.assign({ question, type: 'input', inputType: 'number', answer: String(answer) }, extra || {});
+
+  if (type === 'bigNumber') {
+    const a = randInt(1, 9);
+    const b = randInt(1, 9999);
+    return input(`${a}億${b}万を、数字で 書くと？`, a * 100000000 + b * 10000);
+  }
+  if (type === 'div4') {
+    const b = randInt(2, 9);
+    const c = diff === 0 ? randInt(5, Math.floor(99 / b)) : randInt(Math.ceil(100 / b), Math.floor(999 / b));
+    return input(`${b * c} ÷ ${b} = ？`, c);
+  }
+  if (type === 'divRem4') {
+    const b = randInt(3, 9);
+    const c = randInt(Math.ceil(30 / b), Math.floor(150 / b));
+    const r = randInt(1, b - 1);
+    return {
+      question: `${b * c + r} ÷ ${b} = ？\nあまりも こたえてね。\n（れい：3あまり2 → 「3あまり2」と入力）`,
+      type: 'input', inputType: 'text', answerType: 'remainder', answer: `${c}あまり${r}`
+    };
+  }
+  if (type === 'div2digit') {
+    const b = randInt(11, 25);
+    const c = randInt(2, 9);
+    return input(`${b * c} ÷ ${b} = ？`, c);
+  }
+  if (type === 'mul4') {
+    let a, b;
+    if (diff === 0) { a = randInt(11, 39); b = randInt(11, 29); }
+    else if (diff === 1) { a = randInt(101, 399); b = randInt(11, 49); }
+    else { a = randInt(101, 999); b = randInt(11, 99); }
+    return input(`${a} × ${b} = ？`, a * b);
+  }
+  if (type === 'decAdd4') {
+    const a = randInt(100, 999) / 100;
+    const b = randInt(10, 499) / 100;
+    if (Math.random() < 0.5) return input(`${a} ＋ ${b} = ？`, fmtDec(a + b), { inputType: 'text' });
+    return input(`${Math.max(a, b)} － ${Math.min(a, b)} = ？`, fmtDec(Math.max(a, b) - Math.min(a, b)), { inputType: 'text' });
+  }
+  if (type === 'decMul4') {
+    const a = randInt(11, 99) / 10;
+    const b = randInt(2, 9);
+    return input(`${a} × ${b} = ？`, fmtDec(a * b), { inputType: 'text' });
+  }
+  if (type === 'decDiv4') {
+    const q = randInt(11, 99) / 10;
+    const b = randInt(2, 9);
+    return input(`${fmtDec(q * b)} ÷ ${b} = ？`, fmtDec(q), { inputType: 'text' });
+  }
+  if (type === 'frac4') {
+    const d = randInt(4, 12);
+    const proper = diff < 2;
+    const isAdd = Math.random() < 0.5;
+    let n1, n2;
+    if (isAdd) {
+      n1 = randInt(1, d - 1);
+      n2 = proper ? randInt(1, d - 1 - n1 < 1 ? 1 : d - 1 - n1) : randInt(1, d - 1);
+      if (proper && n1 + n2 >= d) { n1 = 1; n2 = 1; }
+      return {
+        question: `${n1}/${d} ＋ ${n2}/${d} = ？\n（分数で こたえてね）`,
+        type: 'input', inputType: 'text', isFraction: true, answer: `${n1 + n2}/${d}`
+      };
+    }
+    n1 = randInt(2, d - 1);
+    n2 = randInt(1, n1 - 1);
+    return {
+      question: `${n1}/${d} － ${n2}/${d} = ？\n（分数で こたえてね）`,
+      type: 'input', inputType: 'text', isFraction: true, answer: `${n1 - n2}/${d}`
+    };
+  }
+  if (type === 'order4') {
+    const f = randInt(1, 3);
+    const a = randInt(2, 12), b = randInt(2, 9), c = randInt(2, 9);
+    if (f === 1) return input(`${a} ＋ ${b} × ${c} = ？`, a + b * c);
+    if (f === 2) return input(`(${a} ＋ ${b}) × ${c} = ？`, (a + b) * c);
+    return input(`${a + b * c} － ${b} × ${c} = ？`, a);
+  }
+  if (type === 'areaUnit4') {
+    const k = randInt(1, 9);
+    return input(`${k}m² は、なんcm²？`, k * 10000);
+  }
+  if (type === 'area4') {
+    if (Math.random() < 0.5) {
+      const a = randInt(3, 15), b = randInt(3, 15);
+      return input(`たて ${a}cm、よこ ${b}cm の 長方形の 面積は、なんcm²？`, a * b);
+    }
+    const a = randInt(3, 15);
+    return input(`1辺が ${a}cm の 正方形の 面積は、なんcm²？`, a * a);
+  }
+  if (type === 'angle4') {
+    const a = randInt(2, 17) * 10;
+    return input(`一直線に ならんだ 2つの 角の うち、一方が ${a}° です。\nもう一方の 角は、何度？`, 180 - a);
+  }
+  if (type === 'round4') {
+    if (Math.random() < 0.6) {
+      const n = randInt(1000, 9999);
+      return input(`${n} を ししゃごにゅうして、百の位までの がい数に すると？`, Math.floor((n + 50) / 100) * 100);
+    }
+    const n = randInt(10000, 99999);
+    return input(`${n} を ししゃごにゅうして、千の位までの がい数に すると？`, Math.floor((n + 500) / 1000) * 1000);
+  }
+  if (type === 'divWord4') {
+    const items = [['あめ', 'こ'], ['色紙', 'まい'], ['シール', 'まい']];
+    const [name, unit] = items[randInt(0, items.length - 1)];
+    const b = randInt(11, 25), c = randInt(3, 9);
+    return input(`${name}が ${b * c}${unit} あります。\n${b}人で 同じ数ずつ 分けると、1人分は なん${unit}？`, c);
+  }
+  // mulWord4
+  const p = randInt(12, 98), n = randInt(12, 48);
+  return input(`1こ ${p}円の 品物を ${n}こ 買うと、代金は 何円？`, p * n);
+}
+
+// ===== 6年生 =====
+function genGrade6(diff = 1) {
+  const base = ['fracMul6', 'literal6', 'prop6', 'ratio6'];
+  const mid = ['fracDiv6', 'circleArea6', 'speed6', 'median6', 'mode6', 'prism6'];
+  const high = ['perm6', 'comb6', 'inverse6', 'ratioVal6', 'time6'];
+  const typePools = [base, [...base, ...mid], [...base, ...mid, ...high]];
+  const types = typePools[diff];
+  const type = types[randInt(0, types.length - 1)];
+  lastMathType = type;
+  const input = (question, answer, extra) => Object.assign({ question, type: 'input', inputType: 'number', answer: String(answer) }, extra || {});
+  const frac = (question, num, den) => {
+    const r = reduceFraction(num, den);
+    return { question, type: 'input', inputType: 'text', isFraction: true, answer: fractionToString(r) };
+  };
+
+  if (type === 'fracMul6') {
+    const d1 = randInt(2, 9), d2 = randInt(2, 9);
+    const n1 = randInt(1, d1 - 1), n2 = randInt(1, d2 - 1);
+    return frac(`${n1}/${d1} × ${n2}/${d2} = ？\n（やくぶんした 分数で こたえてね）`, n1 * n2, d1 * d2);
+  }
+  if (type === 'fracDiv6') {
+    const d1 = randInt(2, 9), d2 = randInt(2, 9);
+    const n1 = randInt(1, d1 - 1), n2 = randInt(1, d2 - 1);
+    return frac(`${n1}/${d1} ÷ ${n2}/${d2} = ？\n（やくぶんした 分数で こたえてね）`, n1 * d2, d1 * n2);
+  }
+  if (type === 'literal6') {
+    const x = randInt(1, 9), a = randInt(2, 9), b = randInt(1, 9);
+    return input(`x = ${x} のとき、${a}x ＋ ${b} の 値は？`, a * x + b);
+  }
+  if (type === 'prop6') {
+    const a = randInt(2, 9), x1 = randInt(1, 8);
+    let x2 = randInt(2, 12);
+    while (x2 === x1) x2 = randInt(2, 12);
+    return input(`y は x に 比例します。\nx = ${x1} のとき y = ${a * x1} です。\nx = ${x2} のとき、y は？`, a * x2);
+  }
+  if (type === 'inverse6') {
+    const x1 = randInt(2, 6), y1 = randInt(2, 8);
+    const k = x1 * y1;
+    const divs = [];
+    for (let d = 1; d <= k; d++) if (k % d === 0 && d !== x1) divs.push(d);
+    const x2 = divs[randInt(0, divs.length - 1)];
+    return input(`y は x に 反比例します。\nx = ${x1} のとき y = ${y1} です。\nx = ${x2} のとき、y は？`, k / x2);
+  }
+  if (type === 'ratio6') {
+    let a = randInt(1, 9), b = randInt(1, 9);
+    while (a === b || gcd(a, b) !== 1) { a = randInt(1, 9); b = randInt(1, 9); }
+    const g = randInt(2, 6);
+    return {
+      question: `${a * g}:${b * g} を、いちばん かんたんな 整数の 比に すると？\n（れい：2:3）`,
+      type: 'input', inputType: 'text', answerType: 'ratio', answer: `${a}:${b}`
+    };
+  }
+  if (type === 'ratioVal6') {
+    const a = randInt(1, 12), b = randInt(2, 12);
+    return frac(`${a}:${b} の 比の値は？\n（分数で こたえてね）`, a, b);
+  }
+  if (type === 'circleArea6') {
+    const r = randInt(1, 10);
+    return input(`半径 ${r}cm の 円の 面積は、なんcm²？\n（円周率は 3.14）`, fmtDec(r * r * 3.14), { inputType: 'text' });
+  }
+  if (type === 'prism6') {
+    const s = randInt(5, 40), h = randInt(2, 12);
+    return input(`底面積が ${s}cm²、高さが ${h}cm の 角柱の 体積は、なんcm³？`, s * h);
+  }
+  if (type === 'speed6') {
+    const v = randInt(3, 12) * 10, t = randInt(2, 8);
+    return input(`${v * t}kmを ${t}時間で 走りました。\n時速は、なんkm？`, v);
+  }
+  if (type === 'time6') {
+    const v = randInt(3, 12) * 10, t = randInt(2, 8);
+    return input(`時速 ${v}kmで ${v * t}km 進むには、何時間 かかる？`, t);
+  }
+  if (type === 'median6') {
+    const n = [5, 7][randInt(0, 1)];
+    const set = new Set();
+    while (set.size < n) set.add(randInt(2, 40));
+    const list = shuffleArray([...set]);
+    const sorted = [...set].sort((x, y) => x - y);
+    return input(`${list.join('、')} の 中央値（まん中の 数）は？`, sorted[(n - 1) / 2]);
+  }
+  if (type === 'mode6') {
+    const m = randInt(2, 30);
+    const others = [];
+    while (others.length < 2) { const v = randInt(2, 30); if (v !== m && !others.includes(v)) others.push(v); }
+    const list = shuffleArray([m, m, m, others[0], others[0], others[1]]);
+    return input(`${list.join('、')} の 最頻値（さいひんち：いちばん 多い数）は？`, m);
+  }
+  if (type === 'perm6') {
+    const n = [3, 4][randInt(0, 1)];
+    const names = ['A', 'B', 'C', 'D'].slice(0, n).join('、');
+    return input(`${names}の ${n}人が 1れつに ならぶ ならび方は、ぜんぶで 何通り？`, n === 3 ? 6 : 24);
+  }
+  // comb6
+  const n = randInt(4, 6);
+  return input(`${n}チームで、どのチームとも 1回ずつ しあいを します。\nしあいは、ぜんぶで 何試合？`, (n * (n - 1)) / 2);
+}
+
 function generateMathProblem(grade, diff = 1) {
-  const p = grade === 1 ? genGrade1(diff) : grade === 3 ? genGrade3(diff) : grade === 5 ? genGrade5(diff) : genGrade7(diff);
+  const gens = { 1: genGrade1, 2: genGrade2, 3: genGrade3, 4: genGrade4, 5: genGrade5, 6: genGrade6, 7: genGrade7 };
+  const p = (gens[grade] || genGrade7)(diff);
   p.key = lastMathType;
   p.unitLabel = MATH_UNIT_LABELS[lastMathType] || '';
   return p;

@@ -1,5 +1,7 @@
 # まなびポコ（旧 BRAIN QUEST：零式）— CLAUDE.md
 
+対象学年：1・2・3・4・5・6年 と 中1（ALL_GRADES = [1..7]、7 = 中1）。2・4・6年のことわざ・英語は、前後の学年の問題を組み合わせて作る（kanji.js / eigo.js の末尾）。
+
 ## Claude Code 起動オプション
 
 ```bash
@@ -90,6 +92,7 @@ GitHub Pages: `https://bok8rei-cell.github.io/manabi-app/`
 | `js/core.js` | バージョン・自動更新・教科/難易度・チャレンジ管理・なまえ・進捗・showScreen |
 | `js/quiz.js` | 学習セッション共通（ドリル/ミッション/にがて復習/チャレンジ）と結果画面 |
 | `js/home.js` | ホーム・ずかん・きろく・せってい画面、showTab |
+| `js/recommend.js` | 正解率が低い教科は、前の学年に もどって ふくしゅうをすすめる（最近20もん／12問以上／6割未満） |
 | `js/pet.js` | ポコ（育成キャラ）・コイン・バッジ |
 | `js/fx.js` | 効果音・ふるえ・よみあげ・紙ふぶき |
 | `js/explain.js` | 算数の「やさしい解説」を問題文から生成（答えが一致したときだけ表示） |
@@ -144,6 +147,6 @@ Agent ツールで以下を実行：
 
 - iOS でPWAをホーム画面から削除すると localStorage が消えるが、プレイヤー名を再入力すれば Firestore から復元できる
 - Service Worker のキャッシュバージョンを上げないと端末に古いバージョンが残る
-- バージョンは `js/core.js` の APP_VERSION・`version.json`・`sw.js` の CACHE_NAME・`index.html` の `?v=` を同じ番号にそろえて上げる（現在 v38.3）
+- バージョンは `js/core.js` の APP_VERSION・`version.json`・`sw.js` の CACHE_NAME・`index.html` の `?v=` を同じ番号にそろえて上げる（現在 v38.4）
 - 日付は `localDateStr()`（js/store.js）を使う。`toISOString()` は UTC なので日本時間の朝に1日ずれる
 - `explain.js` を変更したら、先生エージェントに審査を依頼する（問題データと同じ扱い）

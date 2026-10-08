@@ -155,8 +155,23 @@ const EIGO_DATA = {
   ]
 };
 
-// 1・3・5年生は、英語のつづりが読めない子が多いので、カタカナの読みを横にそえる（中1は付けない）。
-const EIGO_KANA_GRADES = [1, 3, 5];
+// 2・4・6年は、前後の学年の単語から つくる（おなじ単語・おなじ絵・おなじ日本語は ひとつだけ）
+function eigoMix(...lists) {
+  const seen = { en: new Set(), ja: new Set(), emoji: new Set() };
+  const out = [];
+  lists.flat().forEach(it => {
+    if (seen.en.has(it.en) || seen.ja.has(it.ja) || seen.emoji.has(it.emoji)) return;
+    seen.en.add(it.en); seen.ja.add(it.ja); seen.emoji.add(it.emoji);
+    out.push(it);
+  });
+  return out;
+}
+EIGO_DATA[2] = eigoMix(EIGO_DATA[1].slice(18), EIGO_DATA[3].slice(0, 12));
+EIGO_DATA[4] = eigoMix(EIGO_DATA[3].slice(12), EIGO_DATA[5].slice(0, 12));
+EIGO_DATA[6] = eigoMix(EIGO_DATA[5].slice(12), EIGO_DATA[7].slice(0, 10));
+
+// 1〜6年生は、英語のつづりが読めない子が多いので、カタカナの読みを横にそえる（中1は付けない）。
+const EIGO_KANA_GRADES = [1, 2, 3, 4, 5, 6];
 const EIGO_KANA = {
   cat: 'キャット',
   dog: 'ドッグ',
@@ -253,6 +268,8 @@ const EIGO_KANA = {
   phone: 'フォン',
   rocket: 'ロケット',
   science: 'サイエンス',
+  study: 'スタディ', library: 'ライブラリー', weekend: 'ウィークエンド', homework: 'ホームワーク', friend: 'フレンド', teacher: 'ティーチャー',
+  museum: 'ミュージアム', sport: 'スポーツ', vacation: 'バケーション',
   walk: 'ウォーク',
   swim: 'スイム',
   sleep: 'スリープ',

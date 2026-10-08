@@ -96,7 +96,7 @@ function getMission(grade) {
   if (dueMistakes(grade).length > 0) {
     items.push({ id: 'm3', kind: 'review', n: 5, done: false });
   } else {
-    items.push({ id: 'm3', kind: 'subject', subject: grade === 1 ? 'eigo' : 'rikashakai', n: 5, done: false });
+    items.push({ id: 'm3', kind: 'subject', subject: grade <= 2 ? 'eigo' : 'rikashakai', n: 5, done: false });
   }
   const mission = { items, bonus: false };
   writeJSON(missionKey(grade), mission);
@@ -219,4 +219,33 @@ function setSkip(subject, grade, key, label, on) {
   const s = loadSkips();
   s[skipId(subject, grade, key)] = { on: !!on, t: Date.now(), label: label || '' };
   writeJSON(skipStoreKey(), s);
+}
+
+// ---- 最近の正解率（教科×学年ごとに、さいごの20もん）。「前の学年に もどって ふくしゅう」のすすめに使う ----
+const RECENT_N = 20;
+
+function recentKey(name) { return `manabi_recent_${playerTag(name)}`; }
+
+function loadRecent(name) {
+  const r = readJSON(recentKey(name), {});
+  return r && typeof r === 'object' && !Array.isArray(r) ? r : {};
+}
+
+function recordRecent(subject, grade, ok) {
+  const r = loadRecent();
+  const id = `${subject}|${grade}`;
+  const e = r[id] && Array.isArray(r[id].a) ? r[id] : { a: [], t: 0 };
+  e.a.push(ok ? 1 : 0);
+  if (e.a.length > RECENT_N) e.a = e.a.slice(-RECENT_N);
+  e.t = Date.now();
+  r[id] = e;
+  writeJSON(recentKey(), r);
+}
+
+// { n: 答えた数, rate: せいかいりつ(0〜1) }
+function recentRate(subject, grade, name) {
+  const e = loadRecent(name)[`${subject}|${grade}`];
+  if (!e || !Array.isArray(e.a) || e.a.length === 0) return { n: 0, rate: 0 };
+  if (e.t && Date.now() - e.t > 60 * 86400000) return { n: 0, rate: 0 };   // 60日より古い きろくは 参考にしない
+  return { n: e.a.length, rate: e.a.reduce((x, y) => x + y, 0) / e.a.length };
 }
