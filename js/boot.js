@@ -29,6 +29,15 @@ parentToggle.addEventListener('change', (e) => {
   try { localStorage.setItem('manabi_parentmode', e.target.checked ? '1' : '0'); } catch (err) { /* 無視 */ }
 });
 
+// ほかのアプリから戻ってきたときにも、自動で合わせる（iPad はアプリを閉じずに置いておくことが多いため）
+let lastAutoSyncAt = Date.now();
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && Date.now() - lastAutoSyncAt > 30000) {
+    lastAutoSyncAt = Date.now();
+    autoSync();
+  }
+});
+
 cleanOldMissions();
 showTab(localStorage.getItem('manabi_parentmode') === '1' ? 'parent' : 'home');
 autoSync();
