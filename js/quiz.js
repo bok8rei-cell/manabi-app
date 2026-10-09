@@ -19,17 +19,24 @@ function showToast(msg) {
   toastTimer = setTimeout(() => t.classList.add('hidden'), 2800);
 }
 
-function askConfirm(text, okLabel, cancelLabel, onOk) {
+// opts.cancelFirst：うっかり おさないように、「やめる」を 大きく 上に、「つかう」を 小さく 下に 出す
+function askConfirm(text, okLabel, cancelLabel, onOk, opts) {
+  const o = opts || {};
+  const modal = byId('modal');
   byId('modal-text').textContent = text;
   const ok = byId('modal-ok');
   const cancel = byId('modal-cancel');
   ok.textContent = okLabel;
   cancel.textContent = cancelLabel;
-  const close = () => byId('modal').classList.add('hidden');
+  ok.className = o.cancelFirst ? 'sub-btn' : 'main-btn';
+  cancel.className = o.cancelFirst ? 'main-btn' : 'sub-btn';
+  modal.classList.toggle('cancel-first', !!o.cancelFirst);
+  const close = () => modal.classList.add('hidden');
   ok.onclick = () => { close(); onOk(); };
   cancel.onclick = close;
-  byId('modal').classList.remove('hidden');
-  ok.focus();
+  modal.onclick = (e) => { if (e.target === modal && o.cancelFirst) close(); };   // まわりを タップしても「やめる」
+  modal.classList.remove('hidden');
+  (o.cancelFirst ? cancel : ok).focus();
 }
 
 function subjectNameOf(grade, key) {
@@ -293,12 +300,11 @@ function updateHintUI() {
   const btn = byId('quiz-hintbtn');
   if (!s || s.answered || !s.hint || s.hint.max === 0 || s.hintStage >= s.hint.max) { btn.classList.add('hidden'); return; }
   const left = s.hint.max - s.hintStage;
-  const have = petBalance(loadPet());
   btn.innerHTML = '';
   btn.appendChild(document.createTextNode(`💡 ${s.hintStage === 0 ? 'ヒント' : 'つぎの ヒント'}（${HINT_COST}コイン）`));
   const sub = document.createElement('span');
   sub.className = 'coins';
-  sub.textContent = `のこり ${left}かい ／ いま ${have}コイン`;
+  sub.textContent = `のこり ${left}かい`;
   btn.appendChild(sub);
   btn.classList.remove('hidden');
 }
@@ -311,6 +317,18 @@ function useHint() {
     showToast(`コインが たりないよ（あと ${HINT_COST - have}コイン）。「わからない」を おすと こたえが みられるよ`);
     return;
   }
+  // おしまちがいを ふせぐため、コインを つかう前に かならず たしかめる
+  askConfirm(
+    `ヒントを つかう？\n（${HINT_COST}コイン つかいます）\nいま ${have}コイン`,
+    'つかう', 'やめる',
+    () => revealHint(),
+    { cancelFirst: true }
+  );
+}
+
+function revealHint() {
+  const s = session;
+  if (!s || s.answered || !s.hint || s.hint.max === 0 || s.hintStage >= s.hint.max) return;
   if (!spendCoins(HINT_COST)) return;
   s.hintStage++;
   s.hintsUsed++;
