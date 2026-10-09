@@ -806,11 +806,14 @@ function genGrade7(diff = 1) {
         answer: `${a * x2}`
       };
     } else {
-      const x1 = randInt(1, 6);
-      const y1 = randInt(1, 6);
-      const k = x1 * y1;
-      const divisors = [];
-      for (let d = 1; d <= k; d++) if (k % d === 0 && d !== x1) divisors.push(d);
+      let x1, y1, k, divisors;
+      do {   // x1 = y1 = 1 だと、ほかの約数がなく x2 が決まらないので、とり直す
+        x1 = randInt(1, 6);
+        y1 = randInt(1, 6);
+        k = x1 * y1;
+        divisors = [];
+        for (let d = 1; d <= k; d++) if (k % d === 0 && d !== x1) divisors.push(d);
+      } while (divisors.length === 0);
       const x2 = divisors[randInt(0, divisors.length - 1)];
       return {
         question: `yはxに反比例し、x = ${x1} のとき y = ${y1} です。\nx = ${x2} のときの y の値は？`,
@@ -1170,10 +1173,11 @@ function generateMathProblem(grade, diff = 1) {
 
 // ユーザー入力が正解かどうか判定
 function isMathAnswerCorrect(problem, userInput) {
-  // 全角の数字・記号（１２、３／４、－５、０．５）で入力されても同じに扱う
-  userInput = String(userInput)
-    .replace(/[０-９]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0xFEE0))
-    .replace(/[．。]/g, '.').replace(/／/g, '/').replace(/[－ー−]/g, '-');
+  // 全角・半角カナ・見えない文字・文末の「。」などがまざっても同じに扱う（１２、３／４、－５、０．５、ｱﾏﾘ）
+  userInput = String(userInput).normalize('NFKC')
+    .replace(/[​-‍⁠﻿­]/g, '')
+    .replace(/[．。]/g, '.').replace(/[－ー−]/g, '-')
+    .replace(/[\s.、,，]+$/, '');
   if (problem.type === 'choice') {
     return userInput === problem.answer;
   }
@@ -1186,8 +1190,16 @@ function isMathAnswerCorrect(problem, userInput) {
     return ur[0] === ar[0] && ur[1] === ar[1];
   }
   if (problem.answerType === 'remainder') {
-    const norm = s => String(s).trim().replace(/\s+/g, '').replace(/余り/g, 'あまり');
-    return norm(userInput) === norm(problem.answer);
+    // 「1あまり1」「1 あまり 1」「1余り1」「1アマリ1」「1あまり1。」「1あまり1こ」を同じ答えとして読む
+    const parse = s => {
+      const t = String(s).normalize('NFKC').replace(/[ァ-ヶ]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0x60))
+        .replace(/[\s​-‍⁠﻿]/g, '').replace(/余り/g, 'あまり');
+      const m = t.match(/^(\d+)(?:あまり|amari|r)(\d+)\D*$/i);
+      return m ? [Number(m[1]), Number(m[2])] : null;
+    };
+    const u = parse(userInput);
+    const a = parse(problem.answer);
+    return !!u && !!a && u[0] === a[0] && u[1] === a[1];
   }
   if (problem.answerType === 'time') {
     const parse = s => {
@@ -1205,6 +1217,7 @@ function isMathAnswerCorrect(problem, userInput) {
     return norm(userInput) === norm(problem.answer);
   }
   // 数値比較（小数誤差対策）
+  if (String(userInput).trim() === '') return false;   // 「。」だけ などは Number('') = 0 になるので ここで はじく
   const u = Number(String(userInput).trim());
   const a = Number(problem.answer);
   if (!Number.isFinite(u)) return false;
