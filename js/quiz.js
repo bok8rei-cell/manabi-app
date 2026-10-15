@@ -459,6 +459,14 @@ function showFeedback(ok, isDK, p) {
     ans.className = 'fb-ans';
     ans.textContent = `こたえは「${p.answer}」`;
     body.appendChild(ans);
+    // 入力した答えも見せる（「同じなのに ちがう」ときに、何が入っていたか わかるように）
+    const typedEl = byId('answer-input');
+    if (!isDK && p.type !== 'choice' && typedEl && typedEl.value.trim() !== '') {
+      const mine = document.createElement('div');
+      mine.className = 'fb-ans';
+      mine.textContent = `きみの こたえは「${typedEl.value.trim()}」`;
+      body.appendChild(mine);
+    }
   }
 
   const exp = explainProblem(p, s.currentSubject, s.grade);

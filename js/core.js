@@ -1,6 +1,6 @@
 // ===== まなびポコ（旧 BRAIN QUEST：零式） 共通の部品 =====
 
-const APP_VERSION = 'v38.8';
+const APP_VERSION = 'v38.9';
 const TOTAL_QUESTIONS = 10;
 const DONT_KNOW = '__DONTKNOW__';
 
