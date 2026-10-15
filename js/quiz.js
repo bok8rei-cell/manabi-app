@@ -241,9 +241,15 @@ function renderQuestion() {
       }
       byId('quiz-hint').textContent = '';
     });
+    // 日本語入力の「変換をかくてい」する Enter を、「こたえる」と まちがえない
+    // （「1あまり」→「1余り」と変換した Enter で、さいごの「1」を かく前に 採点されていた）
+    let composing = false, composeEndAt = 0;
+    input.addEventListener('compositionstart', () => { composing = true; });
+    input.addEventListener('compositionend', () => { composing = false; composeEndAt = Date.now(); });
     input.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
         e.preventDefault();
+        if (e.isComposing || composing || e.keyCode === 229 || Date.now() - composeEndAt < 80) return;
         byId('quiz-action-btn').click();
       }
     });
