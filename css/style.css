@@ -576,3 +576,11 @@ h2, h3 { margin: 0; }
 .family-note { margin-top: 8px; font-size: 0.9rem; color: var(--ink); white-space: pre-line; }
 .family-perk { margin-top: 6px; font-size: 0.9rem; font-weight: 700; color: var(--main-d); }
 .week-chip { text-align: center; font-size: 0.8rem; color: var(--blue); font-weight: 700; margin: 2px 0 6px; }
+.quest-guide { margin-top: 12px; padding: 10px 12px 12px; background: #fff; border: 2px dashed #A9D3F5; border-radius: 14px; }
+.quest-guide-title { font-weight: 700; font-size: 0.95rem; margin-bottom: 4px; }
+.quest-guide-text { font-size: 0.85rem; color: var(--sub); white-space: pre-line; line-height: 1.5; }
+.quest-rewards { display: flex; gap: 10px; margin-top: 10px; }
+.quest-reward { flex: 1; text-align: center; background: #FFFBEA; border: 2px solid #F5D77A; border-radius: 14px; padding: 8px 4px 10px; }
+.quest-reward-pic { display: flex; justify-content: center; }
+.quest-reward-label { font-weight: 700; font-size: 0.85rem; margin-top: 2px; }
+.quest-reward-sub { font-size: 0.8rem; color: var(--sub); white-space: pre-line; line-height: 1.4; margin-top: 2px; }

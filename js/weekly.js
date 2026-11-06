@@ -99,7 +99,8 @@ function renderFamilyCard(body) {
 
   if (!w.started) {
     const tomorrow = addDaysStr(localDateStr(), 1) === WEEKLY_START;
-    card.appendChild(el('div', 'family-note', `${tomorrow ? 'あした ' : ''}${mdLabel(WEEKLY_START)}（土）の 0じから スタート！\n3人で ${w.goal}もん せいかい（ヒントなし）を めざそう`));
+    card.appendChild(el('div', 'family-note', `${tomorrow ? 'あした ' : ''}${mdLabel(WEEKLY_START)}（土）の 0じから スタート！`));
+    appendQuestGuide(card, w);
     body.appendChild(card);
     return;
   }
@@ -131,5 +132,30 @@ function renderFamilyCard(body) {
       ? '✨ せんしゅうの 1い！ ポコに 王冠が ついてるよ'
       : '✨ せんしゅう たっせい！ いまは とくべつな ポコだよ'));
   }
+  appendQuestGuide(card, w);
   body.appendChild(card);
+}
+
+// 「なにをして、なにが もらえるか」の せつめい（ごほうびの みほん つき）
+function appendQuestGuide(card, w) {
+  const guide = el('div', 'quest-guide');
+  guide.appendChild(el('div', 'quest-guide-title', '📖 ポコクエストって？'));
+  guide.appendChild(el('div', 'quest-guide-text',
+    `1しゅうかん（土〜金）に、3人の せいかいを あわせて ${w.goal}もん めざそう！\n（ヒントを つかわずに せいかいした もんだいだけ かぞえるよ）`));
+  const stage = petStage(loadPet().growth);
+  const rewards = el('div', 'quest-rewards');
+  [
+    { perk: { special: true, crown: false }, label: 'たっせいで', sub: 'つぎの 1しゅうかん\n3人とも とくべつな ポコ！' },
+    { perk: { special: true, crown: true }, label: 'せいかい 1い だと', sub: 'さらに\n王冠が つくよ！' }
+  ].forEach(r => {
+    const item = el('div', 'quest-reward');
+    const pic = el('div', 'quest-reward-pic');
+    pic.innerHTML = petSVG(stage, 'cheer', 64, r.perk);
+    item.appendChild(pic);
+    item.appendChild(el('div', 'quest-reward-label', r.label));
+    item.appendChild(el('div', 'quest-reward-sub', r.sub));
+    rewards.appendChild(item);
+  });
+  guide.appendChild(rewards);
+  card.appendChild(guide);
 }
