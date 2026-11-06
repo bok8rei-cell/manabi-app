@@ -46,6 +46,7 @@ function renderHome() {
   const pet = loadPet();
   const mission = grade ? getMission(grade) : null;
   const allDone = mission && mission.items.every(it => it.done);
+  if (name && evaluateDouble()) showToast(`🎉 ダブル たっせい！ ${SOLO_COIN}コイン ゲット！`);   // ポコ＋そろタッチ
 
   byId('home-hello').textContent = name ? `${timeGreeting()}、${name}` : timeGreeting();
   const chip = byId('home-streak');
@@ -56,6 +57,7 @@ function renderHome() {
   let say;
   if (!name) say = 'なまえを おしえてね！\n「せってい」で いれられるよ。';
   else if (!grade) say = 'まず 学年を えらんでね！';
+  else if (soloOn() && !soloDoneOn(localDateStr()) && pokoQuestionsOn(localDateStr()) >= POKO_DAILY_MIN) say = 'ポコは バッチリ！\nそろタッチは やった？';
   else if (allDone) say = 'きょうの ミッション クリア！\nすごいね！';
   else if (studiedToday()) say = 'いいちょうし！\nもうすこし やってみる？';
   else if (streak > 0) say = 'きのうも がんばったね！\nきょうも いっしょに やろう！';
@@ -119,6 +121,9 @@ function renderHome() {
     card.appendChild(el('div', 'mission-clear', '🎉 ぜんぶ クリア！ また あした！'));
   }
   body.appendChild(card);
+
+  // ダブルチャレンジ（そろタッチも やっている子だけ）
+  renderDoubleCard(body);
 
   // ポコクエスト（1しゅうかん・みんなで 1000もん）
   renderFamilyCard(body);
@@ -346,6 +351,7 @@ function showReportScreen() {
 function renderSettings() {
   playerNameInput.value = state.playerName;
   byId('sound-toggle').checked = FX.soundOn();
+  renderSoloSetting();
   renderSkipList();
 }
 
@@ -464,6 +470,7 @@ function renderParent() {
       ? `この 1しゅうかん：${weekQ}もん（せいかい ${Math.round((weekC / weekQ) * 100)}%）　${days.filter(d => d.q > 0).length}日 べんきょう`
       : 'この 1しゅうかん：まだ やっていません'));
     card.appendChild(buildWeekBars(days));
+    appendDoubleParent(card, name);
 
     // 教科べつ（せいかいりつ）
     const rows = [];

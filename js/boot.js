@@ -11,6 +11,11 @@ document.querySelectorAll('[data-back]').forEach(btn => {
   btn.addEventListener('click', () => showTab(btn.dataset.back));
 });
 
+byId('solo-toggle').addEventListener('change', (e) => {
+  setSoloOn(e.target.checked);
+  autoSync();
+});
+
 byId('sound-toggle').addEventListener('change', (e) => {
   try { localStorage.setItem('manabi_sound', e.target.checked ? 'on' : 'off'); } catch (err) { /* 無視 */ }
   if (e.target.checked) FX.correct();
