@@ -73,7 +73,13 @@ function mergeExtra(key, rawA, rawB) {
   if (key.indexOf('manabi_solo_') === 0) {
     const a = parseJSONOr(rawA, {}), b = parseJSONOr(rawB, {});
     const newer = (b.t || 0) > (a.t || 0) ? b : a;   // 「そろタッチも やってる」は あたらしい方
-    return JSON.stringify({ on: !!newer.on, t: newer.t || 0, days: Object.assign({}, a.days, b.days), paid: Object.assign({}, a.paid, b.paid) });
+    const rank = { done: 3, quit: 2, expired: 1 };
+    const log = {};
+    new Set([...Object.keys(a.log || {}), ...Object.keys(b.log || {})]).forEach(d => {
+      const x = (a.log || {})[d], y = (b.log || {})[d];
+      log[d] = !x ? y : (!y ? x : ((rank[y.r] || 0) > (rank[x.r] || 0) ? y : (((rank[y.r] || 0) === (rank[x.r] || 0) && (y.m || 0) > (x.m || 0)) ? y : x)));
+    });
+    return JSON.stringify({ on: !!newer.on, t: newer.t || 0, days: Object.assign({}, a.days, b.days), paid: Object.assign({}, a.paid, b.paid), log });
   }
   if (key.indexOf('manabi_week_') === 0) {
     const a = parseJSONOr(rawA, {}), b = parseJSONOr(rawB, {});

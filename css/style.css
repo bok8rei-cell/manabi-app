@@ -604,3 +604,5 @@ h2, h3 { margin: 0; }
 .double-legend { margin-top: 4px; font-size: 0.75rem; color: var(--sub); }
 .double-row .double-btn { width: auto; flex: 0 0 auto; margin: 0; }
 .double-row > span:nth-child(2) { min-width: 0; }
+
+.double-text { white-space: pre-line; line-height: 1.4; }

@@ -46,6 +46,7 @@ function renderHome() {
   const pet = loadPet();
   const mission = grade ? getMission(grade) : null;
   const allDone = mission && mission.items.every(it => it.done);
+  if (name) settleSolo();   // じかんを すぎた そろタッチの スタートは「やっていない」に
   if (name && evaluateDouble()) showToast(`🎉 ダブル たっせい！ ${SOLO_COIN}コイン ゲット！`);   // ポコ＋そろタッチ
 
   byId('home-hello').textContent = name ? `${timeGreeting()}、${name}` : timeGreeting();
@@ -57,7 +58,7 @@ function renderHome() {
   let say;
   if (!name) say = 'なまえを おしえてね！\n「せってい」で いれられるよ。';
   else if (!grade) say = 'まず 学年を えらんでね！';
-  else if (soloOn() && !soloDoneOn(localDateStr()) && pokoQuestionsOn(localDateStr()) >= POKO_DAILY_MIN) say = 'ポコは バッチリ！\nそろタッチは やった？';
+  else if (soloBubble()) say = soloBubble();
   else if (allDone) say = 'きょうの ミッション クリア！\nすごいね！';
   else if (studiedToday()) say = 'いいちょうし！\nもうすこし やってみる？';
   else if (streak > 0) say = 'きのうも がんばったね！\nきょうも いっしょに やろう！';
