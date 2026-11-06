@@ -177,6 +177,7 @@ function renderQuestion() {
   byId('quiz-bar').style.width = `${pct}%`;
   byId('quiz-bar-wrap').setAttribute('aria-valuenow', String(pct));
   byId('quiz-tag').textContent = quizTagText();
+  updateWeekChip();
   byId('quiz-emoji').textContent = p.emoji || '';
   byId('quiz-emoji').classList.toggle('hidden', !p.emoji);
   byId('quiz-question').textContent = p.question;
@@ -416,6 +417,7 @@ function checkAnswer() {
   if (ok) {
     s.correct++;
     s.combo++;
+    if (s.hintStage === 0) { addWeeklyCorrect(); updateWeekChip(); }   // 家族ミッション：ヒントなしの せいかいだけ数える
     FX.correct();
   } else {
     s.wrong++;

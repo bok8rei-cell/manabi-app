@@ -1,6 +1,6 @@
 // オフラインでも使えるようにするための サービスワーカー
 // ファイルを更新したら CACHE_NAME のバージョンを上げてください
-const CACHE_NAME = 'manabi-app-v39.0';
+const CACHE_NAME = 'manabi-app-v39.1';
 
 const ASSETS = [
   './',
@@ -16,6 +16,7 @@ const ASSETS = [
   './js/core.js',
   './js/fx.js',
   './js/pet.js',
+  './js/weekly.js',
   './js/explain.js',
   './js/steps.js',
   './js/sync.js',

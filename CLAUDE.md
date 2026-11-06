@@ -95,6 +95,7 @@ GitHub Pages: `https://bok8rei-cell.github.io/manabi-app/`
 | `js/steps.js` | 算数の全種類の「解き方」（なぜ）とヒントの材料。答えが一致したときだけ使う。ヒントは答えが出る手前まで（hintPlan / MATH_HINT_MAX） |
 | `js/recommend.js` | 正解率が低い教科は、前の学年に もどって ふくしゅうをすすめる（最近20もん／12問以上／6割未満） |
 | `js/pet.js` | ポコ（育成キャラ）・コイン・バッジ |
+| `js/weekly.js` | ポコクエスト：土〜金の1週間で、3人で 1000もん（ヒントなしの せいかい）。たっせいで つぎの1週間 ポコが とくべつな すがた、1位は 王冠。週ごとの数は `manabi_week_{名前}` に保存し同期 |
 | `js/fx.js` | 効果音・ふるえ・よみあげ・紙ふぶき |
 | `js/explain.js` | 算数の「やさしい解説」を問題文から生成（答えが一致したときだけ表示） |
 | `js/sync.js` | ファイル/クラウド同期（ポコ・にがて・連続日数も同期） |
@@ -148,6 +149,6 @@ Agent ツールで以下を実行：
 
 - iOS でPWAをホーム画面から削除すると localStorage が消えるが、プレイヤー名を再入力すれば Firestore から復元できる
 - Service Worker のキャッシュバージョンを上げないと端末に古いバージョンが残る
-- バージョンは `js/core.js` の APP_VERSION・`version.json`・`sw.js` の CACHE_NAME・`index.html` の `?v=` を同じ番号にそろえて上げる（現在 v39.0）
+- バージョンは `js/core.js` の APP_VERSION・`version.json`・`sw.js` の CACHE_NAME・`index.html` の `?v=` を同じ番号にそろえて上げる（現在 v39.1）
 - 日付は `localDateStr()`（js/store.js）を使う。`toISOString()` は UTC なので日本時間の朝に1日ずれる
 - `explain.js` を変更したら、先生エージェントに審査を依頼する（問題データと同じ扱い）

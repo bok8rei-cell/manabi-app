@@ -120,6 +120,9 @@ function renderHome() {
   }
   body.appendChild(card);
 
+  // ポコクエスト（1しゅうかん・みんなで 1000もん）
+  renderFamilyCard(body);
+
   // ふくしゅうの おすすめ（正解率が低い教科は、前の学年に もどって ふくしゅう）
   const recs = getRecommendations(state.playerName, grade).slice(0, 2);
   if (recs.length > 0) {
@@ -211,7 +214,7 @@ function renderZukan() {
   PET_STAGES.forEach((st, i) => {
     const cell = el('div', 'stage' + (i <= prog.stage ? '' : ' locked'));
     const pic = el('div', 'stage-pic');
-    pic.innerHTML = petSVG(i, 'happy', 52);
+    pic.innerHTML = petSVG(i, 'happy', 52, null);   // ずかんの 見本には とくべつな すがたを つけない
     cell.appendChild(pic);
     cell.appendChild(el('div', 'stage-name', i <= prog.stage ? st.name : '？？？'));
     stages.appendChild(cell);

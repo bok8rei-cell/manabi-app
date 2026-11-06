@@ -76,17 +76,31 @@ function awardPet({ xp = 0, coins = 0, perfect = false, mission = false, cleared
 }
 
 // ポコの絵。stage: 0=たまご 1〜4=せいちょう / mood: happy | cheer | think
-function petSVG(stage, mood = 'happy', size = 64) {
+// 家族ミッションを たっせいした つぎの1しゅうかん：ひかり・キラキラ・ちょうネクタイ（1位の子は 王冠も）
+function perkStar(x, y, r) {
+  const k = r * 0.28;
+  return `<path d="M${x} ${y - r} L${x + k} ${y - k} L${x + r} ${y} L${x + k} ${y + k} L${x} ${y + r} L${x - k} ${y + k} L${x - r} ${y} L${x - k} ${y - k} Z" fill="#FFD43B"/>`;
+}
+
+function petSVG(stage, mood = 'happy', size = 64, perk) {
+  if (perk === undefined) perk = (typeof weeklyPerk === 'function') ? weeklyPerk() : null;
   const w = size;
   const h = Math.round(size * 0.94);
   const open = (inner) =>
     `<svg width="${w}" height="${h}" viewBox="0 0 64 60" role="img" aria-label="マスコットのポコ" xmlns="http://www.w3.org/2000/svg">${inner}</svg>`;
 
+  const glow = perk ? '<ellipse cx="32" cy="33" rx="30" ry="27" fill="#FFE7A0" opacity="0.6"/>' : '';
+  const sparkles = perk ? perkStar(6, 10, 5) + perkStar(58, 12, 4) + perkStar(7, 48, 3.5) + perkStar(57, 46, 4.5) : '';
+  const crownAt = (b) => `<path d="M20 ${b} L22 ${b - 12} L27 ${b - 5} L32 ${b - 14} L37 ${b - 5} L42 ${b - 12} L44 ${b} Z" fill="#F5B21B" stroke="#C98A00" stroke-width="1.2"/>` +
+    `<circle cx="22" cy="${b - 12}" r="1.8" fill="#E5484D"/><circle cx="32" cy="${b - 14}" r="2.1" fill="#E5484D"/><circle cx="42" cy="${b - 12}" r="1.8" fill="#E5484D"/>`;
+
   if (stage === 0) {
     return open(
+      glow +
       '<ellipse cx="32" cy="34" rx="19" ry="23" fill="#FFF3D6" stroke="#E8D5A8" stroke-width="2"/>' +
       '<circle cx="25" cy="28" r="3.2" fill="#B8EBDD"/><circle cx="38" cy="38" r="4" fill="#B8EBDD"/><circle cx="30" cy="45" r="2.4" fill="#B8EBDD"/>' +
-      '<path d="M22 22 L28 26 L32 20 L37 26 L42 22" stroke="#E8D5A8" stroke-width="2" fill="none" stroke-linejoin="round"/>'
+      '<path d="M22 22 L28 26 L32 20 L37 26 L42 22" stroke="#E8D5A8" stroke-width="2" fill="none" stroke-linejoin="round"/>' +
+      sparkles + (perk && perk.crown ? crownAt(16) : '')
     );
   }
 
@@ -94,7 +108,7 @@ function petSVG(stage, mood = 'happy', size = 64) {
   const ry = [0, 16, 19, 21, 22][stage];
   const cy = 60 - ry - 3;
   const eyeY = cy - 4;
-  let parts = '';
+  let parts = glow;
   if (stage >= 2) {
     parts += `<path d="M${32 - rx + 6} ${cy - ry + 6} L${32 - rx + 8} ${cy - ry - 7} L${32 - rx + 17} ${cy - ry + 2} Z" fill="#5CC9B0"/>`;
     parts += `<path d="M${32 + rx - 6} ${cy - ry + 6} L${32 + rx - 8} ${cy - ry - 7} L${32 + rx - 17} ${cy - ry + 2} Z" fill="#5CC9B0"/>`;
@@ -117,6 +131,12 @@ function petSVG(stage, mood = 'happy', size = 64) {
     parts += `<path d="M27 ${my + 3} L37 ${my + 3}" stroke="#3B2F2A" stroke-width="2.2" stroke-linecap="round"/>`;
   } else {
     parts += `<path d="M26 ${my} Q32 ${my + 7} 38 ${my}" stroke="#3B2F2A" stroke-width="2.2" fill="none" stroke-linecap="round"/>`;
+  }
+  if (perk) {
+    const by = cy + ry - 2;
+    parts += `<path d="M32 ${by} L23 ${by - 5} L23 ${by + 5} Z" fill="#FF6F91"/><path d="M32 ${by} L41 ${by - 5} L41 ${by + 5} Z" fill="#FF6F91"/><circle cx="32" cy="${by}" r="2.6" fill="#E0446C"/>`;
+    parts += sparkles;
+    if (perk.crown) parts += crownAt(cy - ry + 3);
   }
   return open(parts);
 }
