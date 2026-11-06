@@ -662,7 +662,7 @@ function renderResult(r) {
   const prog = petProgress(award.pet.growth);
   const petCard = el('div', 'panel pet-card');
   const petImg = el('div', 'pet-img');
-  petImg.innerHTML = petSVG(award.after, rate >= 0.8 ? 'cheer' : 'happy', 56);
+  petImg.innerHTML = petSVG(award.after, rate >= 0.8 ? 'cheer' : 'happy', 56, weeklyPerkStatic());
   const petInfo = el('div', 'pet-info');
   petInfo.appendChild(el('div', 'pet-name', award.levelUp ? `ポコが しんかした！ ${PET_STAGES[award.after].name}` : `${PET_STAGES[award.after].name} が せいちょう中`));
   const bar = el('div', 'bar');

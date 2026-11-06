@@ -196,7 +196,7 @@ function renderZukan() {
 
   const hero = el('div', 'zukan-hero');
   const img = el('div', 'zukan-pet');
-  img.innerHTML = petSVG(prog.stage, 'happy', 120);
+  img.innerHTML = petSVG(prog.stage, 'happy', 120, weeklyPerkStatic());
   hero.appendChild(img);
   hero.appendChild(el('div', 'zukan-name', PET_STAGES[prog.stage].name));
   const bar = el('div', 'bar');

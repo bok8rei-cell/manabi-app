@@ -70,6 +70,12 @@ function weeklyPerk(name) {
   return { special: true, crown: !!mine && top > 0 && mine.n === top };
 }
 
+// ずかんや しんかの ひょうじ用：ほんとうの 育ち具合の すがたに、キラキラと 王冠だけ つける
+function weeklyPerkStatic(name) {
+  const perk = weeklyPerk(name);
+  return perk ? Object.assign({}, perk, { noEvolve: true }) : null;
+}
+
 function mdLabel(dateStr) {
   const [, m, d] = dateStr.split('-').map(Number);
   return `${m}/${d}`;
@@ -124,7 +130,7 @@ function renderFamilyCard(body) {
   card.appendChild(rows);
 
   card.appendChild(el('div', 'family-note', w.achieved
-    ? '🎉 たっせい！ つぎの 1しゅうかん、ポコが とくべつな すがたに なるよ'
+    ? '🎉 たっせい！ つぎの 1しゅうかん、みんな 1だん しんかした とくべつな ポコが てに はいるよ'
     : `あと ${w.left}もん！ みんなで おうえんしあって がんばろう`));
   const perk = weeklyPerk();
   if (perk) {
@@ -145,8 +151,8 @@ function appendQuestGuide(card, w) {
   const stage = petStage(loadPet().growth);
   const rewards = el('div', 'quest-rewards');
   [
-    { perk: { special: true, crown: false }, label: 'たっせいで', sub: 'つぎの 1しゅうかん\nみんな とくべつ！' },
-    { perk: { special: true, crown: true }, label: 'せいかい 1い だと', sub: 'さらに\n王冠が つくよ！' }
+    { perk: { special: true, crown: false }, label: 'みんなで たっせい', sub: 'つぎの 1しゅうかん\n1だん しんかした\nとくべつな ポコが\nてに はいるよ！' },
+    { perk: { special: true, crown: true }, label: 'せいかい 1い だと', sub: 'さらに\n王冠も つくよ！' }
   ].forEach(r => {
     const item = el('div', 'quest-reward');
     const pic = el('div', 'quest-reward-pic');

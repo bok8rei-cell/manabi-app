@@ -84,6 +84,9 @@ function perkStar(x, y, r) {
 
 function petSVG(stage, mood = 'happy', size = 64, perk) {
   if (perk === undefined) perk = (typeof weeklyPerk === 'function') ? weeklyPerk() : null;
+  // とくべつな すがたの 1しゅうかんは、ポコが 1だん しんかした すがたで 見える（ポコキングは そのまま）。
+  // ほんとうの 育ち具合（growth）は かわらない。ずかん・しんかの ひょうじは noEvolve で、ほんとうの すがたを 見せる
+  if (perk && !perk.noEvolve && stage < 4) stage += 1;
   const w = size;
   const h = Math.round(size * 0.94);
   const open = (inner) =>
