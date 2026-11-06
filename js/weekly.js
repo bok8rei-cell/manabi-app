@@ -145,7 +145,7 @@ function appendQuestGuide(card, w) {
   const stage = petStage(loadPet().growth);
   const rewards = el('div', 'quest-rewards');
   [
-    { perk: { special: true, crown: false }, label: 'たっせいで', sub: 'つぎの 1しゅうかん\n3人とも とくべつな ポコ！' },
+    { perk: { special: true, crown: false }, label: 'たっせいで', sub: 'つぎの 1しゅうかん\nみんな とくべつ！' },
     { perk: { special: true, crown: true }, label: 'せいかい 1い だと', sub: 'さらに\n王冠が つくよ！' }
   ].forEach(r => {
     const item = el('div', 'quest-reward');
