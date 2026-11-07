@@ -27,7 +27,7 @@ function collectSyncData() {
 }
 
 // ---- ポコ・にがて・毎日の連続日数も同期する ----
-const EXTRA_PREFIXES = ['manabi_pet_', 'manabi_mistakes_', 'manabi_daystreak_', 'manabi_history_', 'manabi_grade_', 'manabi_skip_', 'manabi_recent_', 'manabi_week_', 'manabi_solo_'];
+const EXTRA_PREFIXES = ['manabi_pet_', 'manabi_mistakes_', 'manabi_daystreak_', 'manabi_history_', 'manabi_grade_', 'manabi_skip_', 'manabi_recent_', 'manabi_week_', 'manabi_solo_', 'manabi_shop_'];
 
 function parseJSONOr(raw, fallback) {
   try { return raw ? JSON.parse(raw) : fallback; } catch (e) { return fallback; }
@@ -69,6 +69,11 @@ function mergeExtra(key, rawA, rawB) {
       out[k] = !x ? y : (!y ? x : ((y.t || 0) > (x.t || 0) ? y : x));   // あたらしい方（もどした／けした）を採用
     });
     return JSON.stringify(out);
+  }
+  if (key.indexOf('manabi_shop_') === 0) {
+    const a = parseJSONOr(rawA, {}), b = parseJSONOr(rawB, {});
+    const newer = (b.t || 0) > (a.t || 0) ? b : a;   // いま つけている ものは あたらしい方、かった ものは どちらも のこす
+    return JSON.stringify({ own: Object.assign({}, a.own, b.own), wear: Object.assign({}, newer.wear), t: Math.max(a.t || 0, b.t || 0) });
   }
   if (key.indexOf('manabi_solo_') === 0) {
     const a = parseJSONOr(rawA, {}), b = parseJSONOr(rawB, {});

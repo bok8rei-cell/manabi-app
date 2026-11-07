@@ -17,6 +17,7 @@ function syncBeforeShow(showFn) { showFn(); }
 function showTab(name) {
   if (name === 'home') renderHome();
   else if (name === 'zukan') renderZukan();
+  else if (name === 'shop') renderShop();
   else if (name === 'report') { renderReport(); }
   else if (name === 'settings') renderSettings();
   else if (name === 'parent') { renderParent(); autoSync(); }
@@ -220,7 +221,7 @@ function renderZukan() {
   PET_STAGES.forEach((st, i) => {
     const cell = el('div', 'stage' + (i <= prog.stage ? '' : ' locked'));
     const pic = el('div', 'stage-pic');
-    pic.innerHTML = petSVG(i, 'happy', 52, null);   // ずかんの 見本には とくべつな すがたを つけない
+    pic.innerHTML = petSVG(i, 'happy', 52, null, null);   // ずかんの 見本には とくべつな すがたを つけない
     cell.appendChild(pic);
     cell.appendChild(el('div', 'stage-name', i <= prog.stage ? st.name : '？？？'));
     stages.appendChild(cell);

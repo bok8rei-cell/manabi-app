@@ -82,8 +82,10 @@ function perkStar(x, y, r) {
   return `<path d="M${x} ${y - r} L${x + k} ${y - k} L${x + r} ${y} L${x + k} ${y + k} L${x} ${y + r} L${x - k} ${y + k} L${x - r} ${y} L${x - k} ${y - k} Z" fill="#FFD43B"/>`;
 }
 
-function petSVG(stage, mood = 'happy', size = 64, perk) {
+// look：おしゃれの かざり（場所 → id）。省くと いまの子が つけているもの、null で なし
+function petSVG(stage, mood = 'happy', size = 64, perk, look) {
   if (perk === undefined) perk = (typeof weeklyPerk === 'function') ? weeklyPerk() : null;
+  if (look === undefined) look = (typeof shopLook === 'function') ? shopLook() : null;
   // とくべつな すがたの 1しゅうかんは、ポコが 1だん しんかした すがたで 見える（ポコキングは そのまま）。
   // ほんとうの 育ち具合（growth）は かわらない。ずかん・しんかの ひょうじは noEvolve で、ほんとうの すがたを 見せる
   if (perk && !perk.noEvolve && stage < 4) stage += 1;
@@ -111,16 +113,17 @@ function petSVG(stage, mood = 'happy', size = 64, perk) {
   const ry = [0, 16, 19, 21, 22][stage];
   const cy = 60 - ry - 3;
   const eyeY = cy - 4;
-  let parts = glow;
+  const deco = (typeof shopDraw === 'function') ? shopDraw(look, { rx, ry, cy, eyeY, y0: cy - ry }) : { back: '', defs: '', main: '#5CC9B0', belly: '#B8EBDD', eyes: '', cheek: '', neck: '', head: '' };
+  let parts = deco.defs + deco.back + glow;
   if (perk && perk.cape) {   // ウラボスを たおした つぎの1しゅうかん：マント（からだの うしろ）
     parts += `<path d="M${32 - rx + 3} ${cy - 3} Q${32 - rx - 7} ${cy + ry} ${32 - rx + 3} ${cy + ry + 2} L${32 + rx - 3} ${cy + ry + 2} Q${32 + rx + 7} ${cy + ry} ${32 + rx - 3} ${cy - 3} Z" fill="#D63B4F" stroke="#A92639" stroke-width="1"/>`;
   }
   if (stage >= 2) {
-    parts += `<path d="M${32 - rx + 6} ${cy - ry + 6} L${32 - rx + 8} ${cy - ry - 7} L${32 - rx + 17} ${cy - ry + 2} Z" fill="#5CC9B0"/>`;
-    parts += `<path d="M${32 + rx - 6} ${cy - ry + 6} L${32 + rx - 8} ${cy - ry - 7} L${32 + rx - 17} ${cy - ry + 2} Z" fill="#5CC9B0"/>`;
+    parts += `<path d="M${32 - rx + 6} ${cy - ry + 6} L${32 - rx + 8} ${cy - ry - 7} L${32 - rx + 17} ${cy - ry + 2} Z" fill="${deco.main}"/>`;
+    parts += `<path d="M${32 + rx - 6} ${cy - ry + 6} L${32 + rx - 8} ${cy - ry - 7} L${32 + rx - 17} ${cy - ry + 2} Z" fill="${deco.main}"/>`;
   }
-  parts += `<ellipse cx="32" cy="${cy}" rx="${rx}" ry="${ry}" fill="#5CC9B0"/>`;
-  if (stage >= 2) parts += `<ellipse cx="32" cy="${cy + 6}" rx="${rx - 9}" ry="${ry - 9}" fill="#B8EBDD"/>`;
+  parts += `<ellipse cx="32" cy="${cy}" rx="${rx}" ry="${ry}" fill="${deco.main}"/>`;
+  if (stage >= 2) parts += `<ellipse cx="32" cy="${cy + 6}" rx="${rx - 9}" ry="${ry - 9}" fill="${deco.belly}"/>`;
   if (stage >= 3) {
     parts += `<circle cx="${32 - rx + 8}" cy="${cy + 3}" r="3" fill="#FFB3A1"/><circle cx="${32 + rx - 8}" cy="${cy + 3}" r="3" fill="#FFB3A1"/>`;
   }
@@ -138,6 +141,7 @@ function petSVG(stage, mood = 'happy', size = 64, perk) {
   } else {
     parts += `<path d="M26 ${my} Q32 ${my + 7} 38 ${my}" stroke="#3B2F2A" stroke-width="2.2" fill="none" stroke-linecap="round"/>`;
   }
+  parts += deco.cheek + deco.eyes + deco.neck + deco.head;   // おしゃれの かざり
   if (perk) {
     const by = cy + ry - 2;
     parts += `<path d="M32 ${by} L23 ${by - 5} L23 ${by + 5} Z" fill="#FF6F91"/><path d="M32 ${by} L41 ${by - 5} L41 ${by + 5} Z" fill="#FF6F91"/><circle cx="32" cy="${by}" r="2.6" fill="#E0446C"/>`;

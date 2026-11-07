@@ -12,7 +12,7 @@
 <meta name="apple-mobile-web-app-title" content="まなびポコ">
 <link rel="apple-touch-icon" href="icons/icon-180.png">
 <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="css/style.css?v=39.8">
+<link rel="stylesheet" href="css/style.css?v=39.9">
 </head>
 <body>
 <div id="app">
@@ -32,6 +32,11 @@
   </section>
 
   <!-- ずかん（ポコ・バッジ） -->
+  <section id="screen-shop" class="screen hidden">
+    <h2 class="page-title">おしゃれ</h2>
+    <div id="shop-content"></div>
+  </section>
+
   <section id="screen-zukan" class="screen hidden">
     <h2 class="page-title">ポコの ずかん</h2>
     <div id="zukan-content"></div>
@@ -232,6 +237,7 @@
 <nav id="tabbar" class="tabbar" aria-label="メニュー">
   <button class="tab-btn" data-tab="home"><span class="ico">🏠</span>ホーム</button>
   <button class="tab-btn" data-tab="zukan"><span class="ico">🐾</span>ずかん</button>
+  <button class="tab-btn" data-tab="shop"><span class="ico">👗</span>おしゃれ</button>
   <button class="tab-btn" data-tab="report"><span class="ico">📊</span>きろく</button>
   <button class="tab-btn" data-tab="settings"><span class="ico">⚙️</span>せってい</button>
 </nav>
@@ -253,27 +259,28 @@
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
 <!-- ?v= はキャッシュ破棄用。デプロイのたびに APP_VERSION と同じ番号へ更新する -->
-<script src="js/firebase-config.js?v=39.8"></script>
-<script src="js/math.js?v=39.8"></script>
-<script src="js/kanji.js?v=39.8"></script>
-<script src="js/rikashakai.js?v=39.8"></script>
-<script src="js/eigo.js?v=39.8"></script>
-<script src="js/store.js?v=39.8"></script>
-<script src="js/core.js?v=39.8"></script>
-<script src="js/fx.js?v=39.8"></script>
-<script src="js/pet.js?v=39.8"></script>
-<script src="js/weekly.js?v=39.8"></script>
-<script src="js/solo.js?v=39.8"></script>
-<script src="js/explain.js?v=39.8"></script>
-<script src="js/steps.js?v=39.8"></script>
-<script src="js/sync.js?v=39.8"></script>
-<script src="js/ranking.js?v=39.8"></script>
-<script src="js/speed.js?v=39.8"></script>
-<script src="js/quiz.js?v=39.8"></script>
-<script src="js/recommend.js?v=39.8"></script>
-<script src="js/home.js?v=39.8"></script>
-<script src="js/update.js?v=39.8"></script>
-<script src="js/boot.js?v=39.8"></script>
+<script src="js/firebase-config.js?v=39.9"></script>
+<script src="js/math.js?v=39.9"></script>
+<script src="js/kanji.js?v=39.9"></script>
+<script src="js/rikashakai.js?v=39.9"></script>
+<script src="js/eigo.js?v=39.9"></script>
+<script src="js/store.js?v=39.9"></script>
+<script src="js/core.js?v=39.9"></script>
+<script src="js/fx.js?v=39.9"></script>
+<script src="js/pet.js?v=39.9"></script>
+<script src="js/weekly.js?v=39.9"></script>
+<script src="js/shop.js?v=39.9"></script>
+<script src="js/solo.js?v=39.9"></script>
+<script src="js/explain.js?v=39.9"></script>
+<script src="js/steps.js?v=39.9"></script>
+<script src="js/sync.js?v=39.9"></script>
+<script src="js/ranking.js?v=39.9"></script>
+<script src="js/speed.js?v=39.9"></script>
+<script src="js/quiz.js?v=39.9"></script>
+<script src="js/recommend.js?v=39.9"></script>
+<script src="js/home.js?v=39.9"></script>
+<script src="js/update.js?v=39.9"></script>
+<script src="js/boot.js?v=39.9"></script>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {

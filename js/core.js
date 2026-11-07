@@ -1,6 +1,6 @@
 // ===== まなびポコ（旧 BRAIN QUEST：零式） 共通の部品 =====
 
-const APP_VERSION = 'v39.8';
+const APP_VERSION = 'v39.9';
 const TOTAL_QUESTIONS = 10;
 const DONT_KNOW = '__DONTKNOW__';
 
@@ -357,7 +357,7 @@ playerNameInput.addEventListener('change', () => {
 
 // ---- 画面切り替え ----
 // 下のタブバーを出す画面
-const TAB_SCREENS = ['home', 'zukan', 'report', 'settings', 'parent'];
+const TAB_SCREENS = ['home', 'zukan', 'shop', 'report', 'settings', 'parent'];
 
 function showScreen(name) {
   document.querySelectorAll('.screen').forEach(el => el.classList.add('hidden'));
