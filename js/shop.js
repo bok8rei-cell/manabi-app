@@ -72,7 +72,13 @@ const SHOP_ITEMS = [
   { id: 'tongue',     name: 'ぺろり',             slot: 'mouth', price: 300,  tier: 's' },
   { id: 'fangs',      name: 'きば',               slot: 'mouth', price: 600,  tier: 'n' },
   { id: 'mask',       name: 'マスク',             slot: 'mouth', price: 700,  tier: 'n' },
-  { id: 'candy',      name: 'ぺろぺろキャンディ', slot: 'mouth', price: 700,  tier: 'n' }
+  { id: 'candy',      name: 'ぺろぺろキャンディ', slot: 'mouth', price: 700,  tier: 'n' },
+  // --- ふやした かざり（ひげ）---
+  { id: 'goatee',     name: 'やぎひげ',                     slot: 'mouth', price: 300,  tier: 's' },
+  { id: 'kaiser',     name: 'カイゼルひげ',                 slot: 'mouth', price: 600,  tier: 'n' },
+  { id: 'blackbeard', name: 'もじゃもじゃ くろひげ',        slot: 'mouth', price: 800,  tier: 'n' },
+  { id: 'santabeard', name: 'サンタの もじゃもじゃ しろひげ', slot: 'mouth', price: 800, tier: 'n' },
+  { id: 'wizard',     name: 'まほうつかいの ながい ひげ',   slot: 'mouth', price: 1500, tier: 'r' }
 ];
 
 const SHOP_GIFT_NAMES = { shine: 'きらきらポコ', crown: 'おうかん', cape: 'マント', wing: 'つばさ' };
@@ -227,6 +233,29 @@ function shopPearls(g) {
   return out;
 }
 
+// もじゃもじゃの ひげ（かおの したはんぶんを ぐるっと おおう）。くちは ひげの 下がわに かきなおす
+function shopBushyBeard(g, fill, shade, mouthColor) {
+  let s = '';
+  // そとがわの もじゃもじゃ（まるを ならべる）。まず ひとまわり 大きい「ふち」を かき、その うえに 本体を かさねる
+  for (const pass of ['edge', 'body']) {
+    for (let i = 0; i <= 11; i++) {
+      const phi = Math.PI * (0.1 + 0.8 * i / 11);
+      const x = 32 - (g.rx + 0.5) * Math.cos(phi);
+      const y = g.cy + (g.ry - 5) * Math.sin(phi) + 1;
+      const r = 4.4 + (i % 3) * 0.7 + (pass === 'edge' ? 0.9 : 0);
+      s += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r.toFixed(1)}" fill="${pass === 'edge' ? shade : fill}"/>`;
+    }
+  }
+  // なかを うめる（うえの ふちは くちの すこし うえ）
+  s += `<path d="M${32 - g.rx + 2} ${g.cy + 2} Q32 ${g.cy + 5} ${32 + g.rx - 2} ${g.cy + 2} L${32 + g.rx - 3} ${g.cy + g.ry - 4} Q32 ${g.cy + g.ry + 2} ${32 - g.rx + 3} ${g.cy + g.ry - 4} Z" fill="${fill}"/>`;
+  // ひげの すじ
+  s += `<path d="M${32 - 10} ${g.cy + 12} Q${32 - 11} ${g.cy + 16} ${32 - 9} ${g.cy + g.ry - 2} M32 ${g.cy + 13} L32 ${g.cy + g.ry} M${32 + 10} ${g.cy + 12} Q${32 + 11} ${g.cy + 16} ${32 + 9} ${g.cy + g.ry - 2}" stroke="${shade}" stroke-width="1" fill="none" stroke-linecap="round" opacity="0.7"/>`;
+  // くちの うえの ひげ（こぶ）と、かきなおした くち
+  s += `<circle cx="28" cy="${g.cy + 4.4}" r="3.4" fill="${fill}"/><circle cx="36" cy="${g.cy + 4.4}" r="3.4" fill="${fill}"/>`;
+  s += `<path d="M28.5 ${g.cy + 8.4} Q32 ${g.cy + 11.4} 35.5 ${g.cy + 8.4}" stroke="${mouthColor}" stroke-width="2" fill="none" stroke-linecap="round"/>`;
+  return s;
+}
+
 function shopHeart(x, y) {
   return `<path transform="translate(${x} ${y}) scale(1.2)" d="M0 2.4 C-4 -0.6 -3.6 -4.2 0 -2.4 C3.6 -4.2 4 -0.6 0 2.4 Z" fill="#FF4D6D"/>`;
 }
@@ -320,6 +349,30 @@ const SHOP_DRAW = {
     return `<path d="M37.5 ${g.cy + 6.2} L${x - 2} ${y + 2}" stroke="#E5E7EB" stroke-width="2" stroke-linecap="round"/>` +
       `<circle cx="${x}" cy="${y}" r="5.4" fill="#F472B6" stroke="#DB2777" stroke-width="0.8"/>` +
       `<path d="M${x} ${y} m-1.2 0 a1.2 1.2 0 1 1 2.4 0 a2.4 2.4 0 1 1 -4.8 0 a3.6 3.6 0 1 1 7.2 0" stroke="#fff" stroke-width="1.1" fill="none" stroke-linecap="round"/>`;
+  },
+  // --- ふやした かざり（ひげ）---
+  // やぎひげ：あごの したに とがった ひげ ＋ ちいさな くちひげ（くちから 出た 舌に 見えないように あごへ さげる）
+  goatee: g => {
+    const top = g.cy + Math.max(10.5, g.ry - 7);
+    return `<path d="M26.5 ${g.cy + 4.6} Q29.5 ${g.cy + 2.4} 32 ${g.cy + 4} Q34.5 ${g.cy + 2.4} 37.5 ${g.cy + 4.6}" stroke="#3E2616" stroke-width="2" fill="none" stroke-linecap="round"/>` +
+      `<path d="M27 ${top} Q32 ${top + 2} 37 ${top} Q36.5 ${g.cy + g.ry - 1.5} 32 ${Math.min(59.5, g.cy + g.ry + 2.5)} Q27.5 ${g.cy + g.ry - 1.5} 27 ${top} Z" fill="#3E2616"/>`;
+  },
+  kaiser: g => {
+    const y = g.cy + 3.5;
+    return `<path d="M32 ${y} Q27 ${y + 2.4} 23.5 ${y} Q20 ${y - 1.6} 20.6 ${y - 5}" stroke="#3B2F2A" stroke-width="2.6" fill="none" stroke-linecap="round"/>` +
+      `<path d="M32 ${y} Q37 ${y + 2.4} 40.5 ${y} Q44 ${y - 1.6} 43.4 ${y - 5}" stroke="#3B2F2A" stroke-width="2.6" fill="none" stroke-linecap="round"/>` +
+      `<circle cx="32" cy="${y}" r="2.4" fill="#3B2F2A"/>`;
+  },
+  blackbeard: g => shopBushyBeard(g, '#2B2623', '#0F0D0C', '#FCA5A5'),
+  santabeard: g => shopBushyBeard(g, '#F8FAFC', '#CBD5E1', '#C2410C') +
+    `<circle cx="${32 - g.rx + 5}" cy="${g.cy + 4}" r="2.6" fill="#F8FAFC"/><circle cx="${32 + g.rx - 5}" cy="${g.cy + 4}" r="2.6" fill="#F8FAFC"/>`,
+  wizard: g => {
+    const tip = Math.min(59.5, g.cy + g.ry + 3);
+    let s = `<path d="M${32 - g.rx + 4} ${g.cy + 2} Q32 ${g.cy + 5} ${32 + g.rx - 4} ${g.cy + 2} Q${32 + g.rx - 3} ${g.cy + g.ry - 4} 32 ${tip} Q${32 - g.rx + 3} ${g.cy + g.ry - 4} ${32 - g.rx + 4} ${g.cy + 2} Z" fill="#F3F4F6" stroke="#D1D5DB" stroke-width="0.8"/>`;
+    s += `<path d="M${32 - 8} ${g.cy + 10} Q${32 - 9} ${g.cy + 16} 31 ${tip - 2} M32 ${g.cy + 11} L32 ${tip - 1} M${32 + 8} ${g.cy + 10} Q${32 + 9} ${g.cy + 16} 33 ${tip - 2}" stroke="#D1D5DB" stroke-width="0.9" fill="none" stroke-linecap="round"/>`;
+    s += `<circle cx="28" cy="${g.cy + 4.4}" r="3.2" fill="#F3F4F6"/><circle cx="36" cy="${g.cy + 4.4}" r="3.2" fill="#F3F4F6"/>`;
+    s += `<path d="M29 ${g.cy + 8.4} Q32 ${g.cy + 10.6} 35 ${g.cy + 8.4}" stroke="#C2410C" stroke-width="1.8" fill="none" stroke-linecap="round"/>`;
+    return s;
   },
   // --- ふやした かざり（め）---
   swirl: g => `<g fill="rgba(255,255,255,0.3)" stroke="#3B2F2A" stroke-width="1.4"><circle cx="23" cy="${g.eyeY}" r="6.6"/><circle cx="41" cy="${g.eyeY}" r="6.6"/></g>` +
