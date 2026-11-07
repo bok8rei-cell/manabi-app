@@ -5,7 +5,8 @@
 const SHOP_SLOTS = [
   { key: 'head',  label: 'あたま' },
   { key: 'eyes',  label: 'め' },
-  { key: 'cheek', label: 'ほっぺ・くち' },
+  { key: 'cheek', label: 'ほっぺ' },
+  { key: 'mouth', label: 'くち' },
   { key: 'neck',  label: 'くび' },
   { key: 'body',  label: 'いろ' },
   { key: 'back',  label: 'はいけい' },
@@ -21,7 +22,7 @@ const SHOP_ITEMS = [
   { id: 'partyhat',   name: 'パーティぼうし',     slot: 'head',  price: 300,  tier: 's' },
   { id: 'cheeks',     name: 'ほっぺの ハート',    slot: 'cheek', price: 200,  tier: 's' },
   { id: 'glasses',    name: 'まるめがね',         slot: 'eyes',  price: 250,  tier: 's' },
-  { id: 'mustache',   name: 'ひげ',               slot: 'cheek', price: 300,  tier: 's' },
+  { id: 'mustache',   name: 'ひげ',               slot: 'mouth', price: 300,  tier: 's' },
   { id: 'scarf',      name: 'スカーフ',           slot: 'neck',  price: 250,  tier: 's' },
   { id: 'bell',       name: 'すずの くびかざり',  slot: 'neck',  price: 300,  tier: 's' },
   { id: 'sunglasses', name: 'サングラス',         slot: 'eyes',  price: 700,  tier: 'n' },
@@ -44,6 +45,7 @@ const SHOP_ITEMS = [
   { id: 'bunny',      name: 'うさみみ',           slot: 'head',  price: 600,  tier: 'n' },
   { id: 'horns',      name: 'ドラゴンの つの',    slot: 'head',  price: 700,  tier: 'n' },
   { id: 'halo',       name: 'てんしの わ',        slot: 'head',  price: 1500, tier: 'r' },
+  { id: 'onehair',    name: 'いっぽんげ',         slot: 'head',  price: 200,  tier: 's' },
   { id: 'swirl',      name: 'ぐるぐるめがね',     slot: 'eyes',  price: 250,  tier: 's' },
   { id: 'shadesround', name: 'まるサングラス',    slot: 'eyes',  price: 600,  tier: 'n' },
   { id: 'shadespink', name: 'ピンクの サングラス', slot: 'eyes', price: 700,  tier: 'n' },
@@ -55,7 +57,17 @@ const SHOP_ITEMS = [
   { id: 'heartneck',  name: 'ハートの ペンダント', slot: 'neck', price: 300,  tier: 's' },
   { id: 'pearl',      name: 'しんじゅの ネックレス', slot: 'neck', price: 700, tier: 'n' },
   { id: 'medal',      name: 'きんメダル',         slot: 'neck',  price: 800,  tier: 'n' },
-  { id: 'diamond',    name: 'ダイヤの ネックレス', slot: 'neck', price: 1800, tier: 'r' }
+  { id: 'diamond',    name: 'ダイヤの ネックレス', slot: 'neck', price: 1800, tier: 'r' },
+  // --- ふやした かざり（ほっぺ／くち）---
+  { id: 'freckles',   name: 'そばかす',           slot: 'cheek', price: 200,  tier: 's' },
+  { id: 'starcheeks', name: 'ほしの ほっぺ',      slot: 'cheek', price: 250,  tier: 's' },
+  { id: 'swirlcheeks', name: 'ぐるぐる ほっぺ',   slot: 'cheek', price: 250,  tier: 's' },
+  { id: 'bandaid',    name: 'ばんそうこう',       slot: 'cheek', price: 250,  tier: 's' },
+  { id: 'whiskers',   name: 'ねこの ひげ',        slot: 'cheek', price: 300,  tier: 's' },
+  { id: 'tongue',     name: 'ぺろり',             slot: 'mouth', price: 300,  tier: 's' },
+  { id: 'fangs',      name: 'きば',               slot: 'mouth', price: 600,  tier: 'n' },
+  { id: 'mask',       name: 'マスク',             slot: 'mouth', price: 700,  tier: 'n' },
+  { id: 'candy',      name: 'ぺろぺろキャンディ', slot: 'mouth', price: 700,  tier: 'n' }
 ];
 
 function shopItem(id) { return SHOP_ITEMS.find(it => it.id === id) || null; }
@@ -66,7 +78,9 @@ function shopKey(name) { return `manabi_shop_${playerTag(name)}`; }
 function loadShop(name) {
   const o = readJSON(shopKey(name), null) || {};
   const map = v => (v && typeof v === 'object' && !Array.isArray(v) ? v : {});
-  return { own: map(o.own), wear: map(o.wear), fav: map(o.fav), t: o.t || 0 };
+  // 場所を 分けたので、ふるい きろく（ひげが「ほっぺ」に 入っていた など）も かざりの 本当の 場所に 直す
+  const bySlot = m => { const out = {}; Object.keys(m).forEach(k => { const it = shopItem(m[k]); if (it) out[it.slot] = it.id; }); return out; };
+  return { own: map(o.own), wear: bySlot(map(o.wear)), fav: bySlot(map(o.fav)), t: o.t || 0 };
 }
 
 function saveShop(o, name) {
@@ -236,8 +250,47 @@ const SHOP_DRAW = {
     return `<path d="M${lx - 3} ${g.y0 + 6} Q${lx - 4.5} ${g.y0 - 5} ${lx + 1} ${g.y0 - 9} Q${lx + 2.5} ${g.y0 - 1} ${lx + 3} ${g.y0 + 6} Z" fill="#F97316" stroke="#C2410C" stroke-width="0.8"/>` +
       `<path d="M${rx + 3} ${g.y0 + 6} Q${rx + 4.5} ${g.y0 - 5} ${rx - 1} ${g.y0 - 9} Q${rx - 2.5} ${g.y0 - 1} ${rx - 3} ${g.y0 + 6} Z" fill="#F97316" stroke="#C2410C" stroke-width="0.8"/>`;
   },
+  // いっぽんげ：あたまの てっぺんに 1ぽんだけ（くるんと カール）
+  onehair: g => {
+    const top = Math.max(3, g.y0 - 9);
+    return `<path d="M32 ${g.y0 + 2} Q31 ${g.y0 - 3} ${32.5} ${top + 3} Q34 ${top - 0.5} 36 ${top + 1.5} Q37.5 ${top + 3.5} 35.6 ${top + 5}" stroke="#3B2F2A" stroke-width="1.3" fill="none" stroke-linecap="round"/>`;
+  },
   halo: g => `<ellipse cx="32" cy="${Math.max(4, g.y0 - 5)}" rx="11" ry="3" fill="none" stroke="#FDE68A" stroke-width="4" opacity="0.6"/>` +
     `<ellipse cx="32" cy="${Math.max(4, g.y0 - 5)}" rx="11" ry="3" fill="none" stroke="#FBBF24" stroke-width="2"/>`,
+  // --- ふやした かざり（ほっぺ）---
+  freckles: g => {
+    const l = 32 - g.rx + 9, r = 32 + g.rx - 9, y = g.cy + 2;
+    const dots = (x) => `<circle cx="${x - 2.4}" cy="${y}" r="0.8" fill="#8A5A2B"/><circle cx="${x}" cy="${y - 1.6}" r="0.8" fill="#8A5A2B"/><circle cx="${x + 2.4}" cy="${y + 0.4}" r="0.8" fill="#8A5A2B"/><circle cx="${x - 0.8}" cy="${y + 2.2}" r="0.8" fill="#8A5A2B"/><circle cx="${x + 1.8}" cy="${y + 2.6}" r="0.8" fill="#8A5A2B"/>`;
+    return dots(l) + dots(r);
+  },
+  starcheeks: g => `<path d="${shopStarPath(32 - g.rx + 8, g.cy + 3, 3.6)}" fill="#FBBF24" stroke="#D97706" stroke-width="0.5"/><path d="${shopStarPath(32 + g.rx - 8, g.cy + 3, 3.6)}" fill="#FBBF24" stroke="#D97706" stroke-width="0.5"/>`,
+  swirlcheeks: g => {
+    const one = (x, y) => `<circle cx="${x}" cy="${y}" r="3.6" fill="#FF8FA3"/><circle cx="${x}" cy="${y}" r="2.1" fill="none" stroke="#E11D48" stroke-width="0.8"/><circle cx="${x}" cy="${y}" r="0.7" fill="#E11D48"/>`;
+    return one(32 - g.rx + 8, g.cy + 3) + one(32 + g.rx - 8, g.cy + 3);
+  },
+  bandaid: g => {
+    const x = 32 - g.rx + 8, y = g.cy + 3;
+    return `<g transform="rotate(-25 ${x} ${y})"><rect x="${x - 5.5}" y="${y - 2.2}" width="11" height="4.4" rx="1.6" fill="#F4C79A" stroke="#D9A56B" stroke-width="0.6"/><rect x="${x - 2}" y="${y - 2.2}" width="4" height="4.4" fill="#F0B27A"/></g>`;
+  },
+  whiskers: g => {
+    const side = (s) => {
+      const x0 = 32 + s * (g.rx - 10), x1 = 32 + s * (g.rx + 1.5), y = g.cy + 2.5;
+      return `<path d="M${x0} ${y} L${x1} ${y - 3.5} M${x0} ${y + 1.6} L${x1 + 0.8} ${y + 1.6} M${x0} ${y + 3.2} L${x1} ${y + 6.5}" stroke="#3B2F2A" stroke-width="1" stroke-linecap="round" fill="none"/>`;
+    };
+    return side(-1) + side(1);
+  },
+  // --- ふやした かざり（くち）---
+  tongue: g => `<ellipse cx="33" cy="${g.cy + 9.2}" rx="3" ry="3.6" fill="#FB7185" stroke="#E11D48" stroke-width="0.7"/><path d="M33 ${g.cy + 6.8} L33 ${g.cy + 10.4}" stroke="#E11D48" stroke-width="0.6"/>`,
+  fangs: g => `<path d="M27.2 ${g.cy + 4.6} L30.2 ${g.cy + 5.4} L28.4 ${g.cy + 9.6} Z" fill="#fff" stroke="#E5E7EB" stroke-width="0.5"/><path d="M36.8 ${g.cy + 4.6} L33.8 ${g.cy + 5.4} L35.6 ${g.cy + 9.6} Z" fill="#fff" stroke="#E5E7EB" stroke-width="0.5"/>`,
+  mask: g => `<path d="M${32 - g.rx + 6} ${g.cy + 1} Q32 ${g.cy - 1.5} ${32 + g.rx - 6} ${g.cy + 1} L${32 + g.rx - 6} ${g.cy + g.ry - 5} Q32 ${g.cy + g.ry + 1} ${32 - g.rx + 6} ${g.cy + g.ry - 5} Z" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1"/>` +
+    `<path d="M${32 - g.rx + 6} ${g.cy + 3} L${32 - g.rx + 0.5} ${g.cy + 0.5} M${32 + g.rx - 6} ${g.cy + 3} L${32 + g.rx - 0.5} ${g.cy + 0.5}" stroke="#CBD5E1" stroke-width="1" stroke-linecap="round"/>` +
+    `<path d="M${32 - 7} ${g.cy + 5} L${32 + 7} ${g.cy + 5} M${32 - 7} ${g.cy + 8} L${32 + 7} ${g.cy + 8}" stroke="#E2E8F0" stroke-width="0.8"/>`,
+  candy: g => {
+    const x = 47, y = g.cy - 3;
+    return `<path d="M37.5 ${g.cy + 6.2} L${x - 2} ${y + 2}" stroke="#E5E7EB" stroke-width="2" stroke-linecap="round"/>` +
+      `<circle cx="${x}" cy="${y}" r="5.4" fill="#F472B6" stroke="#DB2777" stroke-width="0.8"/>` +
+      `<path d="M${x} ${y} m-1.2 0 a1.2 1.2 0 1 1 2.4 0 a2.4 2.4 0 1 1 -4.8 0 a3.6 3.6 0 1 1 7.2 0" stroke="#fff" stroke-width="1.1" fill="none" stroke-linecap="round"/>`;
+  },
   // --- ふやした かざり（め）---
   swirl: g => `<g fill="rgba(255,255,255,0.3)" stroke="#3B2F2A" stroke-width="1.4"><circle cx="23" cy="${g.eyeY}" r="6.6"/><circle cx="41" cy="${g.eyeY}" r="6.6"/></g>` +
     `<g fill="none" stroke="#3B2F2A" stroke-width="1.1"><circle cx="23" cy="${g.eyeY}" r="3.6"/><circle cx="41" cy="${g.eyeY}" r="3.6"/><circle cx="23" cy="${g.eyeY}" r="1.2"/><circle cx="41" cy="${g.eyeY}" r="1.2"/></g>` +
@@ -335,7 +388,7 @@ const SHOP_DRAW = {
 
 // look（場所 → id）から、ポコの 各ぶぶんの 絵を つくる
 function shopDraw(look, g) {
-  const out = { back: '', aura: '', defs: '', main: '#5CC9B0', belly: '#B8EBDD', eyes: '', cheek: '', neck: '', head: '' };
+  const out = { back: '', aura: '', defs: '', main: '#5CC9B0', belly: '#B8EBDD', eyes: '', cheek: '', mouth: '', neck: '', head: '' };
   if (!look) return out;
   const draw = (slot) => (look[slot] && SHOP_DRAW[look[slot]]) ? SHOP_DRAW[look[slot]](g) : '';
   out.back = draw('back');
@@ -343,6 +396,7 @@ function shopDraw(look, g) {
   if (look.aura) out.defs += SHOP_AURA_DEFS;
   out.eyes = draw('eyes');
   out.cheek = draw('cheek');
+  out.mouth = draw('mouth');
   out.neck = draw('neck');
   out.head = draw('head');
   const body = look.body && SHOP_BODY[look.body];
