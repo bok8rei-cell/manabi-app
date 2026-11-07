@@ -14,7 +14,7 @@ const SHOP_SLOTS = [
 
 const SHOP_TIERS = { s: 'ちいさい', n: 'ふつう', r: 'レア', sr: 'スーパーレア', ur: 'でんせつ' };
 
-// ねだん：ちいさい 200〜300／ふつう 600〜800／レア 1500〜1800／スーパーレア 5000／でんせつ 20000（ぜんぶで 約38,650コイン）
+// ねだん：ちいさい 200〜300／ふつう 600〜800／レア 1500〜1800／スーパーレア 5000／でんせつ 20000（ぜんぶで 約51,550コイン）
 const SHOP_ITEMS = [
   { id: 'ribbon',     name: 'リボン',             slot: 'head',  price: 200,  tier: 's' },
   { id: 'flower',     name: 'おはな',             slot: 'head',  price: 250,  tier: 's' },
@@ -36,7 +36,25 @@ const SHOP_ITEMS = [
   { id: 'stars',      name: 'ほしぞらの はいけい', slot: 'back',  price: 1800, tier: 'r' },
   { id: 'sea',        name: 'うみの はいけい',    slot: 'back',  price: 1800, tier: 'r' },
   { id: 'rainbow',    name: 'にじいろの ポコ',    slot: 'body',  price: 5000, tier: 'sr' },
-  { id: 'legend',     name: 'でんせつの オーラ',  slot: 'aura',  price: 20000, tier: 'ur' }
+  { id: 'legend',     name: 'でんせつの オーラ',  slot: 'aura',  price: 20000, tier: 'ur' },
+  // --- ふやした かざり（あたま／め／くび）---
+  { id: 'beret',      name: 'ベレーぼう',         slot: 'head',  price: 250,  tier: 's' },
+  { id: 'catears',    name: 'ねこみみ',           slot: 'head',  price: 300,  tier: 's' },
+  { id: 'bearears',   name: 'くまみみ',           slot: 'head',  price: 300,  tier: 's' },
+  { id: 'bunny',      name: 'うさみみ',           slot: 'head',  price: 600,  tier: 'n' },
+  { id: 'horns',      name: 'ドラゴンの つの',    slot: 'head',  price: 700,  tier: 'n' },
+  { id: 'halo',       name: 'てんしの わ',        slot: 'head',  price: 1500, tier: 'r' },
+  { id: 'swirl',      name: 'ぐるぐるめがね',     slot: 'eyes',  price: 250,  tier: 's' },
+  { id: 'shadesround', name: 'まるサングラス',    slot: 'eyes',  price: 600,  tier: 'n' },
+  { id: 'shadespink', name: 'ピンクの サングラス', slot: 'eyes', price: 700,  tier: 'n' },
+  { id: 'goggle',     name: 'ゴーグル',           slot: 'eyes',  price: 800,  tier: 'n' },
+  { id: 'shadesheart', name: 'ハートの サングラス', slot: 'eyes', price: 1500, tier: 'r' },
+  { id: 'shadesstar', name: 'ほしの サングラス',  slot: 'eyes',  price: 1500, tier: 'r' },
+  { id: 'starneck',   name: 'ほしの ネックレス',  slot: 'neck',  price: 300,  tier: 's' },
+  { id: 'heartneck',  name: 'ハートの ペンダント', slot: 'neck', price: 300,  tier: 's' },
+  { id: 'pearl',      name: 'しんじゅの ネックレス', slot: 'neck', price: 700, tier: 'n' },
+  { id: 'medal',      name: 'きんメダル',         slot: 'neck',  price: 800,  tier: 'n' },
+  { id: 'diamond',    name: 'ダイヤの ネックレス', slot: 'neck', price: 1800, tier: 'r' }
 ];
 
 function shopItem(id) { return SHOP_ITEMS.find(it => it.id === id) || null; }
@@ -134,6 +152,36 @@ const SHOP_BODY = {
   }
 };
 
+// 5かくの ほし（中心 cx,cy・はんけい r）
+function shopStarPath(cx, cy, r) {
+  let d = '';
+  for (let i = 0; i < 10; i++) {
+    const rad = (i % 2 === 0 ? r : r * 0.45);
+    const ang = -Math.PI / 2 + (i * Math.PI) / 5;
+    d += (i === 0 ? 'M' : 'L') + (cx + rad * Math.cos(ang)).toFixed(2) + ' ' + (cy + rad * Math.sin(ang)).toFixed(2) + ' ';
+  }
+  return d + 'Z';
+}
+
+// くびの チェーン（左のつけね → 右のつけね。たるませた 線）と、まんなかの 位置
+function shopChain(g, color, width) {
+  const y = g.cy + g.ry;
+  const x0 = 32 - g.rx + 5, x1 = 32 + g.rx - 5, y0 = y - 8, cyc = y - 1;
+  return { svg: `<path d="M${x0} ${y0} Q32 ${cyc} ${x1} ${y0}" stroke="${color}" stroke-width="${width}" fill="none" stroke-linecap="round"/>`, midY: (y0 + cyc) / 2, x0, x1, y0, cyc };
+}
+
+function shopPearls(g) {
+  const c = shopChain(g, 'none', 0);
+  let out = '';
+  for (let i = 0; i <= 8; i++) {
+    const t = i / 8;
+    const x = (1 - t) * (1 - t) * c.x0 + 2 * (1 - t) * t * 32 + t * t * c.x1;
+    const y = (1 - t) * (1 - t) * c.y0 + 2 * (1 - t) * t * c.cyc + t * t * c.y0;
+    out += `<circle cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="2.2" fill="#FDF2F8" stroke="#D9B8C8" stroke-width="0.7"/>`;
+  }
+  return out;
+}
+
 function shopHeart(x, y) {
   return `<path transform="translate(${x} ${y}) scale(1.2)" d="M0 2.4 C-4 -0.6 -3.6 -4.2 0 -2.4 C3.6 -4.2 4 -0.6 0 2.4 Z" fill="#FF4D6D"/>`;
 }
@@ -162,6 +210,63 @@ const SHOP_DRAW = {
     '<path d="M0 44 Q8 40 16 44 T32 44 T48 44 T64 44 L64 60 L0 60 Z" fill="#7CC8F5"/>' +
     '<path d="M0 50 Q8 46 16 50 T32 50 T48 50 T64 50" stroke="#fff" stroke-width="1.2" fill="none" opacity="0.7"/>' +
     '<circle cx="52" cy="10" r="5" fill="#FFE08A"/>',
+  // --- ふやした かざり ---
+  beret: g => `<ellipse cx="${29}" cy="${g.y0 + 1}" rx="${g.rx - 5}" ry="6" fill="#B91C1C"/><circle cx="27" cy="${g.y0 - 5}" r="1.8" fill="#7F1D1D"/>`,
+  catears: g => {
+    const l = 32 - g.rx, r = 32 + g.rx;
+    return `<path d="M${l + 5} ${g.y0 + 7} L${l + 4} ${g.y0 - 10} L${l + 17} ${g.y0 + 3} Z" fill="#FFF3E0" stroke="#E8D5A8" stroke-width="1"/>` +
+      `<path d="M${l + 7} ${g.y0 + 3} L${l + 7} ${g.y0 - 5} L${l + 12} ${g.y0 + 1} Z" fill="#FFB3C6"/>` +
+      `<path d="M${r - 5} ${g.y0 + 7} L${r - 4} ${g.y0 - 10} L${r - 17} ${g.y0 + 3} Z" fill="#FFF3E0" stroke="#E8D5A8" stroke-width="1"/>` +
+      `<path d="M${r - 7} ${g.y0 + 3} L${r - 7} ${g.y0 - 5} L${r - 12} ${g.y0 + 1} Z" fill="#FFB3C6"/>`;
+  },
+  bearears: g => `<circle cx="${32 - g.rx * 0.62}" cy="${g.y0 + 3}" r="5.2" fill="#B7835A"/><circle cx="${32 - g.rx * 0.62}" cy="${g.y0 + 3.4}" r="2.6" fill="#E8C39E"/>` +
+    `<circle cx="${32 + g.rx * 0.62}" cy="${g.y0 + 3}" r="5.2" fill="#B7835A"/><circle cx="${32 + g.rx * 0.62}" cy="${g.y0 + 3.4}" r="2.6" fill="#E8C39E"/>`,
+  bunny: g => {
+    const tall = Math.min(10, (g.y0 + 2) / 2 - 0.5);
+    const cy = g.y0 + 2 - tall;
+    const lx = 32 - g.rx * 0.45, rx = 32 + g.rx * 0.45;
+    return `<ellipse cx="${lx}" cy="${cy}" rx="3.6" ry="${tall}" fill="#FFFFFF" stroke="#E8D5A8" stroke-width="1" transform="rotate(-10 ${lx} ${cy + tall})"/>` +
+      `<ellipse cx="${lx}" cy="${cy + 1}" rx="1.8" ry="${tall * 0.6}" fill="#FFB3C6" transform="rotate(-10 ${lx} ${cy + tall})"/>` +
+      `<ellipse cx="${rx}" cy="${cy}" rx="3.6" ry="${tall}" fill="#FFFFFF" stroke="#E8D5A8" stroke-width="1" transform="rotate(10 ${rx} ${cy + tall})"/>` +
+      `<ellipse cx="${rx}" cy="${cy + 1}" rx="1.8" ry="${tall * 0.6}" fill="#FFB3C6" transform="rotate(10 ${rx} ${cy + tall})"/>`;
+  },
+  horns: g => {
+    const lx = 32 - g.rx * 0.45, rx = 32 + g.rx * 0.45;
+    return `<path d="M${lx - 3} ${g.y0 + 6} Q${lx - 4.5} ${g.y0 - 5} ${lx + 1} ${g.y0 - 9} Q${lx + 2.5} ${g.y0 - 1} ${lx + 3} ${g.y0 + 6} Z" fill="#F97316" stroke="#C2410C" stroke-width="0.8"/>` +
+      `<path d="M${rx + 3} ${g.y0 + 6} Q${rx + 4.5} ${g.y0 - 5} ${rx - 1} ${g.y0 - 9} Q${rx - 2.5} ${g.y0 - 1} ${rx - 3} ${g.y0 + 6} Z" fill="#F97316" stroke="#C2410C" stroke-width="0.8"/>`;
+  },
+  halo: g => `<ellipse cx="32" cy="${Math.max(4, g.y0 - 5)}" rx="11" ry="3" fill="none" stroke="#FDE68A" stroke-width="4" opacity="0.6"/>` +
+    `<ellipse cx="32" cy="${Math.max(4, g.y0 - 5)}" rx="11" ry="3" fill="none" stroke="#FBBF24" stroke-width="2"/>`,
+  // --- ふやした かざり（め）---
+  swirl: g => `<g fill="rgba(255,255,255,0.3)" stroke="#3B2F2A" stroke-width="1.4"><circle cx="23" cy="${g.eyeY}" r="6.6"/><circle cx="41" cy="${g.eyeY}" r="6.6"/></g>` +
+    `<g fill="none" stroke="#3B2F2A" stroke-width="1.1"><circle cx="23" cy="${g.eyeY}" r="3.6"/><circle cx="41" cy="${g.eyeY}" r="3.6"/><circle cx="23" cy="${g.eyeY}" r="1.2"/><circle cx="41" cy="${g.eyeY}" r="1.2"/></g>` +
+    `<path d="M29.6 ${g.eyeY} L34.4 ${g.eyeY}" stroke="#3B2F2A" stroke-width="1.4"/>`,
+  shadesround: g => `<circle cx="23" cy="${g.eyeY}" r="6.6" fill="#111827"/><circle cx="41" cy="${g.eyeY}" r="6.6" fill="#111827"/>` +
+    `<path d="M29.6 ${g.eyeY - 1} L34.4 ${g.eyeY - 1}" stroke="#111827" stroke-width="1.8"/>` +
+    `<circle cx="20.6" cy="${g.eyeY - 2.4}" r="1.5" fill="#fff" opacity="0.7"/><circle cx="38.6" cy="${g.eyeY - 2.4}" r="1.5" fill="#fff" opacity="0.7"/>`,
+  shadespink: g => `<rect x="16" y="${g.eyeY - 5.5}" width="14" height="10.5" rx="5" fill="#F472B6" fill-opacity="0.82" stroke="#DB2777" stroke-width="1.4"/>` +
+    `<rect x="34" y="${g.eyeY - 5.5}" width="14" height="10.5" rx="5" fill="#F472B6" fill-opacity="0.82" stroke="#DB2777" stroke-width="1.4"/>` +
+    `<path d="M30 ${g.eyeY - 1} L34 ${g.eyeY - 1}" stroke="#DB2777" stroke-width="1.6"/>` +
+    `<path d="M19.5 ${g.eyeY - 2.5} L22.5 ${g.eyeY - 2.5}" stroke="#fff" stroke-width="1.2" opacity="0.8" stroke-linecap="round"/><path d="M37.5 ${g.eyeY - 2.5} L40.5 ${g.eyeY - 2.5}" stroke="#fff" stroke-width="1.2" opacity="0.8" stroke-linecap="round"/>`,
+  goggle: g => `<path d="M14 ${g.eyeY} L50 ${g.eyeY}" stroke="#F97316" stroke-width="4.4" stroke-linecap="round"/>` +
+    `<circle cx="23" cy="${g.eyeY}" r="6.8" fill="#7DD3FC" fill-opacity="0.6" stroke="#EA580C" stroke-width="2.2"/><circle cx="41" cy="${g.eyeY}" r="6.8" fill="#7DD3FC" fill-opacity="0.6" stroke="#EA580C" stroke-width="2.2"/>` +
+    `<path d="M19.5 ${g.eyeY - 3} Q21 ${g.eyeY - 4.5} 23 ${g.eyeY - 4.2}" stroke="#fff" stroke-width="1.2" fill="none" opacity="0.8" stroke-linecap="round"/>`,
+  shadesheart: g => `<path transform="translate(23 ${g.eyeY + 0.4}) scale(2)" d="M0 2.4 C-4 -0.6 -3.6 -4.2 0 -2.4 C3.6 -4.2 4 -0.6 0 2.4 Z" fill="#DC2626" stroke="#7F1D1D" stroke-width="0.5"/>` +
+    `<path transform="translate(41 ${g.eyeY + 0.4}) scale(2)" d="M0 2.4 C-4 -0.6 -3.6 -4.2 0 -2.4 C3.6 -4.2 4 -0.6 0 2.4 Z" fill="#DC2626" stroke="#7F1D1D" stroke-width="0.5"/>` +
+    `<path d="M29.5 ${g.eyeY - 2} L34.5 ${g.eyeY - 2}" stroke="#7F1D1D" stroke-width="1.6"/>` +
+    `<circle cx="19.5" cy="${g.eyeY - 2}" r="1.2" fill="#fff" opacity="0.8"/><circle cx="37.5" cy="${g.eyeY - 2}" r="1.2" fill="#fff" opacity="0.8"/>`,
+  shadesstar: g => `<path d="${shopStarPath(23, g.eyeY + 0.3, 8.2)}" fill="#FBBF24" stroke="#B45309" stroke-width="1"/>` +
+    `<path d="${shopStarPath(41, g.eyeY + 0.3, 8.2)}" fill="#FBBF24" stroke="#B45309" stroke-width="1"/>` +
+    `<path d="M29.8 ${g.eyeY - 1} L34.2 ${g.eyeY - 1}" stroke="#B45309" stroke-width="1.6"/>`,
+  // --- ふやした かざり（くび）---
+  starneck: g => { const c = shopChain(g, '#8FA1B8', 1.9); return c.svg + `<path d="${shopStarPath(32, c.midY + 2.2, 3.6)}" fill="#FBBF24" stroke="#B45309" stroke-width="0.7"/>`; },
+  heartneck: g => { const c = shopChain(g, '#8FA1B8', 1.9); return c.svg + `<path transform="translate(32 ${c.midY + 2.2}) scale(1.1)" d="M0 2.4 C-4 -0.6 -3.6 -4.2 0 -2.4 C3.6 -4.2 4 -0.6 0 2.4 Z" fill="#EF4444" stroke="#991B1B" stroke-width="0.6"/>`; },
+  pearl: g => { const c = shopChain(g, 'none', 0); return shopPearls(g) + `<circle cx="32" cy="${c.midY + 3.2}" r="2.6" fill="#FDF2F8" stroke="#E5C8D6" stroke-width="0.7"/>`; },
+  medal: g => { const c = shopChain(g, 'none', 0); return `<path d="M${c.x0 + 3} ${c.y0 - 0.5} L32 ${c.midY + 1.5} L${c.x1 - 3} ${c.y0 - 0.5}" stroke="#3B82F6" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>` +
+    `<circle cx="32" cy="${c.midY + 4}" r="4.3" fill="#FBBF24" stroke="#B45309" stroke-width="0.9"/><path d="${shopStarPath(32, c.midY + 4, 2.4)}" fill="#fff" opacity="0.85"/>`; },
+  diamond: g => { const c = shopChain(g, '#9CA3AF', 1.9); const y = c.midY + 1.5; return c.svg +
+    `<path d="M32 ${y} L36 ${y + 3} L32 ${y + 8} L28 ${y + 3} Z" fill="#67E8F9" stroke="#0891B2" stroke-width="0.8"/><path d="M28 ${y + 3} L36 ${y + 3}" stroke="#fff" stroke-width="0.7" opacity="0.8"/>` +
+    `<path d="M39 ${y - 1} L40 ${y + 1} L42 ${y + 2} L40 ${y + 3} L39 ${y + 5} L38 ${y + 3} L36 ${y + 2} L38 ${y + 1} Z" fill="#fff" opacity="0.9"/>`; },
   // --- あたま ---
   ribbon: g => `<g transform="translate(${32 + g.rx * 0.5} ${g.y0 + 4})"><path d="M0 0 L-8 -5 L-8 5 Z" fill="#FF6F91"/><path d="M0 0 L8 -5 L8 5 Z" fill="#FF6F91"/><circle r="2.6" fill="#E0446C"/></g>`,
   flower: g => `<g transform="translate(${32 - g.rx * 0.5} ${g.y0 + 4})">` +
