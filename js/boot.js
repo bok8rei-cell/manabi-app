@@ -43,6 +43,16 @@ document.addEventListener('visibilitychange', () => {
   }
 });
 
+// アプリを ひらいている あいだは、1ぷんごとに 自動で合わせる（3人が どうじに やっても 数字が ずれつづけないように）。
+// 通信は 裏で 動くだけなので、勉強の じゃまには ならない。画面が かくれている間・オフラインの間は うごかさない
+const AUTO_SYNC_EVERY_MS = 60 * 1000;
+setInterval(() => {
+  if (document.visibilityState !== 'visible') return;
+  if (Date.now() - lastAutoSyncAt < AUTO_SYNC_EVERY_MS - 5000) return;   // さっき 合わせたばかりなら 休む
+  lastAutoSyncAt = Date.now();
+  autoSync();
+}, AUTO_SYNC_EVERY_MS);
+
 cleanOldMissions();
 showTab(localStorage.getItem('manabi_parentmode') === '1' ? 'parent' : 'home');
 autoSync();

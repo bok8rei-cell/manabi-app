@@ -366,15 +366,30 @@ document.getElementById('cloud-download-btn').addEventListener('click', async ()
 // あいことばが入っているときは、起動時と学習のおわりに、自動でクラウドと合わせる。
 // 合成は「大きい方・新しい方を採用」なので、何回やっても増えすぎない（ボタンでの手動同期も残してある）。
 let autoSyncRunning = false;
+// どうきの まえと あとで、きろくが 変わったか くらべる ための 目じるし（どうきの 時刻などは ふくめない）
+function syncSignature() {
+  let s = '';
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k && k.indexOf('manabi_') === 0 && k !== 'manabi_lastsync' && k !== 'manabi_lasterr') s += k + '=' + localStorage.getItem(k) + ';';
+  }
+  return s;
+}
+
 async function autoSync() {
   if (autoSyncRunning || !cloudDb || !getActiveSyncCode()) return;
   if (typeof navigator !== 'undefined' && navigator.onLine === false) return;
   autoSyncRunning = true;
   try {
+    const before = syncSignature();
     await performCloudSync();
     localStorage.setItem('manabi_lastsync', new Date().toISOString());
     localStorage.removeItem('manabi_lasterr');
-    if (typeof refreshHome === 'function') refreshHome();
+    // 1ぷんごとに 合わせるので、ほかの子の きろくが 変わったときだけ 画面を えがきなおす（ボタンを おす じゃまを しない）
+    if (syncSignature() !== before) {
+      if (typeof refreshHome === 'function') refreshHome();
+      if (typeof updateWeekChip === 'function') updateWeekChip();   // 勉強中の「みんなで ○もん」も さいしんに
+    }
   } catch (e) {
     // ふだんは静かに失敗する（次に学習したときにまた合わせる）。理由は同期画面で見られるように残す。
     try { localStorage.setItem('manabi_lasterr', describeCloudError(e)); } catch (err) { /* 無視 */ }
