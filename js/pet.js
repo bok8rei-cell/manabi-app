@@ -113,8 +113,8 @@ function petSVG(stage, mood = 'happy', size = 64, perk, look) {
   const ry = [0, 16, 19, 21, 22][stage];
   const cy = 60 - ry - 3;
   const eyeY = cy - 4;
-  const deco = (typeof shopDraw === 'function') ? shopDraw(look, { rx, ry, cy, eyeY, y0: cy - ry }) : { back: '', defs: '', main: '#5CC9B0', belly: '#B8EBDD', eyes: '', cheek: '', neck: '', head: '' };
-  let parts = deco.defs + deco.back + glow;
+  const deco = (typeof shopDraw === 'function') ? shopDraw(look, { rx, ry, cy, eyeY, y0: cy - ry }) : { back: '', aura: '', defs: '', main: '#5CC9B0', belly: '#B8EBDD', eyes: '', cheek: '', neck: '', head: '' };
+  let parts = deco.defs + deco.back + deco.aura + glow;
   if (perk && perk.cape) {   // ウラボスを たおした つぎの1しゅうかん：マント（からだの うしろ）
     parts += `<path d="M${32 - rx + 3} ${cy - 3} Q${32 - rx - 7} ${cy + ry} ${32 - rx + 3} ${cy + ry + 2} L${32 + rx - 3} ${cy + ry + 2} Q${32 + rx + 7} ${cy + ry} ${32 + rx - 3} ${cy - 3} Z" fill="#D63B4F" stroke="#A92639" stroke-width="1"/>`;
   }

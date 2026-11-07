@@ -8,12 +8,13 @@ const SHOP_SLOTS = [
   { key: 'cheek', label: 'ほっぺ・くち' },
   { key: 'neck',  label: 'くび' },
   { key: 'body',  label: 'いろ' },
-  { key: 'back',  label: 'はいけい' }
+  { key: 'back',  label: 'はいけい' },
+  { key: 'aura',  label: 'オーラ' }
 ];
 
-const SHOP_TIERS = { s: 'ちいさい', n: 'ふつう', r: 'レア', sr: 'スーパーレア' };
+const SHOP_TIERS = { s: 'ちいさい', n: 'ふつう', r: 'レア', sr: 'スーパーレア', ur: 'でんせつ' };
 
-// ねだんは ぜんぶで 約18,650コイン。ちいさい 200〜300／ふつう 600〜800／レア 1500〜1800／スーパーレア 5000
+// ねだん：ちいさい 200〜300／ふつう 600〜800／レア 1500〜1800／スーパーレア 5000／でんせつ 20000（ぜんぶで 約38,650コイン）
 const SHOP_ITEMS = [
   { id: 'ribbon',     name: 'リボン',             slot: 'head',  price: 200,  tier: 's' },
   { id: 'flower',     name: 'おはな',             slot: 'head',  price: 250,  tier: 's' },
@@ -34,7 +35,8 @@ const SHOP_ITEMS = [
   { id: 'flowers',    name: 'はなばたけの はいけい', slot: 'back', price: 1500, tier: 'r' },
   { id: 'stars',      name: 'ほしぞらの はいけい', slot: 'back',  price: 1800, tier: 'r' },
   { id: 'sea',        name: 'うみの はいけい',    slot: 'back',  price: 1800, tier: 'r' },
-  { id: 'rainbow',    name: 'にじいろの ポコ',    slot: 'body',  price: 5000, tier: 'sr' }
+  { id: 'rainbow',    name: 'にじいろの ポコ',    slot: 'body',  price: 5000, tier: 'sr' },
+  { id: 'legend',     name: 'でんせつの オーラ',  slot: 'aura',  price: 20000, tier: 'ur' }
 ];
 
 function shopItem(id) { return SHOP_ITEMS.find(it => it.id === id) || null; }
@@ -45,7 +47,7 @@ function shopKey(name) { return `manabi_shop_${playerTag(name)}`; }
 function loadShop(name) {
   const o = readJSON(shopKey(name), null) || {};
   const map = v => (v && typeof v === 'object' && !Array.isArray(v) ? v : {});
-  return { own: map(o.own), wear: map(o.wear), t: o.t || 0 };
+  return { own: map(o.own), wear: map(o.wear), fav: map(o.fav), t: o.t || 0 };
 }
 
 function saveShop(o, name) {
@@ -89,6 +91,32 @@ function wearShopItem(id, name) {
   return true;
 }
 
+function takeOffAllShop(name) {
+  const s = loadShop(name);
+  s.wear = {};
+  saveShop(s, name);
+}
+
+// 「いつもの」：いま つけている すがたを 1つだけ おぼえておく／それに きがえる
+function saveShopFav(name) {
+  const s = loadShop(name);
+  s.fav = Object.assign({}, shopLook(name));
+  saveShop(s, name);
+}
+
+function shopFavCount(name) {
+  const s = loadShop(name);
+  return Object.keys(s.fav).filter(k => s.own[s.fav[k]]).length;
+}
+
+function wearShopFav(name) {
+  const s = loadShop(name);
+  const wear = {};
+  Object.keys(s.fav).forEach(k => { const it = shopItem(s.fav[k]); if (it && it.slot === k && s.own[it.id]) wear[k] = it.id; });
+  s.wear = wear;
+  saveShop(s, name);
+}
+
 function takeOffShopSlot(slot, name) {
   const s = loadShop(name);
   delete s.wear[slot];
@@ -110,8 +138,17 @@ function shopHeart(x, y) {
   return `<path transform="translate(${x} ${y}) scale(1.2)" d="M0 2.4 C-4 -0.6 -3.6 -4.2 0 -2.4 C3.6 -4.2 4 -0.6 0 2.4 Z" fill="#FF4D6D"/>`;
 }
 
+const SHOP_AURA_DEFS = '<defs><radialGradient id="pokoAura"><stop offset="0.4" stop-color="#FFE27A" stop-opacity="0.95"/><stop offset="1" stop-color="#FFB300" stop-opacity="0"/></radialGradient></defs>';
+
 // g: { rx, ry, cy, eyeY, y0 }（ポコの 大きさ）
 const SHOP_DRAW = {
+  // --- オーラ（でんせつ） ---
+  legend: () => {
+    let rays = '';
+    for (let a = 0; a < 360; a += 30) rays += `<path d="M32 31 L29.8 0 L34.2 0 Z" fill="#FFD95A" opacity="0.85" transform="rotate(${a} 32 31)"/>`;
+    const star = (typeof perkStar === 'function') ? (perkStar(8, 12, 5) + perkStar(56, 14, 4.2) + perkStar(10, 50, 4) + perkStar(55, 49, 5)) : '';
+    return rays + '<circle cx="32" cy="31" r="29" fill="url(#pokoAura)"/>' + star;
+  },
   // --- はいけい ---
   stars: () => '<rect x="0" y="0" width="64" height="60" rx="10" fill="#312E81"/>' +
     '<circle cx="8" cy="8" r="1.2" fill="#fff"/><circle cx="20" cy="5" r="0.9" fill="#fff"/><circle cx="40" cy="6" r="1" fill="#fff"/>' +
@@ -181,20 +218,43 @@ const SHOP_DRAW = {
 
 // look（場所 → id）から、ポコの 各ぶぶんの 絵を つくる
 function shopDraw(look, g) {
-  const out = { back: '', defs: '', main: '#5CC9B0', belly: '#B8EBDD', eyes: '', cheek: '', neck: '', head: '' };
+  const out = { back: '', aura: '', defs: '', main: '#5CC9B0', belly: '#B8EBDD', eyes: '', cheek: '', neck: '', head: '' };
   if (!look) return out;
   const draw = (slot) => (look[slot] && SHOP_DRAW[look[slot]]) ? SHOP_DRAW[look[slot]](g) : '';
   out.back = draw('back');
+  out.aura = draw('aura');
+  if (look.aura) out.defs += SHOP_AURA_DEFS;
   out.eyes = draw('eyes');
   out.cheek = draw('cheek');
   out.neck = draw('neck');
   out.head = draw('head');
   const body = look.body && SHOP_BODY[look.body];
-  if (body) { out.main = body.main; out.belly = body.belly; out.defs = body.defs || ''; }
+  if (body) { out.main = body.main; out.belly = body.belly; out.defs += body.defs || ''; }
   return out;
 }
 
-// ---- おみせの がめん ----
+// ---- おしゃれの がめん：「きがえ」と「おみせ」 ----
+let shopMode = null;   // 'dress'（きがえ）| 'store'（おみせ）
+
+function shopOwnedCount() { return Object.keys(loadShop().own).filter(id => shopItem(id)).length; }
+
+// ポコを おおきく 見る（ホームと おなじ すがた）
+function showPetBig() {
+  const old = byId('petbig');
+  if (old) old.remove();
+  const pet = loadPet();
+  const size = Math.min(340, Math.max(220, window.innerWidth - 40));
+  const ov = el('div', 'petbig');
+  ov.id = 'petbig';
+  const pic = el('div', 'petbig-pic');
+  pic.innerHTML = petSVG(petStage(pet.growth), 'cheer', size);
+  ov.appendChild(pic);
+  ov.appendChild(el('div', 'petbig-name', PET_STAGES[petStage(pet.growth)].name));
+  ov.appendChild(el('div', 'petbig-hint', 'どこかを タップすると もどるよ'));
+  ov.addEventListener('click', () => ov.remove());
+  document.body.appendChild(ov);
+}
+
 function renderShop() {
   const root = byId('shop-content');
   root.innerHTML = '';
@@ -203,44 +263,70 @@ function renderShop() {
   const stage = Math.max(1, realStage);   // 見本は ポコの すがた（たまごの子にも 見せる）
   const shop = loadShop();
   const have = petBalance(pet);
+  const owned = shopOwnedCount();
+  if (shopMode === null) shopMode = owned > 0 ? 'dress' : 'store';
+  const mode = shopMode;
 
+  // きりかえ
+  const sw = el('div', 'shop-switch');
+  [['dress', `👗 きがえ（${owned}こ）`], ['store', '🛍️ おみせ']].forEach(([key, label]) => {
+    const b = el('button', 'shop-switch-btn' + (mode === key ? ' active' : ''), label);
+    b.addEventListener('click', () => { shopMode = key; renderShop(); });
+    sw.appendChild(b);
+  });
+  root.appendChild(sw);
+
+  // ポコ（タップで おおきく）
   const hero = el('div', 'shop-hero');
-  const pic = el('div', 'shop-pet');
-  pic.innerHTML = petSVG(realStage, 'cheer', 120, weeklyPerkStatic());
+  const pic = el('button', 'shop-pet');
+  pic.setAttribute('aria-label', 'ポコを おおきく 見る');
+  pic.innerHTML = petSVG(realStage, 'cheer', mode === 'dress' ? 170 : 120);
+  pic.addEventListener('click', showPetBig);
   hero.appendChild(pic);
+  hero.appendChild(el('div', 'shop-zoom', '🔍 タップで おおきく'));
   hero.appendChild(el('div', 'zukan-coin', `💰 ${have} コイン`));
-  hero.appendChild(el('div', 'pet-note', realStage === 0
-    ? 'ポコに うまれたら、かった かざりが つけられるよ'
-    : 'すきな かざりを かって、じぶんだけの ポコを つくろう！'));
+  if (realStage === 0) hero.appendChild(el('div', 'pet-note', 'ポコに うまれたら、かった かざりが つけられるよ'));
   root.appendChild(hero);
 
+  if (mode === 'dress') renderDressRoom(root, shop, stage);
+  else renderStore(root, shop, stage, have);
+}
+
+// きがえ：もっている かざりだけ。つけたり はずしたり
+function renderDressRoom(root, shop, stage) {
+  const worn = Object.keys(shopLook()).length;
+  const tools = el('div', 'shop-tools');
+  const favN = shopFavCount();
+  const bFav = el('button', 'sub-btn', '⭐ いつもの に きがえる');
+  bFav.disabled = favN === 0;
+  bFav.addEventListener('click', () => { wearShopFav(); showToast('「いつもの」に きがえたよ！'); renderShop(); });
+  const bSave = el('button', 'sub-btn', '💾 いまの すがたを「いつもの」に する');
+  bSave.disabled = worn === 0;
+  bSave.addEventListener('click', () => {
+    askConfirm(favN > 0 ? '「いつもの」を いまの すがたに かえる？' : '「いつもの」に おぼえておく？', 'おぼえる', 'やめる', () => { saveShopFav(); showToast('「いつもの」に おぼえたよ！'); renderShop(); }, { cancelFirst: true });
+  });
+  const bOff = el('button', 'sub-btn', 'ぜんぶ はずす');
+  bOff.disabled = worn === 0;
+  bOff.addEventListener('click', () => { takeOffAllShop(); renderShop(); });
+  [bFav, bSave, bOff].forEach(b => tools.appendChild(b));
+  root.appendChild(tools);
+
+  let any = false;
   SHOP_SLOTS.forEach(sl => {
-    const items = SHOP_ITEMS.filter(it => it.slot === sl.key);
+    const items = SHOP_ITEMS.filter(it => it.slot === sl.key && shop.own[it.id]);
+    if (items.length === 0) return;
+    any = true;
     root.appendChild(el('h3', 'section-title', sl.label));
     const grid = el('div', 'shop-grid');
     items.forEach(it => {
-      const owned = !!shop.own[it.id];
-      const worn = shop.wear[it.slot] === it.id && owned;
-      const card = el('div', 'shop-card' + (worn ? ' worn' : '') + (owned ? ' owned' : ''));
+      const isWorn = shop.wear[it.slot] === it.id;
+      const card = el('div', 'shop-card owned' + (isWorn ? ' worn' : ''));
       const preview = el('div', 'shop-card-pic');
       preview.innerHTML = petSVG(stage, 'happy', 64, null, { [it.slot]: it.id });
       card.appendChild(preview);
       card.appendChild(el('div', 'shop-card-name', it.name));
-      card.appendChild(el('div', 'shop-card-tier tier-' + it.tier, SHOP_TIERS[it.tier]));
       let btn;
-      if (!owned) {
-        btn = el('button', have >= it.price ? 'main-btn shop-btn' : 'sub-btn shop-btn', `💰 ${it.price}`);
-        btn.addEventListener('click', () => {
-          const now = petBalance(loadPet());
-          if (now < it.price) { showToast(`コインが たりないよ（あと ${it.price - now}コイン）`); return; }
-          askConfirm(`「${it.name}」を かう？\n（${it.price}コイン つかいます）\nいま ${now}コイン`, 'かう', 'やめる', () => {
-            const r = buyShopItem(it.id);
-            if (r === 'ok') { FX.correct(); showToast(`「${it.name}」を かったよ！ つけてみてね`); }
-            else if (r === 'poor') showToast('コインが たりないよ');
-            renderShop();
-          }, { cancelFirst: true });
-        });
-      } else if (worn) {
+      if (isWorn) {
         btn = el('button', 'sub-btn shop-btn', 'はずす');
         btn.addEventListener('click', () => { takeOffShopSlot(it.slot); renderShop(); });
       } else {
@@ -252,4 +338,48 @@ function renderShop() {
     });
     root.appendChild(grid);
   });
+
+  if (!any) {
+    const empty = el('div', 'panel');
+    empty.appendChild(el('div', 'report-empty', 'まだ かざりが ないよ。「おみせ」で コインで かってみよう！'));
+    const go = el('button', 'main-btn wide', '🛍️ おみせへ');
+    go.addEventListener('click', () => { shopMode = 'store'; renderShop(); });
+    empty.appendChild(go);
+    root.appendChild(empty);
+  }
+}
+
+// おみせ：まだ もっていない かざり。かうと「きがえ」に はいる
+function renderStore(root, shop, stage, have) {
+  let any = false;
+  SHOP_SLOTS.forEach(sl => {
+    const items = SHOP_ITEMS.filter(it => it.slot === sl.key && !shop.own[it.id]);
+    if (items.length === 0) return;
+    any = true;
+    root.appendChild(el('h3', 'section-title', sl.label));
+    const grid = el('div', 'shop-grid');
+    items.forEach(it => {
+      const card = el('div', 'shop-card');
+      const preview = el('div', 'shop-card-pic');
+      preview.innerHTML = petSVG(stage, 'happy', 64, null, { [it.slot]: it.id });
+      card.appendChild(preview);
+      card.appendChild(el('div', 'shop-card-name', it.name));
+      card.appendChild(el('div', 'shop-card-tier tier-' + it.tier, SHOP_TIERS[it.tier]));
+      const btn = el('button', have >= it.price ? 'main-btn shop-btn' : 'sub-btn shop-btn', `💰 ${it.price}`);
+      btn.addEventListener('click', () => {
+        const now = petBalance(loadPet());
+        if (now < it.price) { showToast(`コインが たりないよ（あと ${it.price - now}コイン）`); return; }
+        askConfirm(`「${it.name}」を かう？\n（${it.price}コイン つかいます）\nいま ${now}コイン`, 'かう', 'やめる', () => {
+          const r = buyShopItem(it.id);
+          if (r === 'ok') { FX.correct(); showToast(`「${it.name}」を かったよ！ つけたよ。「きがえ」で かえられるよ`); }
+          else if (r === 'poor') showToast('コインが たりないよ');
+          renderShop();
+        }, { cancelFirst: true });
+      });
+      card.appendChild(btn);
+      grid.appendChild(card);
+    });
+    root.appendChild(grid);
+  });
+  if (!any) root.appendChild(el('div', 'panel', '🎉 ぜんぶ かったよ！ すごい！「きがえ」で たのしんでね'));
 }

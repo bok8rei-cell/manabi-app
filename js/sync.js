@@ -73,7 +73,7 @@ function mergeExtra(key, rawA, rawB) {
   if (key.indexOf('manabi_shop_') === 0) {
     const a = parseJSONOr(rawA, {}), b = parseJSONOr(rawB, {});
     const newer = (b.t || 0) > (a.t || 0) ? b : a;   // いま つけている ものは あたらしい方、かった ものは どちらも のこす
-    return JSON.stringify({ own: Object.assign({}, a.own, b.own), wear: Object.assign({}, newer.wear), t: Math.max(a.t || 0, b.t || 0) });
+    return JSON.stringify({ own: Object.assign({}, a.own, b.own), wear: Object.assign({}, newer.wear), fav: Object.assign({}, newer.fav), t: Math.max(a.t || 0, b.t || 0) });
   }
   if (key.indexOf('manabi_solo_') === 0) {
     const a = parseJSONOr(rawA, {}), b = parseJSONOr(rawB, {});

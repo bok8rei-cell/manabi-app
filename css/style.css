@@ -632,3 +632,18 @@ h2, h3 { margin: 0; }
 .shop-card-tier.tier-r { background: #DCEBFF; color: var(--blue); }
 .shop-card-tier.tier-sr { background: #FFE9A8; color: #8A5A00; }
 .shop-btn { width: 100%; min-height: 40px; margin-top: 4px; font-size: 0.9rem; padding: 4px 8px; }
+
+/* ---- おしゃれ：きがえ／おみせ ---- */
+.shop-switch { display: flex; gap: 8px; margin-bottom: 10px; }
+.shop-switch-btn { flex: 1; min-height: 48px; border-radius: 24px; border: 2px solid var(--line); background: #fff; font-weight: 700; font-size: 0.95rem; color: var(--sub); }
+.shop-switch-btn.active { background: var(--ink); color: #fff; border-color: var(--ink); }
+.shop-pet { background: none; border: none; padding: 0; cursor: pointer; }
+.shop-zoom { font-size: 0.8rem; color: var(--sub); margin-top: -2px; }
+.shop-tools { display: flex; flex-direction: column; gap: 8px; margin: 8px 0 4px; }
+.shop-tools .sub-btn:disabled { opacity: 0.45; }
+.shop-card-tier.tier-ur { background: linear-gradient(90deg, #FFE27A, #FFB300); color: #6B4400; }
+.petbig { position: fixed; inset: 0; z-index: 200; background: rgba(43, 33, 64, 0.88); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; }
+.petbig-pic { display: flex; justify-content: center; }
+.petbig-name { color: #fff; font-weight: 700; font-size: 1.3rem; }
+.petbig-hint { color: #D9D2F2; font-size: 0.85rem; }
+.shop-pet { display: flex; justify-content: center; margin: 0 auto; }
