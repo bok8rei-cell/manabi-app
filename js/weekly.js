@@ -54,14 +54,44 @@ function weeklyStatus() {
   const t = started ? weekTally(start) : { rows: weeklyPlayers().map(name => ({ name, n: 0 })), total: 0 };
   const me = (state.playerName || '').trim();
   const mine = (t.rows.find(r => r.name === me) || { n: 0 }).n;
-  const bi = started ? bossInfo(start, t.total) : { boss: null, revealed: false, defeated: false, hpLeft: 0 };
-  return { start, end, started, rows: t.rows, total: t.total, mine, goal: WEEKLY_GOAL, left: Math.max(0, WEEKLY_GOAL - t.total), achieved: t.total >= WEEKLY_GOAL, boss: bi.boss, revealed: bi.revealed, defeated: bi.defeated, hpLeft: bi.hpLeft };
+  const bi = started ? bossInfo(start, t.total) : bossInfo(WEEKLY_START, 0);
+  return {
+    start, end, started, rows: t.rows, total: t.total, mine, goal: WEEKLY_GOAL,
+    left: Math.max(0, WEEKLY_GOAL - t.total), achieved: t.total >= WEEKLY_GOAL,
+    boss: started ? bi.boss : null, revealed: bi.revealed, defeated: bi.defeated, hpLeft: bi.hpLeft,
+    last: started ? bi.last : null, lastRevealed: bi.lastRevealed, lastDefeated: bi.lastDefeated, lastHpLeft: bi.lastHpLeft
+  };
+}
+
+// ===== クエストごとの いろ（プレゼントは まいかい ちがう いろ。8しゅうで ひとまわり）=====
+const QUEST_COLORS = [
+  { name: 'きん',     main: '#F5B21B', dark: '#C98A00', gem: '#E5484D', tint: '#FFE7A0' },
+  { name: 'ぎん',     main: '#D1D5DB', dark: '#6B7280', gem: '#3B82F6', tint: '#E5E7EB' },
+  { name: 'あか',     main: '#F87171', dark: '#991B1B', gem: '#FDE047', tint: '#FECACA' },
+  { name: 'あお',     main: '#60A5FA', dark: '#1D4ED8', gem: '#FDE047', tint: '#BFDBFE' },
+  { name: 'みどり',   main: '#4ADE80', dark: '#15803D', gem: '#FB7185', tint: '#BBF7D0' },
+  { name: 'ピンク',   main: '#F9A8D4', dark: '#BE185D', gem: '#FDE047', tint: '#FBCFE8' },
+  { name: 'むらさき', main: '#C4B5FD', dark: '#6D28D9', gem: '#FDE047', tint: '#DDD6FE' },
+  { name: 'オレンジ', main: '#FDBA74', dark: '#C2410C', gem: '#3B82F6', tint: '#FED7AA' }
+];
+
+function questNumber(weekStart) {
+  if (weekStart < WEEKLY_START) return 1;
+  return weekIndex(weekStart) - weekIndex(WEEKLY_START) + 1;
+}
+
+function questColor(n) {
+  const len = QUEST_COLORS.length;
+  return QUEST_COLORS[(((n - 1) % len) + len) % len];
 }
 
 // ===== ウラボス：1000もん たっせいの あと、とつぜん あらわれる（ひみつ）=====
-// HP 500（＝1000もんの あと、さらに 500もん）。たおすと つぎの1しゅうかん ポコに マント、「ウラボスキラー」の しょうごう。
+// ウラボス HP 500（＝1000もんの あと、さらに 500もん）。たおすと マントの プレゼント、「ウラボスキラー」の しょうごう。
+// ラスボス：ウラボスを たおすと あらわれる。ごうけい 3000もん（あと 1500もん）。たおすと つばさの プレゼント、「ラスボスキラー」。
 // さいしょの週は かならず あらわれる。そのあとは 2週に1回くらい（週ごとに きまる。どの たんまつでも おなじ）
 const BOSS_HP = 500;
+const LAST_BOSS_TOTAL = 3000;                    // ラスボスを たおす ごうけいの もんだい数
+const LAST_BOSS_HP = LAST_BOSS_TOTAL - (WEEKLY_GOAL + BOSS_HP);
 const BOSSES = [
   { name: 'ウラ・ドラゴン', emoji: '🐉' },
   { name: 'ウラ・ゴースト', emoji: '👻' },
@@ -70,6 +100,15 @@ const BOSSES = [
   { name: 'ウラ・まおう', emoji: '👿' },
   { name: 'ウラ・ゴーレム', emoji: '🗿' },
   { name: 'ウラ・ティラノ', emoji: '🦖' }
+];
+const LAST_BOSSES = [
+  { name: 'ブラック・ドラゴン', emoji: '🐲' },
+  { name: 'ダーク・ゴースト', emoji: '💀' },
+  { name: 'デス・ロボ', emoji: '👾' },
+  { name: 'だいおう クラーケン', emoji: '🦑' },
+  { name: 'だいまおう', emoji: '😈' },
+  { name: 'キング・ゴーレム', emoji: '🗿' },
+  { name: 'ティラノ・キング', emoji: '🦖' }
 ];
 
 function weekIndex(weekStart) {
@@ -84,18 +123,31 @@ function weekBoss(weekStart) {
   const n = weekIndex(weekStart);
   if (!first && ((Math.imul(n, 2654435761) >>> 16) & 1) !== 0) return null;
   const idx = first ? 0 : (Math.imul(n, 40503) >>> 8) % BOSSES.length;
-  return Object.assign({ hp: BOSS_HP }, BOSSES[idx]);
+  return Object.assign({ hp: BOSS_HP, idx }, BOSSES[idx]);
+}
+
+// その週に ラスボスが いるか（ウラボスが いる週だけ）
+function weekLastBoss(weekStart) {
+  const boss = weekBoss(weekStart);
+  if (!boss) return null;
+  return Object.assign({ hp: LAST_BOSS_HP }, LAST_BOSSES[boss.idx % LAST_BOSSES.length]);
 }
 
 // いまの週の ボスの ようす（まだ あらわれていなければ revealed=false）
 function bossInfo(start, total) {
   const boss = weekBoss(start);
-  if (!boss) return { boss: null, revealed: false, defeated: false, hpLeft: 0 };
+  if (!boss) return { boss: null, revealed: false, defeated: false, hpLeft: 0, last: null, lastRevealed: false, lastDefeated: false, lastHpLeft: 0 };
+  const last = weekLastBoss(start);
   const damage = Math.min(boss.hp, Math.max(0, total - WEEKLY_GOAL));
-  return { boss, revealed: total >= WEEKLY_GOAL, defeated: total >= WEEKLY_GOAL + boss.hp, hpLeft: boss.hp - damage };
+  const defeated = total >= WEEKLY_GOAL + boss.hp;
+  const lastDamage = Math.min(last.hp, Math.max(0, total - (WEEKLY_GOAL + boss.hp)));
+  return {
+    boss, revealed: total >= WEEKLY_GOAL, defeated, hpLeft: boss.hp - damage,
+    last, lastRevealed: defeated, lastDefeated: total >= LAST_BOSS_TOTAL, lastHpLeft: last.hp - lastDamage
+  };
 }
 
-// これまでに たおした ウラボス
+// これまでに たおした ウラボス／ラスボス
 function bossHistory() {
   const out = [];
   const today = weekStartOf(localDateStr());
@@ -106,40 +158,102 @@ function bossHistory() {
   return out;
 }
 
-// とうじょう・げきは の えんしゅつ（この たんまつ・この子で 1かいだけ）
-function checkBossReveal(w) {
-  if (!w.started || !w.boss || !w.revealed) return;
-  const tag = playerTag();
-  const key = `manabi_bossseen_${tag}_${w.start}`;
-  const seen = localStorage.getItem(key) || '';
-  let text = null, flag = seen;
-  if (w.defeated && seen.indexOf('d') < 0) {
-    text = `🎉 ${w.boss.emoji} ${w.boss.name}を たおした！！\nみんなの ちからだ！\nつぎの 1しゅうかん、ポコに マントが つくよ！\n「ウラボスキラー」の しょうごうも ゲット！`;
-    flag = 'ad';
-  } else if (!w.defeated && seen.indexOf('a') < 0) {
-    text = `…ゴゴゴゴ…\n\n${w.boss.emoji} ウラボス「${w.boss.name}」が あらわれた！\n\nみんなで ${w.boss.hp}ダメージ あたえて たおせ！\n（せいかい 1もん ＝ 1ダメージ）`;
-    flag = 'a';
+function lastBossHistory() {
+  const out = [];
+  const today = weekStartOf(localDateStr());
+  for (let ws = WEEKLY_START; ws <= today; ws = addDaysStr(ws, 7)) {
+    const last = weekLastBoss(ws);
+    if (last && weekTally(ws).total >= LAST_BOSS_TOTAL) out.push({ week: ws, name: last.name, emoji: last.emoji });
   }
-  if (!text) return;
-  try { localStorage.setItem(key, flag); } catch (e) { /* 無視 */ }
-  setTimeout(() => askConfirm(text, 'おう！', 'あとで', () => {}), 400);
+  return out;
 }
 
-// ホームの ボスの パネル
+// ===== プレゼント：もらったら ずっと「きがえ」で つけはずし できる =====
+//  きらきらポコ … 1000もん たっせい（みんな）／マント … ウラボスを たおした（みんな）／つばさ … ラスボスを たおした（みんな）
+//  おうかん … その週の せいかい 1い（その子だけ。週が おわってから）
+// いろは クエストごとに ちがう（同じものは 手に はいらない）
+function weekEndPassed(weekStart) {   // その週が おわって、そのあと この たんまつが どうきしたか
+  const code = (typeof getActiveSyncCode === 'function') ? getActiveSyncCode() : '';
+  if (!code) return true;
+  const last = Date.parse(localStorage.getItem('manabi_lastsync') || '');
+  const [y, m, d] = addDaysStr(weekStart, 7).split('-').map(Number);
+  return Number.isFinite(last) && last >= new Date(y, m - 1, d).getTime();
+}
+
+// プレゼントを わたして、いまの子に あたらしく とどいた id の 一覧を かえす
+function grantQuestGifts() {
+  const me = (state.playerName || '').trim();
+  const today = weekStartOf(localDateStr());
+  const players = weeklyPlayers();
+  const got = [];
+  const give = (id, names) => names.forEach(nm => { if (grantShopItem(id, nm) && nm === me) got.push(id); });
+  for (let ws = WEEKLY_START; ws <= today; ws = addDaysStr(ws, 7)) {
+    const t = weekTally(ws);
+    const n = questNumber(ws);
+    const boss = weekBoss(ws), last = weekLastBoss(ws);
+    if (t.total >= WEEKLY_GOAL) give(`shine:${n}`, players);
+    if (boss && t.total >= WEEKLY_GOAL + boss.hp) give(`cape:${n}`, players);
+    if (last && t.total >= LAST_BOSS_TOTAL) give(`wing:${n}`, players);
+    if (ws < today && t.total >= WEEKLY_GOAL && weekEndPassed(ws)) {
+      const top = t.rows.length ? t.rows[0].n : 0;
+      if (top > 0) give(`crown:${n}`, t.rows.filter(r => r.n === top).map(r => r.name));
+    }
+  }
+  return got;
+}
+
+function announceGifts(ids) {
+  const names = ids.map(id => (shopItem(id) || {}).name).filter(Boolean);
+  if (names.length === 0) return false;
+  setTimeout(() => askConfirm(
+    `🎁 ポコクエストの プレゼントが とどいたよ！\n\n${names.join('\n')}\n\n「おしゃれ」の「きがえ」で ずっと つけられるよ！`,
+    'おしゃれへ', 'あとで', () => { shopMode = 'dress'; showTab('shop'); }), 500);
+  return true;
+}
+
+// とうじょう・げきは の えんしゅつ（この たんまつ・この子で 1かいだけ。1かいに ひとつずつ）
+function checkBossReveal(w) {
+  if (!w.started || !w.boss || !w.revealed) return;
+  const key = `manabi_bossseen_${playerTag()}_${w.start}`;
+  const seen = localStorage.getItem(key) || '';
+  const steps = [
+    { f: 'a', ok: w.revealed,
+      text: `…ゴゴゴゴ…\n\n${w.boss.emoji} ウラボス「${w.boss.name}」が あらわれた！\n\nみんなで ${w.boss.hp}ダメージ あたえて たおせ！\n（せいかい 1もん ＝ 1ダメージ）` },
+    { f: 'd', ok: w.defeated,
+      text: `🎉 ${w.boss.emoji} ${w.boss.name}を たおした！！\nみんなの ちからだ！\nごほうびに マントを プレゼント！\n「ウラボスキラー」の しょうごうも ゲット！` },
+    { f: 'l', ok: w.lastRevealed,
+      text: `…ゴゴゴゴゴゴ…\n\n${w.last ? w.last.emoji : ''} ラスボス「${w.last ? w.last.name : ''}」が あらわれた！！\n\nここまで きた きみたちなら たおせる！\nあと ${w.last ? w.last.hp : 0}ダメージ！（ごうけい ${LAST_BOSS_TOTAL}もん）` },
+    { f: 'z', ok: w.lastDefeated,
+      text: `🎉🎉 ラスボス ${w.last ? w.last.emoji : ''} ${w.last ? w.last.name : ''}を たおした！！\nでんせつの ゆうしゃだ！\nごほうびに つばさを プレゼント！\n「ラスボスキラー」の しょうごうも ゲット！` }
+  ];
+  // 見ていない えんしゅつが いくつか たまっていたら、いちばん あたらしい 1つだけ 見せる（ぜんぶ 見たことに する）
+  const pending = steps.filter(s => s.ok && seen.indexOf(s.f) < 0);
+  if (pending.length === 0) return;
+  const step = pending[pending.length - 1];
+  try { localStorage.setItem(key, seen + pending.map(s => s.f).join('')); } catch (e) { /* 無視 */ }
+  setTimeout(() => askConfirm(step.text, 'おう！', 'あとで', () => {}), 400);
+}
+
+// ホームの ボスの パネル（ラスボスが あらわれたら ラスボスを 見せる）
 function appendBossPanel(card, w) {
   if (!w.boss || !w.revealed) return;
-  const panel = el('div', 'boss-panel' + (w.defeated ? ' defeated' : ''));
+  const isLast = !!(w.last && w.lastRevealed);
+  const b = isLast ? w.last : w.boss;
+  const done = isLast ? w.lastDefeated : w.defeated;
+  const hpLeft = isLast ? w.lastHpLeft : w.hpLeft;
+  const panel = el('div', 'boss-panel' + (isLast ? ' last' : '') + (done ? ' defeated' : ''));
   const head = el('div', 'boss-head');
-  head.appendChild(el('span', 'boss-emoji', w.boss.emoji));
-  head.appendChild(el('span', 'boss-name', `ウラボス ${w.boss.name}`));
+  head.appendChild(el('span', 'boss-emoji', b.emoji));
+  head.appendChild(el('span', 'boss-name', `${isLast ? 'ラスボス' : 'ウラボス'} ${b.name}`));
   panel.appendChild(head);
-  if (w.defeated) {
-    panel.appendChild(el('div', 'boss-note', '🎉 たおした！ つぎの 1しゅうかん、ポコに マントが つくよ'));
+  if (isLast) panel.appendChild(el('div', 'boss-sub', `✓ ウラボス ${w.boss.name} は たおしたよ`));
+  if (done) {
+    panel.appendChild(el('div', 'boss-note', '🎉 ラスボスを たおした！ つばさを プレゼント！'));
   } else {
-    panel.appendChild(el('div', 'boss-hp-text', `HP ${w.hpLeft} / ${w.boss.hp}`));
+    panel.appendChild(el('div', 'boss-hp-text', `HP ${hpLeft} / ${b.hp}`));
     const bar = el('div', 'boss-bar');
     const fill = el('div', 'boss-fill');
-    fill.style.width = `${Math.round((w.hpLeft / w.boss.hp) * 100)}%`;
+    fill.style.width = `${Math.round((hpLeft / b.hp) * 100)}%`;
     bar.appendChild(fill);
     panel.appendChild(bar);
     panel.appendChild(el('div', 'boss-note', `せいかい 1もん ＝ 1ダメージ！ みんなで たおそう（${mdLabel(addDaysStr(w.start, 6))}まで）`));
@@ -147,14 +261,15 @@ function appendBossPanel(card, w) {
   card.appendChild(panel);
 }
 
-// しょうごう（たおした ウラボスの かず）
+// しょうごう（たおした ウラボス・ラスボスの かず）
 function appendBossTitle(card) {
   const hist = bossHistory();
-  if (hist.length === 0) return;
-  card.appendChild(el('div', 'boss-title', `🏅 ウラボスキラー（${hist.length}たい）　${hist.map(h => h.emoji).join('')}`));
+  if (hist.length > 0) card.appendChild(el('div', 'boss-title', `🏅 ウラボスキラー（${hist.length}たい）　${hist.map(h => h.emoji).join('')}`));
+  const lh = lastBossHistory();
+  if (lh.length > 0) card.appendChild(el('div', 'boss-title', `🏅 ラスボスキラー（${lh.length}たい）　${lh.map(h => h.emoji).join('')}`));
 }
 
-// おうちの人の画面：ポコクエストの ようす（ウラボスの ネタバレつき。子どもには ひみつ）
+// おうちの人の画面：ポコクエストの ようす（ボスの ネタバレつき。子どもには ひみつ）
 function appendFamilyParent(root) {
   const w = weeklyStatus();
   const panel = el('div', 'panel');
@@ -164,37 +279,23 @@ function appendFamilyParent(root) {
     root.appendChild(panel);
     return;
   }
-  panel.appendChild(el('div', 'report-line', `${mdLabel(w.start)}〜${mdLabel(w.end)}：みんなで ${w.total} / ${w.goal} もん（あと ${w.left}）`));
+  const n = questNumber(w.start), color = questColor(n);
+  panel.appendChild(el('div', 'report-line', `だい${n}かい（${color.name}）${mdLabel(w.start)}〜${mdLabel(w.end)}：みんなで ${w.total} / ${w.goal} もん（あと ${w.left}）`));
   w.rows.forEach(r => panel.appendChild(el('div', 'report-line', `　${r.name}：${r.n}もん`)));
-  const boss = weekBoss(w.start);
+  const boss = weekBoss(w.start), last = weekLastBoss(w.start);
   panel.appendChild(el('div', 'report-line', boss
-    ? `🤫 ウラボス（子どもには ひみつ）：この週は ${boss.emoji} ${boss.name} が でます。${w.goal}もんで とうじょう、さらに ${boss.hp}もん（合計 ${w.goal + boss.hp}）で げきは`
-    : '🤫 ウラボス（子どもには ひみつ）：この週は でません'));
-  const hist = bossHistory();
+    ? `🤫 ボス（子どもには ひみつ）：この週は ${boss.emoji} ${boss.name}（${w.goal}もんで とうじょう・ごうけい ${w.goal + boss.hp}で げきは）→ ${last.emoji} ラスボス ${last.name}（ごうけい ${LAST_BOSS_TOTAL}で げきは）が でます`
+    : '🤫 ボス（子どもには ひみつ）：この週は でません'));
+  panel.appendChild(el('div', 'report-line', `🎁 プレゼント：きらきらポコ＝${w.goal}もん／マント＝ウラボス／つばさ＝ラスボス／おうかん＝週の 1い（その子だけ）。「きがえ」で ずっと つけられます。いろは まいかい ちがいます`));
+  const hist = bossHistory(), lh = lastBossHistory();
   if (hist.length) panel.appendChild(el('div', 'report-line', `🏅 たおした ウラボス：${hist.length}たい ${hist.map(h => h.emoji + h.name).join('、')}`));
+  if (lh.length) panel.appendChild(el('div', 'report-line', `🏅 たおした ラスボス：${lh.length}たい ${lh.map(h => h.emoji + h.name).join('、')}`));
   root.appendChild(panel);
 }
 
-
-// 先週 たっせいしていたら、いまの週は ポコが とくべつな すがた（1位の子は 王冠つき）
-function weeklyPerk(name) {
-  const who = String(name === undefined ? state.playerName : name || '').trim();
-  const cur = weekStartOf(localDateStr());
-  const prev = addDaysStr(cur, -7);
-  if (prev < WEEKLY_START) return null;
-  const t = weekTally(prev);
-  if (t.total < WEEKLY_GOAL) return null;
-  const top = t.rows.length ? t.rows[0].n : 0;
-  const mine = t.rows.find(r => r.name === who);
-  const boss = weekBoss(prev);
-  const cape = !!boss && t.total >= WEEKLY_GOAL + boss.hp;   // ウラボスを たおした 週の つぎは マント
-  return { special: true, crown: !!mine && top > 0 && mine.n === top, cape };
-}
-
-// ずかんや しんかの ひょうじ用：ほんとうの 育ち具合の すがたに、キラキラと 王冠だけ つける
-function weeklyPerkStatic(name) {
-  const perk = weeklyPerk(name);
-  return perk ? Object.assign({}, perk, { noEvolve: true }) : null;
+// ずかんや しんかの ひょうじ用：「きらきらポコ」でも 1だん しんかした すがたに しない
+function weeklyPerkStatic() {
+  return { noEvolve: true };
 }
 
 function mdLabel(dateStr) {
@@ -208,10 +309,12 @@ function updateWeekChip() {
   if (!chip) return;
   const w = weeklyStatus();
   if (!w.started) { chip.classList.add('hidden'); return; }
-  if (w.boss && w.revealed) {
-    chip.textContent = w.defeated
-      ? `🎉 ウラボスを たおした！ ／ じぶん ${w.mine}もん`
-      : `${w.boss.emoji} ${w.boss.name} HP ${w.hpLeft}/${w.boss.hp} ／ じぶん ${w.mine}もん`;
+  if (w.boss && w.revealed && w.last && w.lastRevealed) {
+    chip.textContent = w.lastDefeated
+      ? `🎉 ラスボスを たおした！ ／ じぶん ${w.mine}もん`
+      : `${w.last.emoji} ラスボス ${w.last.name} HP ${w.lastHpLeft}/${w.last.hp} ／ じぶん ${w.mine}もん`;
+  } else if (w.boss && w.revealed) {
+    chip.textContent = `${w.boss.emoji} ${w.boss.name} HP ${w.hpLeft}/${w.boss.hp} ／ じぶん ${w.mine}もん`;
   } else {
     chip.textContent = w.achieved
       ? `🎉 みんなで ${w.total}もん！ たっせい！ ／ じぶん ${w.mine}もん`
@@ -257,20 +360,20 @@ function renderFamilyCard(body) {
   card.appendChild(rows);
 
   card.appendChild(el('div', 'family-note', w.achieved
-    ? '🎉 たっせい！ つぎの 1しゅうかん、みんな 1だん しんかした とくべつな ポコが てに はいるよ'
+    ? '🎉 たっせい！ とくべつな ポコ「きらきらポコ」を プレゼント！'
     : `あと ${w.left}もん！ みんなで おうえんしあって がんばろう`));
-  const perk = weeklyPerk();
-  if (perk) {
-    card.appendChild(el('div', 'family-perk', perk.crown
-      ? '✨ せんしゅうの 1い！ ポコに 王冠が ついてるよ'
-      : '✨ せんしゅう たっせい！ いまは とくべつな ポコだよ'));
-    if (perk.cape) card.appendChild(el('div', 'family-perk', '🌟 ウラボスを たおした ごほうび！ ポコに マントが ついてるよ'));
-  }
+
+  // プレゼントを わたす → もらった ものを 見せる
+  const gifts = grantQuestGifts();
+  const n = questNumber(w.start);
+  const mine = ['shine', 'cape', 'wing', 'crown'].map(k => `${k}:${n}`).filter(id => shopOwns(id)).map(id => shopItem(id).name);
+  if (mine.length) card.appendChild(el('div', 'family-perk', `🎁 もらった プレゼント：${mine.join('、')}\n「おしゃれ」の「きがえ」で つけられるよ`));
+
   appendBossPanel(card, w);
   appendBossTitle(card);
   appendQuestGuide(card, w);
   body.appendChild(card);
-  checkBossReveal(w);
+  if (!announceGifts(gifts)) checkBossReveal(w);
 }
 
 // 「なにをして、なにが もらえるか」の せつめい（ごほうびの みほん つき）
@@ -280,19 +383,22 @@ function appendQuestGuide(card, w) {
   guide.appendChild(el('div', 'quest-guide-text',
     `1しゅうかん（土〜金）に、3人の せいかいを あわせて ${w.goal}もん めざそう！\n（ヒントを つかわずに せいかいした もんだいだけ かぞえるよ）`));
   const stage = petStage(loadPet().growth);
+  const n = questNumber(w.started ? w.start : WEEKLY_START);
+  const color = questColor(n);
   const rewards = el('div', 'quest-rewards');
   [
-    { perk: { special: true, crown: false }, label: 'みんなで たっせい', sub: 'つぎの 1しゅうかん\n1だん しんかした\nとくべつな ポコが\nてに はいるよ！' },
-    { perk: { special: true, crown: true }, label: 'せいかい 1い だと', sub: 'さらに\n王冠も つくよ！' }
+    { look: { shine: `shine:${n}` }, label: 'みんなで たっせい', sub: '1だん しんかした\nとくべつな ポコを\nプレゼント！' },
+    { look: { shine: `shine:${n}`, crown: `crown:${n}` }, label: 'せいかい 1い だと', sub: 'さらに\n王冠も プレゼント！' }
   ].forEach(r => {
     const item = el('div', 'quest-reward');
     const pic = el('div', 'quest-reward-pic');
-    pic.innerHTML = petSVG(stage, 'cheer', 64, r.perk);
+    pic.innerHTML = petSVG(stage, 'cheer', 64, null, r.look);
     item.appendChild(pic);
     item.appendChild(el('div', 'quest-reward-label', r.label));
     item.appendChild(el('div', 'quest-reward-sub', r.sub));
     rewards.appendChild(item);
   });
   guide.appendChild(rewards);
+  guide.appendChild(el('div', 'quest-guide-text', `もらった プレゼントは ずっと のこって、「おしゃれ」の「きがえ」で つけはずし できるよ。\nいろは ポコクエストごとに ちがうよ（こんかいは「${color.name}」）`));
   card.appendChild(guide);
 }

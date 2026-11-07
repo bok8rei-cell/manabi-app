@@ -647,3 +647,10 @@ h2, h3 { margin: 0; }
 .petbig-name { color: #fff; font-weight: 700; font-size: 1.3rem; }
 .petbig-hint { color: #D9D2F2; font-size: 0.85rem; }
 .shop-pet { display: flex; justify-content: center; margin: 0 auto; }
+
+/* ---- プレゼント／ラスボス ---- */
+.family-perk { white-space: pre-line; }
+.boss-panel.last { background: #3A0F1C; border-color: #E5484D; }
+.boss-panel.last.defeated { background: #FFF6D6; border-color: #F5D77A; }
+.boss-sub { margin-top: 4px; font-size: 0.8rem; color: #C9BEE8; }
+.boss-panel.last .boss-sub { color: #FFC2C7; }

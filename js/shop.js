@@ -1,6 +1,7 @@
 // ===== おしゃれ：コインで ポコの かざりを 買って、じぶんだけの ポコを つくる =====
 // 買った かざり（own）と、いま つけている もの（wear：場所ごとに 1つ）を、子どもごとに 保存して どうきする。
-// 王冠とマントは ポコクエストの ごほうび専用（ここでは 売らない）。
+// ポコクエストの プレゼント（おうかん・マント・きらきらポコ・つばさ）は 売らない。もらったら ずっと 「きがえ」で つけられる。
+// プレゼントの id は 「種類:クエストの番号」（例：crown:1）。クエストごとに いろが かわる（questColor）。
 
 const SHOP_SLOTS = [
   { key: 'head',  label: 'あたま' },
@@ -10,7 +11,11 @@ const SHOP_SLOTS = [
   { key: 'neck',  label: 'くび' },
   { key: 'body',  label: 'いろ' },
   { key: 'back',  label: 'はいけい' },
-  { key: 'aura',  label: 'オーラ' }
+  { key: 'aura',  label: 'オーラ' },
+  { key: 'shine', label: 'きらきらポコ', gift: true },
+  { key: 'crown', label: 'おうかん', gift: true },
+  { key: 'cape',  label: 'マント', gift: true },
+  { key: 'wing',  label: 'つばさ', gift: true }
 ];
 
 const SHOP_TIERS = { s: 'ちいさい', n: 'ふつう', r: 'レア', sr: 'スーパーレア', ur: 'でんせつ' };
@@ -70,7 +75,32 @@ const SHOP_ITEMS = [
   { id: 'candy',      name: 'ぺろぺろキャンディ', slot: 'mouth', price: 700,  tier: 'n' }
 ];
 
-function shopItem(id) { return SHOP_ITEMS.find(it => it.id === id) || null; }
+const SHOP_GIFT_NAMES = { shine: 'きらきらポコ', crown: 'おうかん', cape: 'マント', wing: 'つばさ' };
+
+function shopItem(id) {
+  const fixed = SHOP_ITEMS.find(it => it.id === id);
+  if (fixed) return fixed;
+  const m = /^(shine|crown|cape|wing):(\d+)$/.exec(String(id));   // プレゼント
+  if (!m || typeof questColor !== 'function') return null;
+  const n = Number(m[2]);
+  const color = questColor(n);
+  return { id, name: `${SHOP_GIFT_NAMES[m[1]]}（だい${n}かい・${color.name}）`, slot: m[1], gift: true, quest: n, color, price: 0, tier: 'gift' };
+}
+
+// プレゼントを わたす（コインは つかわない）。あたらしく わたしたら true。「つけている もの」の きろくは さわらない
+function grantShopItem(id, name) {
+  if (!shopItem(id)) return false;
+  const s = loadShop(name);
+  if (s.own[id]) return false;
+  s.own[id] = 1;
+  writeJSON(shopKey(name), s);
+  return true;
+}
+
+// もっている かざり（プレゼントも ふくむ）。プレゼントは あたらしい じゅん
+function shopOwnedItems(shop) {
+  return Object.keys(shop.own).map(shopItem).filter(Boolean).sort((a, b) => (b.quest || 0) - (a.quest || 0));
+}
 
 // ---- 保存 ----
 function shopKey(name) { return `manabi_shop_${playerTag(name)}`; }
@@ -388,7 +418,7 @@ const SHOP_DRAW = {
 
 // look（場所 → id）から、ポコの 各ぶぶんの 絵を つくる
 function shopDraw(look, g) {
-  const out = { back: '', aura: '', defs: '', main: '#5CC9B0', belly: '#B8EBDD', eyes: '', cheek: '', mouth: '', neck: '', head: '' };
+  const out = { back: '', aura: '', glow: '', wing: '', cape: '', defs: '', main: '#5CC9B0', belly: '#B8EBDD', eyes: '', cheek: '', mouth: '', neck: '', head: '', bow: '', sparkles: '', crown: '' };
   if (!look) return out;
   const draw = (slot) => (look[slot] && SHOP_DRAW[look[slot]]) ? SHOP_DRAW[look[slot]](g) : '';
   out.back = draw('back');
@@ -399,6 +429,33 @@ function shopDraw(look, g) {
   out.mouth = draw('mouth');
   out.neck = draw('neck');
   out.head = draw('head');
+  // --- プレゼント（いろは クエストごとに ちがう）---
+  const gift = slot => { const it = look[slot] ? shopItem(look[slot]) : null; return it && it.gift ? it : null; };
+  const sh = gift('shine'), cr = gift('crown'), cp = gift('cape'), wg = gift('wing');
+  if (sh) {
+    const c = sh.color, by = g.cy + g.ry - 2;
+    out.glow = `<ellipse cx="32" cy="33" rx="30" ry="27" fill="${c.tint}" opacity="0.6"/>`;
+    out.sparkles = perkStar(6, 10, 5, c.main) + perkStar(58, 12, 4, c.main) + perkStar(7, 48, 3.5, c.main) + perkStar(57, 46, 4.5, c.main);
+    out.bow = `<path d="M32 ${by} L23 ${by - 5} L23 ${by + 5} Z" fill="${c.main}" stroke="${c.dark}" stroke-width="0.6"/><path d="M32 ${by} L41 ${by - 5} L41 ${by + 5} Z" fill="${c.main}" stroke="${c.dark}" stroke-width="0.6"/><circle cx="32" cy="${by}" r="2.6" fill="${c.dark}"/>`;
+  }
+  if (cp) {
+    const c = cp.color;
+    out.cape = `<path d="M${32 - g.rx + 3} ${g.cy - 3} Q${32 - g.rx - 7} ${g.cy + g.ry} ${32 - g.rx + 3} ${g.cy + g.ry + 2} L${32 + g.rx - 3} ${g.cy + g.ry + 2} Q${32 + g.rx + 7} ${g.cy + g.ry} ${32 + g.rx - 3} ${g.cy - 3} Z" fill="${c.main}" stroke="${c.dark}" stroke-width="1"/>`;
+  }
+  if (wg) {
+    const c = wg.color;
+    const wing = s => {   // s=-1 ひだり／+1 みぎ
+      const x0 = 32 + s * (g.rx - 3), y0 = g.cy - 2;
+      const xo = 32 + s * Math.min(g.rx + 8, 30), yt = y0 - 16;
+      return `<path d="M${x0} ${y0} Q${xo} ${yt - 2} ${xo} ${y0 - 6} Q${xo - s * 1.5} ${y0 - 1} ${xo - s * 3.5} ${y0 - 1} Q${xo - s * 4} ${y0 + 4} ${xo - s * 7} ${y0 + 4} Q${xo - s * 8} ${y0 + 9} ${x0} ${y0 + 10} Z" fill="#FFFFFF" stroke="${c.main}" stroke-width="1.8" stroke-linejoin="round"/>`;
+    };
+    out.wing = wing(-1) + wing(1);
+  }
+  if (cr) {
+    const c = cr.color, b = g.y0 + 3;
+    out.crown = `<path d="M20 ${b} L22 ${b - 12} L27 ${b - 5} L32 ${b - 14} L37 ${b - 5} L42 ${b - 12} L44 ${b} Z" fill="${c.main}" stroke="${c.dark}" stroke-width="1.2"/>` +
+      `<circle cx="22" cy="${b - 12}" r="1.8" fill="${c.gem}"/><circle cx="32" cy="${b - 14}" r="2.1" fill="${c.gem}"/><circle cx="42" cy="${b - 12}" r="1.8" fill="${c.gem}"/>`;
+  }
   const body = look.body && SHOP_BODY[look.body];
   if (body) { out.main = body.main; out.belly = body.belly; out.defs += body.defs || ''; }
   return out;
@@ -484,10 +541,10 @@ function renderDressRoom(root, shop, stage) {
 
   let any = false;
   SHOP_SLOTS.forEach(sl => {
-    const items = SHOP_ITEMS.filter(it => it.slot === sl.key && shop.own[it.id]);
+    const items = shopOwnedItems(shop).filter(it => it.slot === sl.key);
     if (items.length === 0) return;
     any = true;
-    root.appendChild(el('h3', 'section-title', sl.label));
+    root.appendChild(el('h3', 'section-title', (sl.gift ? '🎁 プレゼント：' : '') + sl.label));
     const grid = el('div', 'shop-grid');
     items.forEach(it => {
       const isWorn = shop.wear[it.slot] === it.id;
