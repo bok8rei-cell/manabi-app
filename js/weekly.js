@@ -5,7 +5,7 @@
 
 const WEEKLY_GOAL = 1000;
 const WEEKLY_START = '2026-11-07';   // さいしょの週の はじまり（土）。これより前は 数えない
-const WEEKLY_KEEP = 8;               // 保存する週の数
+const WEEKLY_KEEP = 60;              // 保存する週の数（ウラボスキラーの かずを 数えるため ながめに）
 
 // その日をふくむ週の はじまり（土曜日）の日付
 function weekStartOf(dateStr) {
@@ -54,8 +54,127 @@ function weeklyStatus() {
   const t = started ? weekTally(start) : { rows: weeklyPlayers().map(name => ({ name, n: 0 })), total: 0 };
   const me = (state.playerName || '').trim();
   const mine = (t.rows.find(r => r.name === me) || { n: 0 }).n;
-  return { start, end, started, rows: t.rows, total: t.total, mine, goal: WEEKLY_GOAL, left: Math.max(0, WEEKLY_GOAL - t.total), achieved: t.total >= WEEKLY_GOAL };
+  const bi = started ? bossInfo(start, t.total) : { boss: null, revealed: false, defeated: false, hpLeft: 0 };
+  return { start, end, started, rows: t.rows, total: t.total, mine, goal: WEEKLY_GOAL, left: Math.max(0, WEEKLY_GOAL - t.total), achieved: t.total >= WEEKLY_GOAL, boss: bi.boss, revealed: bi.revealed, defeated: bi.defeated, hpLeft: bi.hpLeft };
 }
+
+// ===== ウラボス：1000もん たっせいの あと、とつぜん あらわれる（ひみつ）=====
+// HP 500（＝1000もんの あと、さらに 500もん）。たおすと つぎの1しゅうかん ポコに マント、「ウラボスキラー」の しょうごう。
+// さいしょの週は かならず あらわれる。そのあとは 2週に1回くらい（週ごとに きまる。どの たんまつでも おなじ）
+const BOSS_HP = 500;
+const BOSSES = [
+  { name: 'ウラ・ドラゴン', emoji: '🐉' },
+  { name: 'ウラ・ゴースト', emoji: '👻' },
+  { name: 'ウラ・ロボ', emoji: '🤖' },
+  { name: 'ウラ・クラーケン', emoji: '🐙' },
+  { name: 'ウラ・まおう', emoji: '👿' },
+  { name: 'ウラ・ゴーレム', emoji: '🗿' },
+  { name: 'ウラ・ティラノ', emoji: '🦖' }
+];
+
+function weekIndex(weekStart) {
+  const [y, m, d] = weekStart.split('-').map(Number);
+  return Math.floor(Date.UTC(y, m - 1, d) / 604800000);
+}
+
+// その週に ウラボスが いるか（いなければ null）
+function weekBoss(weekStart) {
+  if (weekStart < WEEKLY_START) return null;
+  const first = weekStart === WEEKLY_START;
+  const n = weekIndex(weekStart);
+  if (!first && ((Math.imul(n, 2654435761) >>> 16) & 1) !== 0) return null;
+  const idx = first ? 0 : (Math.imul(n, 40503) >>> 8) % BOSSES.length;
+  return Object.assign({ hp: BOSS_HP }, BOSSES[idx]);
+}
+
+// いまの週の ボスの ようす（まだ あらわれていなければ revealed=false）
+function bossInfo(start, total) {
+  const boss = weekBoss(start);
+  if (!boss) return { boss: null, revealed: false, defeated: false, hpLeft: 0 };
+  const damage = Math.min(boss.hp, Math.max(0, total - WEEKLY_GOAL));
+  return { boss, revealed: total >= WEEKLY_GOAL, defeated: total >= WEEKLY_GOAL + boss.hp, hpLeft: boss.hp - damage };
+}
+
+// これまでに たおした ウラボス
+function bossHistory() {
+  const out = [];
+  const today = weekStartOf(localDateStr());
+  for (let ws = WEEKLY_START; ws <= today; ws = addDaysStr(ws, 7)) {
+    const boss = weekBoss(ws);
+    if (boss && weekTally(ws).total >= WEEKLY_GOAL + boss.hp) out.push({ week: ws, name: boss.name, emoji: boss.emoji });
+  }
+  return out;
+}
+
+// とうじょう・げきは の えんしゅつ（この たんまつ・この子で 1かいだけ）
+function checkBossReveal(w) {
+  if (!w.started || !w.boss || !w.revealed) return;
+  const tag = playerTag();
+  const key = `manabi_bossseen_${tag}_${w.start}`;
+  const seen = localStorage.getItem(key) || '';
+  let text = null, flag = seen;
+  if (w.defeated && seen.indexOf('d') < 0) {
+    text = `🎉 ${w.boss.emoji} ${w.boss.name}を たおした！！\nみんなの ちからだ！\nつぎの 1しゅうかん、ポコに マントが つくよ！\n「ウラボスキラー」の しょうごうも ゲット！`;
+    flag = 'ad';
+  } else if (!w.defeated && seen.indexOf('a') < 0) {
+    text = `…ゴゴゴゴ…\n\n${w.boss.emoji} ウラボス「${w.boss.name}」が あらわれた！\n\nみんなで ${w.boss.hp}ダメージ あたえて たおせ！\n（せいかい 1もん ＝ 1ダメージ）`;
+    flag = 'a';
+  }
+  if (!text) return;
+  try { localStorage.setItem(key, flag); } catch (e) { /* 無視 */ }
+  setTimeout(() => askConfirm(text, 'おう！', 'あとで', () => {}), 400);
+}
+
+// ホームの ボスの パネル
+function appendBossPanel(card, w) {
+  if (!w.boss || !w.revealed) return;
+  const panel = el('div', 'boss-panel' + (w.defeated ? ' defeated' : ''));
+  const head = el('div', 'boss-head');
+  head.appendChild(el('span', 'boss-emoji', w.boss.emoji));
+  head.appendChild(el('span', 'boss-name', `ウラボス ${w.boss.name}`));
+  panel.appendChild(head);
+  if (w.defeated) {
+    panel.appendChild(el('div', 'boss-note', '🎉 たおした！ つぎの 1しゅうかん、ポコに マントが つくよ'));
+  } else {
+    panel.appendChild(el('div', 'boss-hp-text', `HP ${w.hpLeft} / ${w.boss.hp}`));
+    const bar = el('div', 'boss-bar');
+    const fill = el('div', 'boss-fill');
+    fill.style.width = `${Math.round((w.hpLeft / w.boss.hp) * 100)}%`;
+    bar.appendChild(fill);
+    panel.appendChild(bar);
+    panel.appendChild(el('div', 'boss-note', `せいかい 1もん ＝ 1ダメージ！ みんなで たおそう（${mdLabel(addDaysStr(w.start, 6))}まで）`));
+  }
+  card.appendChild(panel);
+}
+
+// しょうごう（たおした ウラボスの かず）
+function appendBossTitle(card) {
+  const hist = bossHistory();
+  if (hist.length === 0) return;
+  card.appendChild(el('div', 'boss-title', `🏅 ウラボスキラー（${hist.length}たい）　${hist.map(h => h.emoji).join('')}`));
+}
+
+// おうちの人の画面：ポコクエストの ようす（ウラボスの ネタバレつき。子どもには ひみつ）
+function appendFamilyParent(root) {
+  const w = weeklyStatus();
+  const panel = el('div', 'panel');
+  panel.appendChild(el('h3', null, '🏆 ポコクエスト'));
+  if (!w.started) {
+    panel.appendChild(el('div', 'report-line', `${mdLabel(WEEKLY_START)}（土）から スタート`));
+    root.appendChild(panel);
+    return;
+  }
+  panel.appendChild(el('div', 'report-line', `${mdLabel(w.start)}〜${mdLabel(w.end)}：みんなで ${w.total} / ${w.goal} もん（あと ${w.left}）`));
+  w.rows.forEach(r => panel.appendChild(el('div', 'report-line', `　${r.name}：${r.n}もん`)));
+  const boss = weekBoss(w.start);
+  panel.appendChild(el('div', 'report-line', boss
+    ? `🤫 ウラボス（子どもには ひみつ）：この週は ${boss.emoji} ${boss.name} が でます。${w.goal}もんで とうじょう、さらに ${boss.hp}もん（合計 ${w.goal + boss.hp}）で げきは`
+    : '🤫 ウラボス（子どもには ひみつ）：この週は でません'));
+  const hist = bossHistory();
+  if (hist.length) panel.appendChild(el('div', 'report-line', `🏅 たおした ウラボス：${hist.length}たい ${hist.map(h => h.emoji + h.name).join('、')}`));
+  root.appendChild(panel);
+}
+
 
 // 先週 たっせいしていたら、いまの週は ポコが とくべつな すがた（1位の子は 王冠つき）
 function weeklyPerk(name) {
@@ -67,7 +186,9 @@ function weeklyPerk(name) {
   if (t.total < WEEKLY_GOAL) return null;
   const top = t.rows.length ? t.rows[0].n : 0;
   const mine = t.rows.find(r => r.name === who);
-  return { special: true, crown: !!mine && top > 0 && mine.n === top };
+  const boss = weekBoss(prev);
+  const cape = !!boss && t.total >= WEEKLY_GOAL + boss.hp;   // ウラボスを たおした 週の つぎは マント
+  return { special: true, crown: !!mine && top > 0 && mine.n === top, cape };
 }
 
 // ずかんや しんかの ひょうじ用：ほんとうの 育ち具合の すがたに、キラキラと 王冠だけ つける
@@ -87,9 +208,15 @@ function updateWeekChip() {
   if (!chip) return;
   const w = weeklyStatus();
   if (!w.started) { chip.classList.add('hidden'); return; }
-  chip.textContent = w.achieved
-    ? `🎉 みんなで ${w.total}もん！ たっせい！ ／ じぶん ${w.mine}もん`
-    : `こんしゅう じぶん ${w.mine}もん ／ みんなで ${w.total}もん（あと ${w.left}）`;
+  if (w.boss && w.revealed) {
+    chip.textContent = w.defeated
+      ? `🎉 ウラボスを たおした！ ／ じぶん ${w.mine}もん`
+      : `${w.boss.emoji} ${w.boss.name} HP ${w.hpLeft}/${w.boss.hp} ／ じぶん ${w.mine}もん`;
+  } else {
+    chip.textContent = w.achieved
+      ? `🎉 みんなで ${w.total}もん！ たっせい！ ／ じぶん ${w.mine}もん`
+      : `こんしゅう じぶん ${w.mine}もん ／ みんなで ${w.total}もん（あと ${w.left}）`;
+  }
   chip.classList.remove('hidden');
 }
 
@@ -137,9 +264,13 @@ function renderFamilyCard(body) {
     card.appendChild(el('div', 'family-perk', perk.crown
       ? '✨ せんしゅうの 1い！ ポコに 王冠が ついてるよ'
       : '✨ せんしゅう たっせい！ いまは とくべつな ポコだよ'));
+    if (perk.cape) card.appendChild(el('div', 'family-perk', '🌟 ウラボスを たおした ごほうび！ ポコに マントが ついてるよ'));
   }
+  appendBossPanel(card, w);
+  appendBossTitle(card);
   appendQuestGuide(card, w);
   body.appendChild(card);
+  checkBossReveal(w);
 }
 
 // 「なにをして、なにが もらえるか」の せつめい（ごほうびの みほん つき）

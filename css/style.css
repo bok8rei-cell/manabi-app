@@ -606,3 +606,15 @@ h2, h3 { margin: 0; }
 .double-row > span:nth-child(2) { min-width: 0; }
 
 .double-text { white-space: pre-line; line-height: 1.4; }
+
+/* ---- ウラボス ---- */
+.boss-panel { margin-top: 12px; padding: 10px 12px 12px; background: #2B2140; color: #fff; border: 2px solid #7B5CD6; border-radius: 14px; }
+.boss-panel.defeated { background: #FFF6D6; color: var(--ink); border-color: #F5D77A; }
+.boss-head { display: flex; align-items: center; gap: 8px; }
+.boss-emoji { font-size: 2rem; line-height: 1; }
+.boss-name { font-weight: 700; font-size: 1.05rem; }
+.boss-hp-text { margin-top: 6px; font-size: 0.9rem; font-weight: 700; color: #FFD0D4; }
+.boss-bar { height: 14px; margin-top: 4px; background: #4A3D6B; border-radius: 10px; overflow: hidden; }
+.boss-fill { height: 100%; background: linear-gradient(90deg, #FF6F61, #E5484D); border-radius: 10px; transition: width .4s; }
+.boss-note { margin-top: 8px; font-size: 0.85rem; }
+.boss-title { margin-top: 8px; font-size: 0.9rem; font-weight: 700; color: var(--main-d); }

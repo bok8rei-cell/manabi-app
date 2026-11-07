@@ -428,6 +428,7 @@ function renderParent() {
   });
   head.appendChild(refresh);
   root.appendChild(head);
+  appendFamilyParent(root);   // ポコクエスト（ウラボスの ネタバレは おうちの人だけ）
 
   const names = loadPlayerNames();
   if (names.length === 0) {

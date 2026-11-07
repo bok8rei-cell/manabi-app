@@ -112,6 +112,9 @@ function petSVG(stage, mood = 'happy', size = 64, perk) {
   const cy = 60 - ry - 3;
   const eyeY = cy - 4;
   let parts = glow;
+  if (perk && perk.cape) {   // ウラボスを たおした つぎの1しゅうかん：マント（からだの うしろ）
+    parts += `<path d="M${32 - rx + 3} ${cy - 3} Q${32 - rx - 7} ${cy + ry} ${32 - rx + 3} ${cy + ry + 2} L${32 + rx - 3} ${cy + ry + 2} Q${32 + rx + 7} ${cy + ry} ${32 + rx - 3} ${cy - 3} Z" fill="#D63B4F" stroke="#A92639" stroke-width="1"/>`;
+  }
   if (stage >= 2) {
     parts += `<path d="M${32 - rx + 6} ${cy - ry + 6} L${32 - rx + 8} ${cy - ry - 7} L${32 - rx + 17} ${cy - ry + 2} Z" fill="#5CC9B0"/>`;
     parts += `<path d="M${32 + rx - 6} ${cy - ry + 6} L${32 + rx - 8} ${cy - ry - 7} L${32 + rx - 17} ${cy - ry + 2} Z" fill="#5CC9B0"/>`;
