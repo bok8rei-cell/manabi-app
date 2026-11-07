@@ -89,14 +89,22 @@ function missionKey(grade) { return `manabi_mission_${playerTag()}_g${grade}_${l
 function getMission(grade) {
   const saved = readJSON(missionKey(grade), null);
   if (saved && Array.isArray(saved.items)) return saved;
-  const items = [
-    { id: 'm1', kind: 'subject', subject: 'math', n: 5, done: false },
-    { id: 'm2', kind: 'subject', subject: 'kanji', n: 5, done: false }
-  ];
+  // その学年に ある 教科から えらぶ（中2・中3 など、国語・理科社会が まだ ない学年は 英語に する）。同じ教科は 2回 えらばない
+  const used = [];
+  const choose = (...cands) => {
+    const k = cands.find(c => !used.includes(c) && (typeof subjectAvailable !== 'function' || subjectAvailable(c, grade)));
+    if (k) used.push(k);
+    return k;
+  };
+  const items = [];
+  const s1 = choose('math'), s2 = choose('kanji', 'eigo');
+  if (s1) items.push({ id: 'm1', kind: 'subject', subject: s1, n: 5, done: false });
+  if (s2) items.push({ id: 'm2', kind: 'subject', subject: s2, n: 5, done: false });
   if (dueMistakes(grade).length > 0) {
     items.push({ id: 'm3', kind: 'review', n: 5, done: false });
   } else {
-    items.push({ id: 'm3', kind: 'subject', subject: grade <= 2 ? 'eigo' : 'rikashakai', n: 5, done: false });
+    const s3 = choose(grade <= 2 ? 'eigo' : 'rikashakai', 'rika', 'eigo');
+    if (s3) items.push({ id: 'm3', kind: 'subject', subject: s3, n: 5, done: false });
   }
   const mission = { items, bonus: false };
   writeJSON(missionKey(grade), mission);

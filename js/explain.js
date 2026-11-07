@@ -96,6 +96,7 @@ ${a - 10}と ${10 - b}で ${diff}。`;
 }
 
 function explainProblem(problem, subject, grade) {
+  if (problem && problem.explain) return problem.explain;   // 英語など、問題に ひとこと 解説が ついているとき
   if (!problem || !problem.question || subject !== 'math') return '';
   // 種類ごとの「解き方」があれば それを使う（js/steps.js）。なければ、下の問題文から読みとる方式。
   if (typeof mathSteps === 'function') {

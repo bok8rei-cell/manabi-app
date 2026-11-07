@@ -1,6 +1,6 @@
 // オフラインでも使えるようにするための サービスワーカー
 // ファイルを更新したら CACHE_NAME のバージョンを上げてください
-const CACHE_NAME = 'manabi-app-v41.2';
+const CACHE_NAME = 'manabi-app-v42.0';
 
 const ASSETS = [
   './',
@@ -8,10 +8,13 @@ const ASSETS = [
   './manifest.json',
   './css/style.css',
   './js/firebase-config.js',
+  './js/algebra.js',
   './js/math.js',
+  './js/math_jh.js',
   './js/kanji.js',
   './js/rikashakai.js',
   './js/eigo.js',
+  './js/eigo_jh.js',
   './js/store.js',
   './js/core.js',
   './js/fx.js',
@@ -22,6 +25,7 @@ const ASSETS = [
   './js/solo.js',
   './js/explain.js',
   './js/steps.js',
+  './js/steps_jh.js',
   './js/sync.js',
   './js/ranking.js',
   './js/speed.js',

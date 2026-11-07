@@ -1164,7 +1164,7 @@ function genGrade6(diff = 1) {
 }
 
 function generateMathProblem(grade, diff = 1) {
-  const gens = { 1: genGrade1, 2: genGrade2, 3: genGrade3, 4: genGrade4, 5: genGrade5, 6: genGrade6, 7: genGrade7 };
+  const gens = { 1: genGrade1, 2: genGrade2, 3: genGrade3, 4: genGrade4, 5: genGrade5, 6: genGrade6, 7: genGrade7, 8: genGrade8, 9: genGrade9 };   // 8＝中2・9＝中3（math_jh.js）
   const p = (gens[grade] || genGrade7)(diff);
   p.key = lastMathType;
   p.unitLabel = MATH_UNIT_LABELS[lastMathType] || '';
@@ -1173,6 +1173,10 @@ function generateMathProblem(grade, diff = 1) {
 
 // ユーザー入力が正解かどうか判定
 function isMathAnswerCorrect(problem, userInput) {
+  const rawInput = String(userInput);   // 文字式（x²）は 正規化で ² が 2 に なってしまうので、もとの入力を 使う
+  if (problem.type !== 'choice' && (problem.answerType === 'algebra' || problem.answerType === 'factor')) {
+    return algebraAnswerCorrect(problem.answerType, rawInput.replace(/[\s.、,，。]+$/, ''), problem.answer);
+  }
   // 全角・半角カナ・見えない文字・文末の「。」などがまざっても同じに扱う（１２、３／４、－５、０．５、ｱﾏﾘ）
   userInput = String(userInput).normalize('NFKC')
     .replace(/[​-‍⁠﻿­]/g, '')
@@ -1200,6 +1204,19 @@ function isMathAnswerCorrect(problem, userInput) {
     const u = parse(userInput);
     const a = parse(problem.answer);
     return !!u && !!a && u[0] === a[0] && u[1] === a[1];
+  }
+  if (problem.answerType === 'lineEq') {   // 直線の式：y=2x-3（y= は かならず 書く）
+    const strip = s => String(s).normalize('NFKC').replace(/\s+/g, '').replace(/^y=/i, '');
+    if (!/^y=/i.test(String(userInput).replace(/\s+/g, ''))) return false;
+    return algebraAnswerCorrect('algebra', strip(userInput), strip(problem.answer));
+  }
+  if (problem.answerType === 'roots') {   // 二次方程式の解：x=-2, x=-3（順番は 自由）
+    const u = parseRoots(userInput), a = parseRoots(problem.answer);
+    return !!u && !!a && u.length === a.length && u.every((v, i) => Math.abs(v - a[i]) < 1e-9);
+  }
+  if (problem.answerType === 'xy') {      // 連立方程式：x=3, y=2
+    const u = parseXY(userInput), a = parseXY(problem.answer);
+    return !!u && !!a && Math.abs(u[0] - a[0]) < 1e-9 && Math.abs(u[1] - a[1]) < 1e-9;
   }
   if (problem.answerType === 'time') {
     const parse = s => {

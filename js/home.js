@@ -1,6 +1,6 @@
 // ===== ホーム・ずかん・きろく・せってい =====
 
-const GRADE_PILL_LABEL = { 1: '1年', 2: '2年', 3: '3年', 4: '4年', 5: '5年', 6: '6年', 7: '中1' };
+const GRADE_PILL_LABEL = { 1: '1年', 2: '2年', 3: '3年', 4: '4年', 5: '5年', 6: '6年', 7: '中1', 8: '中2', 9: '中3' };
 const SUBJECT_ICON = { math: '🔢', kanji: '✏️', kotowaza: '📜', rikashakai: '🔬', eigo: '🔤' };
 
 function gradeKey(name) { return `manabi_grade_${playerTag(name)}`; }

@@ -317,7 +317,8 @@ function generateAlphabetProblem() {
   };
 }
 
-function generateEigoProblem(grade) {
+function generateEigoProblem(grade, diff = 1) {
+  if (grade >= 8) return generateEigoJHProblem(grade, diff);   // 中2・中3（eigo_jh.js）
   const list = EIGO_DATA[grade] || EIGO_DATA[1];
   if (grade === 1 && Math.random() < 0.2) return generateAlphabetProblem();
   const correct = list[randInt(0, list.length - 1)];

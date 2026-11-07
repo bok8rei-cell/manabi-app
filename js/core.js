@@ -1,6 +1,6 @@
 // ===== まなびポコ（旧 BRAIN QUEST：零式） 共通の部品 =====
 
-const APP_VERSION = 'v41.2';
+const APP_VERSION = 'v42.0';
 const TOTAL_QUESTIONS = 10;
 const DONT_KNOW = '__DONTKNOW__';
 
@@ -123,21 +123,21 @@ checkForUpdate({ immediate: true });
 
 const SUBJECTS = [
   { key: 'math',      label: '算数',          kanaLabel: 'さんすう',              cls: '' },
-  { key: 'kanji',     label: '国語（漢字）',   kanaLabel: 'こくご（かんじ）',      cls: 'kokugo' },
+  { key: 'kanji',     label: '国語（漢字）',   kanaLabel: 'こくご（かんじ）',      cls: 'kokugo', grades: [1, 2, 3, 4, 5, 6, 7] },
   { key: 'kotowaza',  label: 'ことわざ・慣用句', kanaLabel: 'ことわざ・かんようく', cls: 'kokugo', grades: [3, 4, 5, 6, 7] },
   { key: 'rikashakai',label: '理科・社会',     kanaLabel: 'りか・しゃかい',        cls: 'rikashakai', grades: [3, 4, 5, 6, 7] },
   { key: 'eigo',      label: '英語',          kanaLabel: 'えいご',               cls: 'eigo' }
 ];
 
-const ALL_GRADES = [1, 2, 3, 4, 5, 6, 7];   // 7 = 中学1年生
+const ALL_GRADES = [1, 2, 3, 4, 5, 6, 7, 8, 9];   // 7 = 中学1年生、8 = 中学2年生、9 = 中学3年生
 
 function gradeLabel(grade) {
-  return grade === 7 ? '中学1年生' : `${grade}年生`;
+  return grade >= 7 ? `中学${grade - 6}年生` : `${grade}年生`;
 }
 
 function subjectLabel(grade, subj) {
   if (grade === 1) return subj.kanaLabel;
-  if (grade === 7 && subj.key === 'math') return '数学';
+  if (grade >= 7 && subj.key === 'math') return '数学';
   if (subj.key === 'kotowaza' && grade === 7) return '熟語・ことわざ';
   return subj.label;
 }
