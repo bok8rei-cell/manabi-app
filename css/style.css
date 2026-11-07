@@ -654,3 +654,16 @@ h2, h3 { margin: 0; }
 .boss-panel.last.defeated { background: #FFF6D6; border-color: #F5D77A; }
 .boss-sub { margin-top: 4px; font-size: 0.8rem; color: #C9BEE8; }
 .boss-panel.last .boss-sub { color: #FFC2C7; }
+
+/* ---- 教科の バランス（せいげんちゅう） ---- */
+.limit-chip { margin: 2px 0 8px; padding: 8px 10px; border-radius: 12px; font-size: 0.82rem; font-weight: 700; text-align: center; white-space: pre-line; line-height: 1.45; }
+.limit-chip.warn { background: #FFF6D6; color: #8A5A00; border: 2px solid #F5D77A; }
+.limit-chip.limited { background: #FFE9E3; color: #A93219; border: 2px solid #F3A594; }
+.tile { position: relative; }
+.tile-limit { display: block; margin-top: 4px; font-size: 0.72rem; font-weight: 700; color: #A93219; background: #FFE9E3; border-radius: 10px; padding: 1px 8px; }
+.tile-limit.warn { color: #8A5A00; background: #FFF1C2; }
+.tile.is-limited { opacity: 0.92; }
+.balance-note { margin-top: 10px; padding: 10px 12px; border-radius: 14px; background: #FFF6D6; border: 2px solid #F5D77A; }
+.balance-note.limited { background: #FFE9E3; border-color: #F3A594; }
+.balance-title { font-weight: 700; font-size: 0.95rem; }
+.balance-text { margin-top: 2px; font-size: 0.85rem; color: var(--sub); white-space: pre-line; line-height: 1.5; }

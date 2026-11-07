@@ -49,7 +49,7 @@ function subjectNameOf(grade, key) {
 //         problems?: [{problem, subject, id?}], fromMistakes?, missionItemId?, diffLevel? }
 function startSession(opts) {
   session = Object.assign({
-    index: 0, correct: 0, wrong: 0, combo: 0,
+    index: 0, correct: 0, wrong: 0, combo: 0, rewardUnits: 0, limitedCount: 0,
     newMistakes: 0, cleared: 0, wrongList: [],
     answered: false, selected: null, current: null, currentSubject: null, currentId: null,
     hintStage: 0, hintTexts: [], hintsUsed: 0, hintCost: 0,
@@ -178,6 +178,7 @@ function renderQuestion() {
   byId('quiz-bar-wrap').setAttribute('aria-valuenow', String(pct));
   byId('quiz-tag').textContent = quizTagText();
   updateWeekChip();
+  updateLimitChip();
   byId('quiz-emoji').textContent = p.emoji || '';
   byId('quiz-emoji').classList.toggle('hidden', !p.emoji);
   byId('quiz-question').textContent = p.question;
@@ -417,7 +418,12 @@ function checkAnswer() {
   if (ok) {
     s.correct++;
     s.combo++;
-    if (s.hintStage === 0) { addWeeklyCorrect(); updateWeekChip(); }   // 家族ミッション：ヒントなしの せいかいだけ数える
+    // 教科の バランス：やりすぎた 教科は ごほうびが へる（家族ミッションの数も ここで 数える）
+    const factor = applyCorrectReward(s.currentSubject, s.hintStage === 0);
+    s.rewardUnits += factor;
+    if (factor < 1) s.limitedCount++;
+    updateWeekChip();
+    updateLimitChip();
     FX.correct();
   } else {
     s.wrong++;
@@ -591,7 +597,10 @@ function finishSession() {
     if (passed) passChallengeAndUpgrade(s.grade, s.subject, s.diffLevel);
   }
 
-  let coins = correct * 3 + (rate >= 0.8 && total >= 5 ? 20 : 0); // 3もんでは はやくかせげすぎないよう、ボーナスなし
+  // コイン：せいげんちゅうの 教科の せいかいは 10ぶんの 1。ボーナスは 半分いじょう ふつうの せいかいの ときだけ
+  const units = typeof s.rewardUnits === 'number' ? s.rewardUnits : correct;
+  const limitedShare = correct > 0 ? (s.limitedCount || 0) / correct : 0;
+  let coins = Math.floor(units * 3 + 1e-6) + (rate >= 0.8 && total >= 5 && limitedShare <= 0.5 ? 20 : 0); // 3もんでは はやくかせげすぎないよう、ボーナスなし
   if (passed) coins += 50;
   let missionBonus = false;
   if (s.mode === 'mission' && s.missionItemId) {
@@ -655,6 +664,7 @@ function renderResult(r) {
   chips.appendChild(streak);
   root.appendChild(chips);
 
+  if (s.limitedCount > 0) root.appendChild(el('div', 'note', `⚖️ ${BALANCE_NAMES[s.currentSubject] || 'この きょうか'}は せいげんちゅうで、コインが すくなくなったよ（さんすう・こくごを やると もどるよ）`));
   if (s.hintCost > 0) root.appendChild(el('div', 'note', `💡 ヒントで ${s.hintCost}コイン つかったよ（${s.hintsUsed}かい）`));
   if (missionBonus) root.appendChild(el('div', 'note gold', '🎊 きょうの ミッション ぜんぶ クリア！ ボーナス +30コイン'));
 

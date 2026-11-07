@@ -167,10 +167,14 @@ function renderHome() {
     t.appendChild(el('span', 'tile-ico', SUBJECT_ICON[subj.key] || '📘'));
     t.appendChild(el('span', 'tile-name', subjectLabel(grade, subj)));
     t.appendChild(el('span', 'tile-level', `${DIFF_STARS[d]} ${DIFF_LABELS[d]}`));
+    const bal = balanceInfo(subj.key);
+    if (bal.limited) { t.appendChild(el('span', 'tile-limit', '⚖️ せいげんちゅう')); t.classList.add('is-limited'); }
+    else if (bal.watched && bal.left <= BALANCE_WARN_LEFT) t.appendChild(el('span', 'tile-limit warn', '⚖️ もうすぐ せいげん'));
     t.addEventListener('click', () => startDrill(subj.key));
     grid.appendChild(t);
   });
   body.appendChild(grid);
+  renderBalanceNote(body);   // 教科の バランス（せいげんちゅうの ひょうじ）
 
   // にがて
   const mistakes = loadMistakes().filter(m => m.grade === grade);
@@ -474,6 +478,7 @@ function renderParent() {
       : 'この 1しゅうかん：まだ やっていません'));
     card.appendChild(buildWeekBars(days));
     appendDoubleParent(card, name);
+    appendBalanceParent(card, name);
 
     // 教科べつ（せいかいりつ）
     const rows = [];

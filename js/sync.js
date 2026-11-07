@@ -27,7 +27,7 @@ function collectSyncData() {
 }
 
 // ---- ポコ・にがて・毎日の連続日数も同期する ----
-const EXTRA_PREFIXES = ['manabi_pet_', 'manabi_mistakes_', 'manabi_daystreak_', 'manabi_history_', 'manabi_grade_', 'manabi_skip_', 'manabi_recent_', 'manabi_week_', 'manabi_solo_', 'manabi_shop_'];
+const EXTRA_PREFIXES = ['manabi_pet_', 'manabi_mistakes_', 'manabi_daystreak_', 'manabi_history_', 'manabi_grade_', 'manabi_skip_', 'manabi_recent_', 'manabi_week_', 'manabi_solo_', 'manabi_shop_', 'manabi_subj_', 'manabi_taper_'];
 
 function parseJSONOr(raw, fallback) {
   try { return raw ? JSON.parse(raw) : fallback; } catch (e) { return fallback; }
@@ -69,6 +69,20 @@ function mergeExtra(key, rawA, rawB) {
       out[k] = !x ? y : (!y ? x : ((y.t || 0) > (x.t || 0) ? y : x));   // あたらしい方（もどした／けした）を採用
     });
     return JSON.stringify(out);
+  }
+  if (key.indexOf('manabi_subj_') === 0) {   // 教科べつ せいかい数：週ごと・教科ごとに 大きい方
+    const a = parseJSONOr(rawA, {}), b = parseJSONOr(rawB, {});
+    const out = {};
+    new Set([...Object.keys(a), ...Object.keys(b)]).forEach(w => {
+      const x = a[w] || {}, y = b[w] || {};
+      out[w] = {};
+      new Set([...Object.keys(x), ...Object.keys(y)]).forEach(k => { out[w][k] = Math.max(x[k] || 0, y[k] || 0); });
+    });
+    return JSON.stringify(out);
+  }
+  if (key.indexOf('manabi_taper_') === 0) {
+    const a = parseJSONOr(rawA, {}), b = parseJSONOr(rawB, {});
+    return JSON.stringify({ n: Math.max(a.n || 0, b.n || 0) });
   }
   if (key.indexOf('manabi_shop_') === 0) {
     const a = parseJSONOr(rawA, {}), b = parseJSONOr(rawB, {});
