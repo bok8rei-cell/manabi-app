@@ -50,6 +50,7 @@ const SHOP_ITEMS = [
   { id: 'goggle',     name: 'ゴーグル',           slot: 'eyes',  price: 800,  tier: 'n' },
   { id: 'shadesheart', name: 'ハートの サングラス', slot: 'eyes', price: 1500, tier: 'r' },
   { id: 'shadesstar', name: 'ほしの サングラス',  slot: 'eyes',  price: 1500, tier: 'r' },
+  { id: 'teardrop',   name: 'ティアドロップ サングラス', slot: 'eyes', price: 1000, tier: 'r' },
   { id: 'starneck',   name: 'ほしの ネックレス',  slot: 'neck',  price: 300,  tier: 's' },
   { id: 'heartneck',  name: 'ハートの ペンダント', slot: 'neck', price: 300,  tier: 's' },
   { id: 'pearl',      name: 'しんじゅの ネックレス', slot: 'neck', price: 700, tier: 'n' },
@@ -255,6 +256,17 @@ const SHOP_DRAW = {
     `<path transform="translate(41 ${g.eyeY + 0.4}) scale(2)" d="M0 2.4 C-4 -0.6 -3.6 -4.2 0 -2.4 C3.6 -4.2 4 -0.6 0 2.4 Z" fill="#DC2626" stroke="#7F1D1D" stroke-width="0.5"/>` +
     `<path d="M29.5 ${g.eyeY - 2} L34.5 ${g.eyeY - 2}" stroke="#7F1D1D" stroke-width="1.6"/>` +
     `<circle cx="19.5" cy="${g.eyeY - 2}" r="1.2" fill="#fff" opacity="0.8"/><circle cx="37.5" cy="${g.eyeY - 2}" r="1.2" fill="#fff" opacity="0.8"/>`,
+  // ティアドロップ（しずくがた）：うえが ひろく したに すぼむ レンズ、金の フチ、二重の はな あて
+  teardrop: g => {
+    const y = g.eyeY;
+    const lens = (flip) => {
+      const X = v => (flip ? 64 - v : v);   // 右がわは 左がわを 左右はんてん
+      return `<path d="M${X(15.5)} ${y - 5.5} Q${X(23)} ${y - 9} ${X(30.5)} ${y - 5.5} Q${X(30.5)} ${y + 6.5} ${X(24.5)} ${y + 8.5} Q${X(16.5)} ${y + 6.5} ${X(15.5)} ${y - 5.5} Z" fill="#1F2D2A" stroke="#D4A72C" stroke-width="1.5" stroke-linejoin="round"/>` +
+        `<path d="M${X(18.5)} ${y - 4} Q${X(21)} ${y - 5.8} ${X(24)} ${y - 5.5}" stroke="#fff" stroke-width="1.3" fill="none" opacity="0.75" stroke-linecap="round"/>`;
+    };
+    return lens(false) + lens(true) +
+      `<path d="M30.5 ${y - 5} Q32 ${y - 7} 33.5 ${y - 5}" stroke="#D4A72C" stroke-width="1.4" fill="none"/><path d="M30.5 ${y - 2.5} Q32 ${y - 4.2} 33.5 ${y - 2.5}" stroke="#D4A72C" stroke-width="1.2" fill="none"/>`;
+  },
   shadesstar: g => `<path d="${shopStarPath(23, g.eyeY + 0.3, 8.2)}" fill="#FBBF24" stroke="#B45309" stroke-width="1"/>` +
     `<path d="${shopStarPath(41, g.eyeY + 0.3, 8.2)}" fill="#FBBF24" stroke="#B45309" stroke-width="1"/>` +
     `<path d="M29.8 ${g.eyeY - 1} L34.2 ${g.eyeY - 1}" stroke="#B45309" stroke-width="1.6"/>`,
