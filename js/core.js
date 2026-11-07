@@ -1,6 +1,6 @@
 // ===== まなびポコ（旧 BRAIN QUEST：零式） 共通の部品 =====
 
-const APP_VERSION = 'v39.6';
+const APP_VERSION = 'v39.7';
 const TOTAL_QUESTIONS = 10;
 const DONT_KNOW = '__DONTKNOW__';
 
@@ -49,18 +49,35 @@ checkAndUpdateServiceWorker();
 // サーバーの version.json を必ずネットから取得し（HTTPキャッシュも回避）、
 // 今動いているコードが古ければ、SWとキャッシュを全部消して強制リロードする。
 // これで iOS のホーム画面アプリが古いまま固まっても、自力で最新へ更新できる。
-async function checkForUpdate() {
+//  ・アプリを ひらいたとき ／ アプリに もどってきたとき ／ 5ふんごと に かくにんする
+//  ・勉強中・タイムアタック中・結果画面・ダイアログ表示中は 入れかえない（ホームなど、下のタブが 見えている画面で だけ）
+//  ・あたらしいバージョンを 見つけたら、安全になるまで まって、お知らせの あとで 入れかえる
+let pendingUpdate = null;      // 見つけた あたらしい バージョン
+let updateApplying = false;
+let lastUpdateCheckAt = 0;
+const UPDATE_CHECK_GAP_MS = 60 * 1000;        // かくにんの いちばん みじかい あいだ
+const UPDATE_CHECK_EVERY_MS = 5 * 60 * 1000;  // ひらいたままでも かくにんする あいだ
+
+// いま 入れかえて よい画面か（下のタブが 見えている画面だけ。ダイアログが 出ていないとき）
+function isSafeToUpdate() {
+  const tabbar = document.getElementById('tabbar');
+  if (!tabbar || tabbar.classList.contains('hidden')) return false;
+  const modal = document.getElementById('modal');
+  if (modal && !modal.classList.contains('hidden')) return false;
+  return true;
+}
+
+async function applyUpdate(latest) {
+  if (updateApplying) return;
+  // 同じバージョンへのリロードを何度も繰り返さないための安全弁
+  if (sessionStorage.getItem('manabi_updating_to') === latest) return;
+  updateApplying = true;
+  sessionStorage.setItem('manabi_updating_to', latest);
   try {
-    const res = await fetch('version.json?cb=' + Date.now(), { cache: 'no-store' });
-    if (!res.ok) return;
-    const data = await res.json();
-    const latest = data && data.version;
-    if (!latest || latest === APP_VERSION) return;
-
-    // 同じバージョンへのリロードを何度も繰り返さないための安全弁
-    if (sessionStorage.getItem('manabi_updating_to') === latest) return;
-    sessionStorage.setItem('manabi_updating_to', latest);
-
+    if (typeof showToast === 'function' && document.getElementById('toast')) {
+      showToast('あたらしい バージョンに こうしん します…');
+      await new Promise(r => setTimeout(r, 1500));
+    }
     if ('serviceWorker' in navigator) {
       const regs = await navigator.serviceWorker.getRegistrations();
       await Promise.all(regs.map(r => r.unregister()));
@@ -72,10 +89,37 @@ async function checkForUpdate() {
     // ナビゲーションにユニークなクエリを付けて、HTTP/CDNキャッシュも確実に外す
     location.replace(location.pathname + '?u=' + encodeURIComponent(latest) + '.' + Date.now());
   } catch (e) {
+    updateApplying = false;
+  }
+}
+
+// opts.immediate：アプリを ひらいた直後は、まだ なにも していないので すぐ 入れかえる
+async function checkForUpdate(opts) {
+  const immediate = !!(opts && opts.immediate);
+  const now = Date.now();
+  if (!immediate && now - lastUpdateCheckAt < UPDATE_CHECK_GAP_MS) return;
+  lastUpdateCheckAt = now;
+  try {
+    const res = await fetch('version.json?cb=' + now, { cache: 'no-store' });
+    if (!res.ok) return;
+    const data = await res.json();
+    const latest = data && data.version;
+    if (!latest || latest === APP_VERSION) { pendingUpdate = null; return; }
+    pendingUpdate = latest;
+    if (immediate || isSafeToUpdate()) applyUpdate(latest);
+  } catch (e) {
     // オフライン等は無視（次回オンライン時に再チェック）
   }
 }
-checkForUpdate();
+
+// あたらしい版が あるのに 勉強中で まっていたら、安全に なった時に 入れかえる
+setInterval(() => { if (pendingUpdate && isSafeToUpdate()) applyUpdate(pendingUpdate); }, 15000);
+// ひらいたままでも ときどき かくにん／アプリに もどってきたときも かくにん
+setInterval(() => checkForUpdate(), UPDATE_CHECK_EVERY_MS);
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') checkForUpdate();
+});
+checkForUpdate({ immediate: true });
 
 const SUBJECTS = [
   { key: 'math',      label: '算数',          kanaLabel: 'さんすう',              cls: '' },
