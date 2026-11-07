@@ -1,6 +1,6 @@
 // ===== まなびポコ（旧 BRAIN QUEST：零式） 共通の部品 =====
 
-const APP_VERSION = 'v42.0';
+const APP_VERSION = 'v42.1';
 const TOTAL_QUESTIONS = 10;
 const DONT_KNOW = '__DONTKNOW__';
 
@@ -123,7 +123,7 @@ checkForUpdate({ immediate: true });
 
 const SUBJECTS = [
   { key: 'math',      label: '算数',          kanaLabel: 'さんすう',              cls: '' },
-  { key: 'kanji',     label: '国語（漢字）',   kanaLabel: 'こくご（かんじ）',      cls: 'kokugo', grades: [1, 2, 3, 4, 5, 6, 7] },
+  { key: 'kanji',     label: '国語（漢字）',   kanaLabel: 'こくご（かんじ）',      cls: 'kokugo', grades: [1, 2, 3, 4, 5, 6, 7, 8, 9] },
   { key: 'kotowaza',  label: 'ことわざ・慣用句', kanaLabel: 'ことわざ・かんようく', cls: 'kokugo', grades: [3, 4, 5, 6, 7] },
   { key: 'rikashakai',label: '理科・社会',     kanaLabel: 'りか・しゃかい',        cls: 'rikashakai', grades: [3, 4, 5, 6, 7] },
   { key: 'eigo',      label: '英語',          kanaLabel: 'えいご',               cls: 'eigo' }
@@ -138,6 +138,7 @@ function gradeLabel(grade) {
 function subjectLabel(grade, subj) {
   if (grade === 1) return subj.kanaLabel;
   if (grade >= 7 && subj.key === 'math') return '数学';
+  if (grade >= 8 && subj.key === 'kanji') return '国語';   // 中2・中3は 漢字だけでなく 国語ぜんたい
   if (subj.key === 'kotowaza' && grade === 7) return '熟語・ことわざ';
   return subj.label;
 }

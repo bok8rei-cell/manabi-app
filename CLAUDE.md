@@ -1,6 +1,6 @@
 # まなびポコ（旧 BRAIN QUEST：零式）— CLAUDE.md
 
-対象学年：1〜6年 と 中1・中2・中3（ALL_GRADES = [1..9]、7 = 中1、8 = 中2、9 = 中3）。中2・中3は現在「数学」と「英語」だけ（国語・理科・社会は第2・第3弾で追加予定）。教科は SUBJECTS の grades で学年ごとに出し分ける。2・4・6年のことわざ・英語は、前後の学年の問題を組み合わせて作る（kanji.js / eigo.js の末尾）。
+対象学年：1〜6年 と 中1・中2・中3（ALL_GRADES = [1..9]、7 = 中1、8 = 中2、9 = 中3）。中2・中3は現在「数学」「国語」「英語」（理科・社会は追加予定）。教科は SUBJECTS の grades で学年ごとに出し分ける。2・4・6年のことわざ・英語は、前後の学年の問題を組み合わせて作る（kanji.js / eigo.js の末尾）。
 
 ## Claude Code 起動オプション
 
@@ -111,7 +111,8 @@ GitHub Pages: `https://bok8rei-cell.github.io/manabi-app/`
 | `js/algebra.js` | 文字式の答えあわせ（展開・因数分解・直線の式・解）。parsePoly などの多項式パーサー |
 | `js/steps_jh.js` | 中2・中3数学の「解き方」とヒント（steps.js と同じ決まり） |
 | `js/eigo_jh.js` | 英語（中2・中3）の問題データ EIGO_JH（文法・単語・英文えらび。各問に解説 ex） |
-| `js/kanji.js` | 国語（漢字）問題生成・KANJI_DATA |
+| `js/kanji.js` | 国語（漢字）問題生成・KANJI_DATA（中2・中3は kokugo_jh.js へ） |
+| `js/kokugo_jh.js` | 国語（中2・中3）の問題データ（読み・同音異字・熟語・敬語・文法・古文・作品。各問に解説） |
 | `js/rikashakai.js` | 理科・社会問題生成 |
 | `js/eigo.js` | 英語問題生成 |
 | `js/firebase-config.js` | Firebase 初期化（cloudDb をグローバル公開） |
@@ -156,6 +157,6 @@ Agent ツールで以下を実行：
 
 - iOS でPWAをホーム画面から削除すると localStorage が消えるが、プレイヤー名を再入力すれば Firestore から復元できる
 - Service Worker のキャッシュバージョンを上げないと端末に古いバージョンが残る
-- バージョンは `js/core.js` の APP_VERSION・`version.json`・`sw.js` の CACHE_NAME・`index.html` の `?v=` を同じ番号にそろえて上げる（現在 v42.0）
+- バージョンは `js/core.js` の APP_VERSION・`version.json`・`sw.js` の CACHE_NAME・`index.html` の `?v=` を同じ番号にそろえて上げる（現在 v42.1）
 - 日付は `localDateStr()`（js/store.js）を使う。`toISOString()` は UTC なので日本時間の朝に1日ずれる
 - `explain.js` を変更したら、先生エージェントに審査を依頼する（問題データと同じ扱い）

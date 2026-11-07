@@ -887,6 +887,7 @@ const KANJI_DATA = {
 };
 
 function generateKanjiProblem(grade, diff = 1) {
+  if (grade >= 8) return generateKokugoJHProblem(grade, diff);   // 中2・中3（kokugo_jh.js）
   const list = KANJI_DATA[grade] || KANJI_DATA[1];
   const half = Math.ceil(list.length / 2);
   const pool = diff === 0 ? list.slice(0, half) :
