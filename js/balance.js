@@ -10,10 +10,10 @@
 const BALANCE_GAP = 100;                                   // きじゅんより これだけ 多いと せいげん
 const BALANCE_TAPER = 0.1;                                 // せいげんちゅうの ごほうびの わりあい
 const BALANCE_CORE = ['math', 'kanji'];                    // きじゅんに なる 教科
-const BALANCE_LIMITED = ['eigo', 'rikashakai', 'kotowaza'];  // やりすぎると せいげん される 教科
+const BALANCE_LIMITED = ['eigo', 'rikashakai', 'rika', 'shakai', 'kotowaza'];  // やりすぎると せいげん される 教科
 const BALANCE_WARN_LEFT = 30;                              // これだけ のこったら「もうすぐ せいげん」と 知らせる
 const BALANCE_KEEP_WEEKS = 6;
-const BALANCE_NAMES = { math: 'さんすう', kanji: 'こくご', kotowaza: 'ことわざ', rikashakai: 'りか・しゃかい', eigo: 'えいご' };
+const BALANCE_NAMES = { math: 'さんすう', kanji: 'こくご', kotowaza: 'ことわざ', rikashakai: 'りか・しゃかい', rika: 'りか', shakai: 'しゃかい', eigo: 'えいご' };
 
 function subjCountKey(name) { return `manabi_subj_${playerTag(name)}`; }
 function taperKey(name) { return `manabi_taper_${playerTag(name)}`; }
@@ -111,7 +111,7 @@ function appendBalanceParent(card, name) {
   const total = Object.keys(c).reduce((s, k) => s + (c[k] || 0), 0);
   if (total === 0) return;
   card.appendChild(el('div', 'child-section', '⚖️ 今週の 教科べつ せいかい数'));
-  const parts = ['math', 'kanji', 'kotowaza', 'rikashakai', 'eigo']
+  const parts = ['math', 'kanji', 'kotowaza', 'rikashakai', 'rika', 'shakai', 'eigo']
     .filter(k => c[k] > 0)
     .map(k => {
       const i = balanceInfo(k, name);

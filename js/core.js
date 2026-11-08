@@ -1,6 +1,6 @@
 // ===== まなびポコ（旧 BRAIN QUEST：零式） 共通の部品 =====
 
-const APP_VERSION = 'v42.1';
+const APP_VERSION = 'v42.2';
 const TOTAL_QUESTIONS = 10;
 const DONT_KNOW = '__DONTKNOW__';
 
@@ -29,7 +29,7 @@ checkAndUpdateServiceWorker();
 // 名前別にリセットする。以降は manabi_*_{なまえ}_... を使う。
 (function migrateToPerPlayer() {
   if (localStorage.getItem('manabi_perplayer_migrated') === '2') return;
-  const subj = '(math|kanji|kotowaza|rikashakai|eigo)';
+  const subj = '(math|kanji|kotowaza|rikashakai|rika|shakai|eigo)';
   const legacyProgress  = new RegExp(`^manabi_progress_g\\d+_${subj}$`);
   const legacyDiff      = new RegExp(`^manabi_diff_\\d+_${subj}$`);
   const legacyChallenge = new RegExp(`^manabi_challenge(_attempt)?_\\d+_${subj}_\\d+$`);
@@ -126,6 +126,7 @@ const SUBJECTS = [
   { key: 'kanji',     label: '国語（漢字）',   kanaLabel: 'こくご（かんじ）',      cls: 'kokugo', grades: [1, 2, 3, 4, 5, 6, 7, 8, 9] },
   { key: 'kotowaza',  label: 'ことわざ・慣用句', kanaLabel: 'ことわざ・かんようく', cls: 'kokugo', grades: [3, 4, 5, 6, 7] },
   { key: 'rikashakai',label: '理科・社会',     kanaLabel: 'りか・しゃかい',        cls: 'rikashakai', grades: [3, 4, 5, 6, 7] },
+  { key: 'rika',      label: '理科',          kanaLabel: 'りか',                cls: 'rikashakai', grades: [8, 9] },
   { key: 'eigo',      label: '英語',          kanaLabel: 'えいご',               cls: 'eigo' }
 ];
 
@@ -148,6 +149,7 @@ const GENERATORS = {
   kanji:      generateKanjiProblem,
   kotowaza:   generateKotowazaProblem,
   rikashakai: generateRikaShakaiProblem,
+  rika:       generateRikaJHProblem,
   eigo:       generateEigoProblem
 };
 
@@ -386,11 +388,11 @@ function progressKey(grade, subject, name = state.playerName) {
 // 旧形式（プレイヤー共通で全員合算されていた）進捗キーかどうか。
 // リセット対象であり、同期でも無視して水増しデータを復活させない。
 function isLegacyProgressKey(key) {
-  return /^manabi_progress_g\d+_(math|kanji|kotowaza|rikashakai|eigo)$/.test(key);
+  return /^manabi_progress_g\d+_(math|kanji|kotowaza|rikashakai|rika|shakai|eigo)$/.test(key);
 }
 // 旧形式（プレイヤー共通）の難易度キーかどうか。同期でも無視する。
 function isLegacyDiffKey(key) {
-  return /^manabi_diff_\d+_(math|kanji|kotowaza|rikashakai|eigo)$/.test(key);
+  return /^manabi_diff_\d+_(math|kanji|kotowaza|rikashakai|rika|shakai|eigo)$/.test(key);
 }
 
 function loadProgress(grade, subject, name = state.playerName) {
