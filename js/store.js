@@ -250,6 +250,32 @@ function recordRecent(subject, grade, ok) {
   writeJSON(recentKey(), r);
 }
 
+// ---- さいきん 出した もんだい（教科×学年ごとに さいごの SEEN_N こ）。おなじ もんだいが つづけて 出ないように ----
+const SEEN_N = 150;
+
+function seenKey(name) { return `manabi_seen_${playerTag(name)}`; }
+
+function problemFingerprint(bucket, p) {
+  const text = `${bucket}|${p.question}|${p.answer}`;
+  let h = 5381;
+  for (let i = 0; i < text.length; i++) h = ((h * 33) ^ text.charCodeAt(i)) >>> 0;
+  return h.toString(36);
+}
+
+function loadSeen(bucket) {
+  const all = readJSON(seenKey(), {});
+  return all && Array.isArray(all[bucket]) ? all[bucket] : [];
+}
+
+function rememberSeen(bucket, id) {
+  const all = readJSON(seenKey(), {});
+  const o = all && typeof all === 'object' && !Array.isArray(all) ? all : {};
+  const list = Array.isArray(o[bucket]) ? o[bucket] : [];
+  list.push(id);
+  o[bucket] = list.slice(-SEEN_N);
+  writeJSON(seenKey(), o);
+}
+
 // ---- たんげんべつの せいかい数（ぶんせき用）。学年|教科|たんげん ごとに、答えた数 t・自力せいかい c・さいごの日 d ----
 function unitKey(name) { return `manabi_unit_${playerTag(name)}`; }
 

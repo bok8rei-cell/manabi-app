@@ -97,13 +97,23 @@ function startMissionItem(item) {
 }
 
 // 「まだ ならってない」ものとして しるしのついた種類は、しばらく出さない
+// さいきん 出した もんだいは、しばらく 出さない（おなじ もんだいが つづかないように）。
+// まだ 出していない もんだいが みつかれば それを 出す。もんだいの 数が すくなくて ぜんぶ 出したことが あるときは、
+// いちばん むかしに 出した もんだいを えらぶ（ひととおり 出てから くりかえす）。
 function makeProblem(grade, subject, diff) {
-  let p;
-  for (let i = 0; i < 100; i++) {
-    p = GENERATORS[subject](grade, diff);
-    if (!isSkipped(subject, grade, p.key)) break;
+  const bucket = `${subject}|${grade}`;
+  const seen = loadSeen(bucket);
+  let best = null, bestId = '', bestIdx = Infinity;
+  for (let i = 0; i < 150; i++) {
+    const p = GENERATORS[subject](grade, diff);
+    if (isSkipped(subject, grade, p.key)) { if (!best) { best = p; bestId = problemFingerprint(bucket, p); } continue; }
+    const id = problemFingerprint(bucket, p);
+    const idx = seen.lastIndexOf(id);
+    if (idx < 0) { best = p; bestId = id; break; }                  // まだ 出していない
+    if (idx < bestIdx) { best = p; bestId = id; bestIdx = idx; }    // いちばん むかしに 出したもの
   }
-  return p;
+  rememberSeen(bucket, bestId);
+  return best;
 }
 
 // 「まだ ならってない」：まちがいにも わからないにも数えず、おなじ種類を しばらく出さない
