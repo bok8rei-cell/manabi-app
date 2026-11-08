@@ -667,3 +667,14 @@ h2, h3 { margin: 0; }
 .balance-note.limited { background: #FFE9E3; border-color: #F3A594; }
 .balance-title { font-weight: 700; font-size: 0.95rem; }
 .balance-text { margin-top: 2px; font-size: 0.85rem; color: var(--sub); white-space: pre-line; line-height: 1.5; }
+
+/* ----- 端末ロック・ばんごう ----- */
+.pin-input {
+  display: block; width: 100%; box-sizing: border-box; margin: 12px 0 0;
+  font-size: 1.6rem; letter-spacing: 0.5em; text-align: center;
+  padding: 10px; border: 2px solid #E9D9C4; border-radius: 14px;
+}
+.pin-error { min-height: 1.4em; margin-top: 6px; color: #C0392B; font-weight: 700; font-size: 0.9rem; }
+.name-chip.locked-chip { cursor: default; }
+#lock-box { margin-top: 12px; }
+#lock-box .btn-row { margin-top: 8px; }

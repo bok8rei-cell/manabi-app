@@ -1,6 +1,6 @@
 // ===== まなびポコ（旧 BRAIN QUEST：零式） 共通の部品 =====
 
-const APP_VERSION = 'v42.3';
+const APP_VERSION = 'v42.4';
 const TOTAL_QUESTIONS = 10;
 const DONT_KNOW = '__DONTKNOW__';
 
@@ -295,6 +295,7 @@ function loadPlayerNames() {
 }
 
 function selectPlayerName(name) {
+  if ((typeof isLocked === 'function' && isLocked())) return;   // この iPad は ロック中
   state.playerName = name;
   localStorage.setItem('manabi_playername', state.playerName);
   playerNameInput.value = name;
@@ -302,6 +303,7 @@ function selectPlayerName(name) {
 }
 
 function deletePlayerName(name) {
+  if ((typeof isLocked === 'function' && isLocked())) return;
   const names = loadPlayerNames().filter(n => n !== name);
   localStorage.setItem('manabi_playernames', JSON.stringify(names));
   if (state.playerName === name) {
@@ -314,6 +316,14 @@ function deletePlayerName(name) {
 
 function renderPlayerNameSaved() {
   playerNameSaved.innerHTML = '';
+  if ((typeof isLocked === 'function' && isLocked())) {   // ロック中は この子の なまえだけ（おせない）
+    const lockChip = document.createElement('div');
+    lockChip.className = 'name-chip selected locked-chip';
+    lockChip.textContent = '🔒 ' + lockedName();
+    playerNameSaved.appendChild(lockChip);
+    if (typeof refreshHome === 'function') refreshHome();
+    return;
+  }
   loadPlayerNames().forEach(name => {
     const btn = document.createElement('button');
     btn.className = 'name-chip';
@@ -352,11 +362,13 @@ function registerPlayerName(name) {
 renderPlayerNameSaved();
 
 playerNameInput.addEventListener('input', () => {
+  if ((typeof isLocked === 'function' && isLocked())) return;
   state.playerName = playerNameInput.value.trim();
   localStorage.setItem('manabi_playername', state.playerName);
   renderPlayerNameSaved();
 });
 playerNameInput.addEventListener('change', () => {
+  if ((typeof isLocked === 'function' && isLocked())) return;
   registerPlayerName(state.playerName);
 });
 

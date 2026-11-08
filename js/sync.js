@@ -161,6 +161,8 @@ function applySyncData(data) {
   if (data.data && typeof data.data === 'object') {
     // ローカルストレージ全体を復元
     Object.entries(data.data).forEach(([key, value]) => {
+      if (/^manabi_(lock|lock_init|pinhash)$/.test(key)) return;                   // ロックと ばんごうは この端末だけ
+      if (key === 'manabi_playername' && isLocked()) return;
       localStorage.setItem(key, value);
     });
 

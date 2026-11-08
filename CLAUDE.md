@@ -101,6 +101,7 @@ GitHub Pages: `https://bok8rei-cell.github.io/manabi-app/`
 | `js/shop.js` | おしゃれ（「きがえ」＝買った飾りで着替え・いつもの保存・ぜんぶはずす・ポコを大きく見る／「おみせ」＝未購入の飾り）。飾り54個（頭/目/ほっぺ/くち/首/色/背景/オーラ、約60,300コイン分。でんせつのオーラ20,000）。買った物・つけた物・いつもの は `manabi_shop_{名前}` に保存し同期。プレゼント（おうかん/マント/きらきらポコ/つばさ）はポコクエスト専用で売らない |
 | `js/fx.js` | 効果音・ふるえ・よみあげ・紙ふぶき |
 | `js/explain.js` | 算数の「やさしい解説」を問題文から生成（答えが一致したときだけ表示） |
+| `js/lock.js` | 端末ロック（この iPad は ○○ せんよう＝manabi_lock）と おうちの人の 4けた番号（manabi_pinhash＝しお＋SHA-256。この端末だけ・同期しない。コードに番号は書かない）。ロック解除／おうちの人の画面／おうち用スイッチ／番号変更で番号が必要。更新で初めて入ったとき、おうち用端末以外は いまの名前で自動ロック |
 | `js/sync.js` | ファイル/クラウド同期（ポコ・にがて・連続日数も同期） |
 | `js/ranking.js` | この端末のランキング |
 | `js/speed.js` | タイムアタック |
@@ -159,6 +160,6 @@ Agent ツールで以下を実行：
 
 - iOS でPWAをホーム画面から削除すると localStorage が消えるが、プレイヤー名を再入力すれば Firestore から復元できる
 - Service Worker のキャッシュバージョンを上げないと端末に古いバージョンが残る
-- バージョンは `js/core.js` の APP_VERSION・`version.json`・`sw.js` の CACHE_NAME・`index.html` の `?v=` を同じ番号にそろえて上げる（現在 v42.3）
+- バージョンは `js/core.js` の APP_VERSION・`version.json`・`sw.js` の CACHE_NAME・`index.html` の `?v=` を同じ番号にそろえて上げる（現在 v42.4）
 - 日付は `localDateStr()`（js/store.js）を使う。`toISOString()` は UTC なので日本時間の朝に1日ずれる
 - `explain.js` を変更したら、先生エージェントに審査を依頼する（問題データと同じ扱い）

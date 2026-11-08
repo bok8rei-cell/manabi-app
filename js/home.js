@@ -14,12 +14,22 @@ function saveGrade(g) { localStorage.setItem(gradeKey(), String(g)); }
 
 function syncBeforeShow(showFn) { showFn(); }
 
+let parentUnlocked = false;   // おうちの人の 画面は、ばんごうを いれてから（ほかの タブへ いくと また ひつよう）
+
 function showTab(name) {
+  if (name === 'parent' && !parentUnlocked) {
+    requireParent('おうちの人の 画面').then(ok => {
+      if (ok) { parentUnlocked = true; showTab('parent'); }
+      else if (!document.querySelector('.screen:not(.hidden)')) showTab('home');
+    });
+    return;
+  }
+  if (name !== 'parent') parentUnlocked = false;
   if (name === 'home') renderHome();
   else if (name === 'zukan') renderZukan();
   else if (name === 'shop') renderShop();
   else if (name === 'report') { renderReport(); }
-  else if (name === 'settings') renderSettings();
+  else if (name === 'settings') { renderSettings(); applyLockUI(); }
   else if (name === 'parent') { renderParent(); autoSync(); }
   showScreen(name);
 }
@@ -261,7 +271,7 @@ function renderReport() {
 
   // だれの きろくか えらべる（子どもが複数いるとき）
   const names = loadPlayerNames();
-  if (names.length > 1) {
+  if (names.length > 1 && !isLocked()) {
     const chips = el('div', 'name-chips report-chips');
     names.forEach(n => {
       const b = el('button', 'name-chip' + (n === state.playerName ? ' selected' : ''), n);

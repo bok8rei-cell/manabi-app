@@ -30,7 +30,8 @@ byId('sync-open-btn').addEventListener('click', () => {
 byId('parent-open-btn').addEventListener('click', () => showTab('parent'));
 const parentToggle = byId('parent-mode-toggle');
 parentToggle.checked = localStorage.getItem('manabi_parentmode') === '1';
-parentToggle.addEventListener('change', (e) => {
+parentToggle.addEventListener('change', async (e) => {
+  if (!(await requireParent('おうちの人用の スイッチ'))) { e.target.checked = !e.target.checked; return; }
   try { localStorage.setItem('manabi_parentmode', e.target.checked ? '1' : '0'); } catch (err) { /* 無視 */ }
 });
 

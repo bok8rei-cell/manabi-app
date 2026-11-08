@@ -12,7 +12,7 @@
 <meta name="apple-mobile-web-app-title" content="まなびポコ">
 <link rel="apple-touch-icon" href="icons/icon-180.png">
 <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="css/style.css?v=42.3">
+<link rel="stylesheet" href="css/style.css?v=42.4">
 </head>
 <body>
 <div id="app">
@@ -59,6 +59,7 @@
         <label for="player-name">なまえ</label>
         <input type="text" id="player-name" placeholder="なまえを いれてね" maxlength="30" autocomplete="off">
       </div>
+      <div id="lock-box"></div>
     </div>
 
     <div class="panel">
@@ -260,36 +261,37 @@
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
 <!-- ?v= はキャッシュ破棄用。デプロイのたびに APP_VERSION と同じ番号へ更新する -->
-<script src="js/firebase-config.js?v=42.3"></script>
-<script src="js/algebra.js?v=42.3"></script>
-<script src="js/math.js?v=42.3"></script>
-<script src="js/math_jh.js?v=42.3"></script>
-<script src="js/kanji.js?v=42.3"></script>
-<script src="js/kokugo_jh.js?v=42.3"></script>
-<script src="js/rikashakai.js?v=42.3"></script>
-<script src="js/rika_jh.js?v=42.3"></script>
-<script src="js/shakai_jh.js?v=42.3"></script>
-<script src="js/eigo.js?v=42.3"></script>
-<script src="js/eigo_jh.js?v=42.3"></script>
-<script src="js/store.js?v=42.3"></script>
-<script src="js/core.js?v=42.3"></script>
-<script src="js/fx.js?v=42.3"></script>
-<script src="js/pet.js?v=42.3"></script>
-<script src="js/weekly.js?v=42.3"></script>
-<script src="js/balance.js?v=42.3"></script>
-<script src="js/shop.js?v=42.3"></script>
-<script src="js/solo.js?v=42.3"></script>
-<script src="js/explain.js?v=42.3"></script>
-<script src="js/steps.js?v=42.3"></script>
-<script src="js/steps_jh.js?v=42.3"></script>
-<script src="js/sync.js?v=42.3"></script>
-<script src="js/ranking.js?v=42.3"></script>
-<script src="js/speed.js?v=42.3"></script>
-<script src="js/quiz.js?v=42.3"></script>
-<script src="js/recommend.js?v=42.3"></script>
-<script src="js/home.js?v=42.3"></script>
-<script src="js/update.js?v=42.3"></script>
-<script src="js/boot.js?v=42.3"></script>
+<script src="js/firebase-config.js?v=42.4"></script>
+<script src="js/algebra.js?v=42.4"></script>
+<script src="js/math.js?v=42.4"></script>
+<script src="js/math_jh.js?v=42.4"></script>
+<script src="js/kanji.js?v=42.4"></script>
+<script src="js/kokugo_jh.js?v=42.4"></script>
+<script src="js/rikashakai.js?v=42.4"></script>
+<script src="js/rika_jh.js?v=42.4"></script>
+<script src="js/shakai_jh.js?v=42.4"></script>
+<script src="js/eigo.js?v=42.4"></script>
+<script src="js/eigo_jh.js?v=42.4"></script>
+<script src="js/store.js?v=42.4"></script>
+<script src="js/core.js?v=42.4"></script>
+<script src="js/lock.js?v=42.4"></script>
+<script src="js/fx.js?v=42.4"></script>
+<script src="js/pet.js?v=42.4"></script>
+<script src="js/weekly.js?v=42.4"></script>
+<script src="js/balance.js?v=42.4"></script>
+<script src="js/shop.js?v=42.4"></script>
+<script src="js/solo.js?v=42.4"></script>
+<script src="js/explain.js?v=42.4"></script>
+<script src="js/steps.js?v=42.4"></script>
+<script src="js/steps_jh.js?v=42.4"></script>
+<script src="js/sync.js?v=42.4"></script>
+<script src="js/ranking.js?v=42.4"></script>
+<script src="js/speed.js?v=42.4"></script>
+<script src="js/quiz.js?v=42.4"></script>
+<script src="js/recommend.js?v=42.4"></script>
+<script src="js/home.js?v=42.4"></script>
+<script src="js/update.js?v=42.4"></script>
+<script src="js/boot.js?v=42.4"></script>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
