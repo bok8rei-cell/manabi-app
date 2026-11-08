@@ -1,6 +1,6 @@
 // ===== まなびポコ（旧 BRAIN QUEST：零式） 共通の部品 =====
 
-const APP_VERSION = 'v43.0';
+const APP_VERSION = 'v43.1';
 const TOTAL_QUESTIONS = 10;
 const DONT_KNOW = '__DONTKNOW__';
 
@@ -157,8 +157,14 @@ const GENERATORS = {
 
 // ===== 難易度管理 =====
 const DIFF_KEY = 'manabi_diff';
-const DIFF_LABELS = ['やさしい', 'ふつう', 'むずかしい'];
-const DIFF_STARS  = ['⭐', '⭐⭐', '⭐⭐⭐'];
+const DIFF_LABELS = ['やさしい', 'ふつう', 'むずかしい', 'ちょうむずかしい'];
+const DIFF_STARS  = ['⭐', '⭐⭐', '⭐⭐⭐', '🔥'];
+
+// その学年・教科の いちばん 上の レベル（ふつうは 2＝むずかしい。ちょうむずかしい(3)が ある のは 3年の算数だけ）
+const SUPER_LEVEL = { math: [3] };
+function maxDiff(grade, subject) {
+  return (SUPER_LEVEL[subject] || []).includes(Number(grade)) ? 3 : 2;
+}
 
 function getDiff(grade, subject) {
   const raw = localStorage.getItem(`${DIFF_KEY}_${playerTag()}_${grade}_${subject}`);
@@ -168,7 +174,7 @@ function getDiff(grade, subject) {
 }
 
 function setDiff(grade, subject, level) {
-  const v = Math.max(0, Math.min(2, level));
+  const v = Math.max(0, Math.min(maxDiff(grade, subject), level));
   localStorage.setItem(`${DIFF_KEY}_${playerTag()}_${grade}_${subject}`, String(v));
   return v;
 }
@@ -197,7 +203,7 @@ function getChallengeAttemptKey(grade, subject, diffLevel) {
 
 function hasChallenge(grade, subject) {
   const cur = getDiff(grade, subject);
-  if (cur >= 2) return false;
+  if (cur >= maxDiff(grade, subject)) return false;
   const nextLevel = cur + 1;
   const key = getChallengeKey(grade, subject, nextLevel);
   return localStorage.getItem(key) !== null;
@@ -205,7 +211,7 @@ function hasChallenge(grade, subject) {
 
 function offerChallenge(grade, subject) {
   const cur = getDiff(grade, subject);
-  if (cur >= 2) return null;
+  if (cur >= maxDiff(grade, subject)) return null;
   const nextLevel = cur + 1;
   const key = getChallengeKey(grade, subject, nextLevel);
   const today = localDateStr();
@@ -241,7 +247,7 @@ function teacherEvaluate(grade, subject, correct, total) {
   let comment, badge, showChallenge = false;
 
   if (rate >= 0.8) {
-    if (cur < 2) {
+    if (cur < maxDiff(grade, subject)) {
       offerChallenge(grade, subject);
       showChallenge = true;
       comment = rate === 1 ? '🌟 かんぺき！すごいです！' : '✨ よくできました！';

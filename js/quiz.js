@@ -2,7 +2,7 @@
 
 const byId = (id) => document.getElementById(id);
 
-const CHALLENGE_QUESTION_COUNTS = { 0: 15, 1: 20, 2: 25 };
+const CHALLENGE_QUESTION_COUNTS = { 0: 15, 1: 20, 2: 25, 3: 25 };
 const HINT_COST = 100;   // ヒント1回のコイン
 const HINT_MAX = 3;      // 1もんで つかえる ヒントの回数（さいだい 300コイン）
 const CORRECT_WORDS = ['せいかい！', 'やったね！', 'すごい！', 'いいね！'];
@@ -532,7 +532,7 @@ function confirmChallenge() {
   const grade = session.grade;
   const subject = session.subject;
   const next = getDiff(grade, subject) + 1;
-  if (next > 2) return;
+  if (next > maxDiff(grade, subject)) return;
   const total = CHALLENGE_QUESTION_COUNTS[next];
   const pass = Math.ceil(total * 0.8);
   const upgrade = grade <= 3 ? 'つぎのレベルへ！' : `${DIFF_LABELS[next]}へ 昇段！`;
