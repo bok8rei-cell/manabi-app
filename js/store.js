@@ -250,6 +250,25 @@ function recordRecent(subject, grade, ok) {
   writeJSON(recentKey(), r);
 }
 
+// ---- たんげんべつの せいかい数（ぶんせき用）。学年|教科|たんげん ごとに、答えた数 t・自力せいかい c・さいごの日 d ----
+function unitKey(name) { return `manabi_unit_${playerTag(name)}`; }
+
+function loadUnits(name) {
+  const r = readJSON(unitKey(name), {});
+  return r && typeof r === 'object' && !Array.isArray(r) ? r : {};
+}
+
+function recordUnit(subject, grade, unitLabel, ok) {
+  const u = loadUnits();
+  const id = `${grade}|${subject}|${unitLabel || 'そのほか'}`;
+  const e = u[id] || { t: 0, c: 0, d: '' };
+  e.t += 1;
+  if (ok) e.c += 1;
+  e.d = localDateStr();
+  u[id] = e;
+  writeJSON(unitKey(), u);
+}
+
 // { n: 答えた数, rate: せいかいりつ(0〜1) }
 function recentRate(subject, grade, name) {
   const e = loadRecent(name)[`${subject}|${grade}`];

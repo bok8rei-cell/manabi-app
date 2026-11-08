@@ -88,7 +88,7 @@ GitHub Pages: `https://bok8rei-cell.github.io/manabi-app/`
 |---|---|
 | `index.html` | 全画面のHTML（SPA）。下タブ: ホーム/ずかん/おしゃれ/きろく/せってい |
 | `css/style.css` | 全スタイル（v37〜 明るい「おもちゃ箱」テーマ。ダークテーマは廃止） |
-| `js/store.js` | 日付(ローカル日付)・にがて復習・今日のミッション・毎日の連続日数 |
+| `js/store.js` | 日付(ローカル日付)・にがて復習・今日のミッション・毎日の連続日数・たんげんべつ成績（recordUnit／`manabi_unit_{名前}` = 学年|教科|たんげん → {t 答えた数, c 自力せいかい, d 最終日}。同期はたんげん×項目ごとの max。親の画面「よわい たんげん」に表示、書き出しにも入る） |
 | `js/core.js` | バージョン・自動更新（ひらいたとき／もどったとき／5分ごとに確認。勉強中は待ち、ホームなど下のタブが見える画面で自動入れかえ）・教科/難易度・チャレンジ管理・なまえ・進捗・showScreen |
 | `js/quiz.js` | 学習セッション共通（ドリル/ミッション/にがて復習/チャレンジ）と結果画面 |
 | `js/home.js` | ホーム・ずかん・きろく・せってい画面、showTab |
@@ -160,6 +160,6 @@ Agent ツールで以下を実行：
 
 - iOS でPWAをホーム画面から削除すると localStorage が消えるが、プレイヤー名を再入力すれば Firestore から復元できる
 - Service Worker のキャッシュバージョンを上げないと端末に古いバージョンが残る
-- バージョンは `js/core.js` の APP_VERSION・`version.json`・`sw.js` の CACHE_NAME・`index.html` の `?v=` を同じ番号にそろえて上げる（現在 v42.4）
+- バージョンは `js/core.js` の APP_VERSION・`version.json`・`sw.js` の CACHE_NAME・`index.html` の `?v=` を同じ番号にそろえて上げる（現在 v42.5）
 - 日付は `localDateStr()`（js/store.js）を使う。`toISOString()` は UTC なので日本時間の朝に1日ずれる
 - `explain.js` を変更したら、先生エージェントに審査を依頼する（問題データと同じ扱い）
