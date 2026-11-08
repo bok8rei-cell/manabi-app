@@ -1,6 +1,6 @@
 // ===== まなびポコ（旧 BRAIN QUEST：零式） 共通の部品 =====
 
-const APP_VERSION = 'v43.1';
+const APP_VERSION = 'v43.2';
 const TOTAL_QUESTIONS = 10;
 const DONT_KNOW = '__DONTKNOW__';
 
@@ -160,8 +160,8 @@ const DIFF_KEY = 'manabi_diff';
 const DIFF_LABELS = ['やさしい', 'ふつう', 'むずかしい', 'ちょうむずかしい'];
 const DIFF_STARS  = ['⭐', '⭐⭐', '⭐⭐⭐', '🔥'];
 
-// その学年・教科の いちばん 上の レベル（ふつうは 2＝むずかしい。ちょうむずかしい(3)が ある のは 3年の算数だけ）
-const SUPER_LEVEL = { math: [3] };
+// その学年・教科の いちばん 上の レベル（ふつうは 2＝むずかしい。ちょうむずかしい(3)が ある のは 算数の 1〜6年）
+const SUPER_LEVEL = { math: [1, 2, 3, 4, 5, 6] };
 function maxDiff(grade, subject) {
   return (SUPER_LEVEL[subject] || []).includes(Number(grade)) ? 3 : 2;
 }

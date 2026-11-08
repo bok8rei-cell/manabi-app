@@ -11,7 +11,7 @@ Object.assign(MATH_UNIT_LABELS, {
 Object.assign(MATH_HINT_MAX, { superFrac: 2 });
 
 function genSuper(grade) {
-  if (grade !== 3) return null;
+  if (grade !== 3) return (typeof genSuperMore === 'function') ? genSuperMore(grade) : null;   // 1・2・4・5・6年は math_super_more.js
   const types = ['superShop2', 'superChange', 'superTimesRev', 'superCeil', 'superMul2', 'superBox', 'superFrac', 'superBlank', 'superDivRem'];
   const type = _xPick(types);
   lastMathType = type;
