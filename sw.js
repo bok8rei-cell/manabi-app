@@ -1,6 +1,6 @@
 // オフラインでも使えるようにするための サービスワーカー
 // ファイルを更新したら CACHE_NAME のバージョンを上げてください
-const CACHE_NAME = 'manabi-app-v42.2';
+const CACHE_NAME = 'manabi-app-v42.3';
 
 const ASSETS = [
   './',
@@ -15,6 +15,7 @@ const ASSETS = [
   './js/kokugo_jh.js',
   './js/rikashakai.js',
   './js/rika_jh.js',
+  './js/shakai_jh.js',
   './js/eigo.js',
   './js/eigo_jh.js',
   './js/store.js',

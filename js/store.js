@@ -103,7 +103,7 @@ function getMission(grade) {
   if (dueMistakes(grade).length > 0) {
     items.push({ id: 'm3', kind: 'review', n: 5, done: false });
   } else {
-    const s3 = choose(grade <= 2 ? 'eigo' : 'rikashakai', 'rika', 'eigo');
+    const s3 = choose(grade <= 2 ? 'eigo' : 'rikashakai', ...(new Date().getDate() % 2 ? ['rika', 'shakai'] : ['shakai', 'rika']), 'eigo');
     if (s3) items.push({ id: 'm3', kind: 'subject', subject: s3, n: 5, done: false });
   }
   const mission = { items, bonus: false };

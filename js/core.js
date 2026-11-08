@@ -1,6 +1,6 @@
 // ===== まなびポコ（旧 BRAIN QUEST：零式） 共通の部品 =====
 
-const APP_VERSION = 'v42.2';
+const APP_VERSION = 'v42.3';
 const TOTAL_QUESTIONS = 10;
 const DONT_KNOW = '__DONTKNOW__';
 
@@ -127,6 +127,7 @@ const SUBJECTS = [
   { key: 'kotowaza',  label: 'ことわざ・慣用句', kanaLabel: 'ことわざ・かんようく', cls: 'kokugo', grades: [3, 4, 5, 6, 7] },
   { key: 'rikashakai',label: '理科・社会',     kanaLabel: 'りか・しゃかい',        cls: 'rikashakai', grades: [3, 4, 5, 6, 7] },
   { key: 'rika',      label: '理科',          kanaLabel: 'りか',                cls: 'rikashakai', grades: [8, 9] },
+  { key: 'shakai',    label: '社会',          kanaLabel: 'しゃかい',            cls: 'rikashakai', grades: [8, 9] },
   { key: 'eigo',      label: '英語',          kanaLabel: 'えいご',               cls: 'eigo' }
 ];
 
@@ -150,6 +151,7 @@ const GENERATORS = {
   kotowaza:   generateKotowazaProblem,
   rikashakai: generateRikaShakaiProblem,
   rika:       generateRikaJHProblem,
+  shakai:     generateShakaiJHProblem,
   eigo:       generateEigoProblem
 };
 
