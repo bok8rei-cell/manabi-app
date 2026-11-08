@@ -107,7 +107,7 @@ GitHub Pages: `https://bok8rei-cell.github.io/manabi-app/`
 | `js/speed.js` | タイムアタック |
 | `js/update.js` | 「あたらしくする」ボタン |
 | `js/boot.js` | 起動時の配線 |
-| `js/math.js` | 算数問題生成（中1まで）。判定 isMathAnswerCorrect（answerType: remainder/time/ratio/algebra/factor/lineEq/roots/xy） |
+| `js/math.js` | 算数問題生成（中1まで）。弱いたんげん（8もん以上・自力せいかい90%未満）を約半分の確率で多めに出す（weakMathUnits）。判定 isMathAnswerCorrect（answerType: remainder/time/ratio/algebra/factor/lineEq/roots/xy） |
 | `js/math_jh.js` | 数学（中2=genGrade8・中3=genGrade9）の問題生成。問題に `params` を持たせる |
 | `js/algebra.js` | 文字式の答えあわせ（展開・因数分解・直線の式・解）。parsePoly などの多項式パーサー |
 | `js/steps_jh.js` | 中2・中3数学の「解き方」とヒント（steps.js と同じ決まり） |
@@ -160,6 +160,6 @@ Agent ツールで以下を実行：
 
 - iOS でPWAをホーム画面から削除すると localStorage が消えるが、プレイヤー名を再入力すれば Firestore から復元できる
 - Service Worker のキャッシュバージョンを上げないと端末に古いバージョンが残る
-- バージョンは `js/core.js` の APP_VERSION・`version.json`・`sw.js` の CACHE_NAME・`index.html` の `?v=` を同じ番号にそろえて上げる（現在 v42.5）
+- バージョンは `js/core.js` の APP_VERSION・`version.json`・`sw.js` の CACHE_NAME・`index.html` の `?v=` を同じ番号にそろえて上げる（現在 v42.6）
 - 日付は `localDateStr()`（js/store.js）を使う。`toISOString()` は UTC なので日本時間の朝に1日ずれる
 - `explain.js` を変更したら、先生エージェントに審査を依頼する（問題データと同じ扱い）

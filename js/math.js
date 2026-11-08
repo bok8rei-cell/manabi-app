@@ -1165,10 +1165,36 @@ function genGrade6(diff = 1) {
 
 function generateMathProblem(grade, diff = 1) {
   const gens = { 1: genGrade1, 2: genGrade2, 3: genGrade3, 4: genGrade4, 5: genGrade5, 6: genGrade6, 7: genGrade7, 8: genGrade8, 9: genGrade9 };   // 8＝中2・9＝中3（math_jh.js）
-  const p = (gens[grade] || genGrade7)(diff);
-  p.key = lastMathType;
-  p.unitLabel = MATH_UNIT_LABELS[lastMathType] || '';
+  const make = () => {
+    const q = (gens[grade] || genGrade7)(diff);
+    q.key = lastMathType;
+    q.unitLabel = MATH_UNIT_LABELS[lastMathType] || '';
+    return q;
+  };
+  let p = make();
+  // はんぷく練習：この子が じりきで 9わり みたない たんげんを、半分くらいの 確率で 多めに 出す（ぜんぶ できている子は ふつうどおり）
+  const weak = weakMathUnits(grade);
+  if (weak.size > 0 && Math.random() < 0.5 && !weak.has(p.unitLabel)) {
+    for (let i = 0; i < 20; i++) {
+      const q = make();
+      if (weak.has(q.unitLabel)) { p = q; break; }
+    }
+  }
   return p;
+}
+
+// その学年の算数で、8もん以上 答えて じりき正解が 90%未満の たんげん
+function weakMathUnits(grade) {
+  const out = new Set();
+  try {
+    if (typeof loadUnits !== 'function') return out;
+    const u = loadUnits();
+    Object.keys(u).forEach(k => {
+      const [g, subj, unit] = k.split('|');
+      if (Number(g) === grade && subj === 'math' && u[k].t >= 8 && u[k].c / u[k].t < 0.9) out.add(unit);
+    });
+  } catch (e) { /* 無視 */ }
+  return out;
 }
 
 // ユーザー入力が正解かどうか判定
