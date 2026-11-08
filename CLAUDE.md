@@ -110,6 +110,7 @@ GitHub Pages: `https://bok8rei-cell.github.io/manabi-app/`
 | `js/math.js` | 算数問題生成（中1まで）。弱いたんげん（8もん以上・自力せいかい90%未満）を約半分の確率で多めに出す（weakMathUnits）。判定 isMathAnswerCorrect（answerType: remainder/time/ratio/algebra/factor/lineEq/roots/xy） |
 | `js/math_jh.js` | 数学（中2=genGrade8・中3=genGrade9）の問題生成。問題に `params` を持たせる |
 | `js/algebra.js` | 文字式の答えあわせ（展開・因数分解・直線の式・解）。parsePoly などの多項式パーサー |
+| `js/math_extra.js` | 算数の追加問題（1年：くりあがり・くりさがり・3つのたし算・文章題、5年：小数×小数・小数÷小数・平均・体積・分数の文章題・約分）と その解き方。genGrade1/genGrade5 から genExtra1/genExtra5 で呼ぶ。約分系は answerType reducedFraction（約分した形だけ正解） |
 | `js/steps_jh.js` | 中2・中3数学の「解き方」とヒント（steps.js と同じ決まり） |
 | `js/eigo_jh.js` | 英語（中2・中3）の問題データ EIGO_JH（文法・単語・英文えらび。各問に解説 ex） |
 | `js/kanji.js` | 国語（漢字）問題生成・KANJI_DATA（中2・中3は kokugo_jh.js へ） |
@@ -160,6 +161,6 @@ Agent ツールで以下を実行：
 
 - iOS でPWAをホーム画面から削除すると localStorage が消えるが、プレイヤー名を再入力すれば Firestore から復元できる
 - Service Worker のキャッシュバージョンを上げないと端末に古いバージョンが残る
-- バージョンは `js/core.js` の APP_VERSION・`version.json`・`sw.js` の CACHE_NAME・`index.html` の `?v=` を同じ番号にそろえて上げる（現在 v42.6）
+- バージョンは `js/core.js` の APP_VERSION・`version.json`・`sw.js` の CACHE_NAME・`index.html` の `?v=` を同じ番号にそろえて上げる（現在 v43.0）
 - 日付は `localDateStr()`（js/store.js）を使う。`toISOString()` は UTC なので日本時間の朝に1日ずれる
 - `explain.js` を変更したら、先生エージェントに審査を依頼する（問題データと同じ扱い）

@@ -65,13 +65,15 @@ function fractionToString([num, den]) {
 function genGrade1(diff = 1) {
   const typePools = [
     ['add', 'sub', 'compare', 'tens'],
-    ['add', 'sub', 'compare', 'addWord', 'subWord', 'tens', 'bigAdd', 'bigAddWord'],
-    ['bigAdd', 'bigAddWord', 'subWord', 'addWord', 'sub', 'tens']
+    ['add', 'sub', 'compare', 'addWord', 'subWord', 'tens', 'bigAdd', 'bigAddWord', 'bigAddBlank', 'bigAddWord2', 'bigSub', 'bigSubWord', 'add3term'],
+    ['bigAdd', 'bigAddWord', 'subWord', 'addWord', 'sub', 'tens', 'bigAddBlank', 'bigAddWord2', 'bigSub', 'bigSubWord', 'add3term', 'bigAdd', 'bigSub']
   ];
   const types = typePools[diff];
   const type = types[randInt(0, types.length - 1)];
   lastMathType = type;
   const maxN = [4, 9, 9][diff];
+  const extra1 = genExtra1(type, diff);   // js/math_extra.js
+  if (extra1) return extra1;
 
   if (type === 'add') {
     const a = randInt(1, maxN);
@@ -419,13 +421,17 @@ function genGrade3(diff = 1) {
 // ===== 5年生 =====
 function genGrade5(diff = 1) {
   const typePools = [
-    ['fraction', 'decimalMul', 'decimalDiv', 'oddEven', 'lcm'],
-    ['fraction', 'decimalMul', 'decimalDiv', 'percent', 'area', 'average', 'circle', 'volume', 'oddEven', 'lcm', 'gcd5', 'speedWord', 'discount', 'density'],
-    ['fraction', 'decimalMul', 'decimalDiv', 'percent', 'area', 'average', 'circle', 'volume', 'oddEven', 'lcm', 'gcd5', 'speedWord', 'discount', 'density']
+    ['fraction', 'decimalMul', 'decimalDiv', 'oddEven', 'lcm', 'fracReduce', 'volumeCube', 'decimalDiv2'],
+    ['fraction', 'decimalMul', 'decimalDiv', 'percent', 'area', 'average', 'circle', 'volume', 'oddEven', 'lcm', 'gcd5', 'speedWord', 'discount', 'density',
+     'decimalMul2', 'decimalDiv2', 'decimalMulWord', 'averageWord', 'averageSum', 'volumeCube', 'volumeL', 'volumeH', 'fractionWord', 'fracReduce'],
+    ['fraction', 'decimalMul', 'decimalDiv', 'percent', 'area', 'average', 'circle', 'volume', 'oddEven', 'lcm', 'gcd5', 'speedWord', 'discount', 'density',
+     'decimalMul2', 'decimalDiv2', 'decimalMulWord', 'averageWord', 'averageSum', 'volumeL', 'volumeH', 'fractionWord', 'decimalMul2', 'averageSum', 'fractionWord']
   ];
   const types = typePools[diff];
   const type = types[randInt(0, types.length - 1)];
   lastMathType = type;
+  const extra5 = genExtra5(type, diff);   // js/math_extra.js
+  if (extra5) return extra5;
 
   if (type === 'oddEven') {
     const n = randInt(10, 99);
@@ -1210,6 +1216,9 @@ function isMathAnswerCorrect(problem, userInput) {
     .replace(/[\s.、,，]+$/, '');
   if (problem.type === 'choice') {
     return userInput === problem.answer;
+  }
+  if (problem.answerType === 'reducedFraction') {   // やくぶんした 形で 書いたときだけ せいかい（やくぶん前の ぶんすうは ×）
+    return userInput.replace(/\s+/g, '') === String(problem.answer);
   }
   if (problem.isFraction) {
     const userFrac = parseFractionInput(userInput);
