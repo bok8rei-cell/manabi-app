@@ -230,6 +230,7 @@ function generateRikaShakaiProblem(grade) {
     choices,
     answer: item.a,
     key: item.q,
-    unitLabel: item.q.slice(0, 18)
+    unitLabel: item.q.slice(0, 18),
+    explain: item.ex || undefined
   };
 }

@@ -117,7 +117,8 @@ GitHub Pages: `https://bok8rei-cell.github.io/manabi-app/`
 | `js/eigo_jh.js` | 英語（中2・中3）の問題データ EIGO_JH（文法・単語・英文えらび。各問に解説 ex） |
 | `js/kanji.js` | 国語（漢字）問題生成・KANJI_DATA（中2・中3は kokugo_jh.js へ） |
 | `js/kokugo_jh.js` | 国語（中2・中3）の問題データ（読み・同音異字・熟語・敬語・文法・古文・作品。各問に解説） |
-| `js/rikashakai.js` | 理科・社会問題生成（小3〜中1） |
+| `js/rikashakai.js` | 理科・社会問題生成（小3〜中1）。ことわざは学年に関係なく kanji.js の kotowazaAll（133問）から出す |
+| `js/rikashakai_more.js` | 理科・社会の追加問題（3年・5年・中1。各問に解説 ex）。rikashakai.js の RIKASHAKAI_DATA に push |
 | `js/rika_jh.js` | 理科（中2・中3）の問題データ＋計算問題 rikaCalc（key `rika`） |
 | `js/shakai_jh.js` | 社会（中2・中3）の問題データ（地理・歴史・公民、key `shakai`） |
 | `js/eigo.js` | 英語問題生成 |
@@ -163,6 +164,6 @@ Agent ツールで以下を実行：
 
 - iOS でPWAをホーム画面から削除すると localStorage が消えるが、プレイヤー名を再入力すれば Firestore から復元できる
 - Service Worker のキャッシュバージョンを上げないと端末に古いバージョンが残る
-- バージョンは `js/core.js` の APP_VERSION・`version.json`・`sw.js` の CACHE_NAME・`index.html` の `?v=` を同じ番号にそろえて上げる（現在 v43.3）
+- バージョンは `js/core.js` の APP_VERSION・`version.json`・`sw.js` の CACHE_NAME・`index.html` の `?v=` を同じ番号にそろえて上げる（現在 v43.4）
 - 日付は `localDateStr()`（js/store.js）を使う。`toISOString()` は UTC なので日本時間の朝に1日ずれる
 - `explain.js` を変更したら、先生エージェントに審査を依頼する（問題データと同じ扱い）
