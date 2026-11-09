@@ -91,6 +91,7 @@ GitHub Pages: `https://bok8rei-cell.github.io/manabi-app/`
 | `js/store.js` | 日付(ローカル日付)・にがて復習・今日のミッション・毎日の連続日数・たんげんべつ成績（recordUnit／`manabi_unit_{名前}` = 学年|教科|たんげん → {t 答えた数, c 自力せいかい, d 最終日}。同期はたんげん×項目ごとの max。親の画面「よわい たんげん」に表示、書き出しにも入る） |
 | `js/core.js` | バージョン・自動更新（ひらいたとき／もどったとき／5分ごとに確認。勉強中は待ち、ホームなど下のタブが見える画面で自動入れかえ）・教科/難易度・チャレンジ管理・なまえ・進捗・showScreen |
 | `js/quiz.js` | 学習セッション共通（makeProblem：さいきん出した問題は出さない／出し切ったら一番むかしに出したものから。`manabi_seen_{名前}` に教科×学年ごと150こ。同期しない）（ドリル/ミッション/にがて復習/チャレンジ）と結果画面 |
+| `js/samples.js` | 「もんだいを 見る」（おうちの人の画面から開く。学年・教科・レベルを選ぶと、そのレベルの問題5問と答え・とき方を見せる。学校の先生に見せる用。GENERATORS を直接呼ぶので成績・「さいきん出した問題」には残らない） |
 | `js/home.js` | ホーム・ずかん・きろく・せってい画面、showTab |
 | `js/steps.js` | 算数の全種類の「解き方」（なぜ）とヒントの材料。答えが一致したときだけ使う。ヒントは答えが出る手前まで（hintPlan / MATH_HINT_MAX） |
 | `js/recommend.js` | 正解率が低い教科は、前の学年に もどって ふくしゅうをすすめる（最近20もん／12問以上／6割未満） |
@@ -164,6 +165,6 @@ Agent ツールで以下を実行：
 
 - iOS でPWAをホーム画面から削除すると localStorage が消えるが、プレイヤー名を再入力すれば Firestore から復元できる
 - Service Worker のキャッシュバージョンを上げないと端末に古いバージョンが残る
-- バージョンは `js/core.js` の APP_VERSION・`version.json`・`sw.js` の CACHE_NAME・`index.html` の `?v=` を同じ番号にそろえて上げる（現在 v43.4）
+- バージョンは `js/core.js` の APP_VERSION・`version.json`・`sw.js` の CACHE_NAME・`index.html` の `?v=` を同じ番号にそろえて上げる（現在 v43.5）
 - 日付は `localDateStr()`（js/store.js）を使う。`toISOString()` は UTC なので日本時間の朝に1日ずれる
 - `explain.js` を変更したら、先生エージェントに審査を依頼する（問題データと同じ扱い）

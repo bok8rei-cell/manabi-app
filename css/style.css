@@ -678,3 +678,11 @@ h2, h3 { margin: 0; }
 .name-chip.locked-chip { cursor: default; }
 #lock-box { margin-top: 12px; }
 #lock-box .btn-row { margin-top: 8px; }
+
+/* ----- もんだいを 見る ----- */
+.sample-title { font-size: 1.15rem; font-weight: 800; text-align: center; margin: 14px 0 6px; line-height: 1.5; }
+.sample-card .sample-no { font-size: 0.8rem; font-weight: 800; color: var(--main-d); margin-bottom: 4px; }
+.sample-q { font-size: 1.1rem; font-weight: 700; white-space: pre-wrap; line-height: 1.6; }
+.sample-choices { margin-top: 8px; white-space: pre-wrap; line-height: 1.8; }
+.sample-ans { margin-top: 10px; font-weight: 800; color: #1B7F4B; }
+.sample-ex { margin-top: 6px; white-space: pre-wrap; font-size: 0.9rem; line-height: 1.6; background: #FFF8EC; border-radius: 12px; padding: 8px 10px; }

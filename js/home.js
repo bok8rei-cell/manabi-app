@@ -443,6 +443,12 @@ function renderParent() {
   });
   head.appendChild(refresh);
   root.appendChild(head);
+  const samplePanel = el('div', 'panel');
+  samplePanel.appendChild(el('div', 'report-line', '学年・教科・レベルごとの もんだいと 答え・とき方を 見られます（学校の 先生に 見せる ときに）。'));
+  const sampleBtn = el('button', 'sub-btn wide', '📖 もんだいを 見る');
+  sampleBtn.addEventListener('click', openSamples);
+  samplePanel.appendChild(sampleBtn);
+  root.appendChild(samplePanel);
   appendFamilyParent(root);   // ポコクエスト（ウラボスの ネタバレは おうちの人だけ）
 
   const names = loadPlayerNames();
