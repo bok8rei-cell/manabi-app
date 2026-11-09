@@ -87,8 +87,9 @@ function petSVG(stage, mood = 'happy', size = 64, opts, look) {
   if (look === undefined) look = (typeof shopLook === 'function') ? shopLook() : null;
   // 「きらきらポコ」（ポコクエストの プレゼント）を つけている間は、1だん しんかした すがたで 見える（ポコキングは そのまま）。
   // ほんとうの 育ち具合（growth）は かわらない
+  const realStage = stage;   // ほんとうの 育ち（からだが つくのは、ほんとうに ポコまる・ポコキングに そだったときだけ）
   if (look && look.shine && !(opts && opts.noEvolve) && stage < 4) stage += 1;
-  const withBody = stage >= 3 && typeof pokoBodySVG === 'function';   // ポコまる・ポコキングは からだが ある
+  const withBody = realStage >= 3 && typeof pokoBodySVG === 'function';   // きらきらポコで 見かけが しんかしても、からだは まだ つかない
   const w = size;
   const h = Math.round(size * 0.94);
   const open = (inner) =>
