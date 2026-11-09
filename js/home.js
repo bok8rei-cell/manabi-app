@@ -14,17 +14,29 @@ function saveGrade(g) { localStorage.setItem(gradeKey(), String(g)); }
 
 function syncBeforeShow(showFn) { showFn(); }
 
-let parentUnlocked = false;   // おうちの人の 画面は、ばんごうを いれてから（ほかの タブへ いくと また ひつよう）
+// おうちの人の 画面は、ばんごうを いれてから。
+// ・「この たんまつは おうちの人用」を オンに している たんまつ（スイッチを かえるのに ばんごうが いる）は、ばんごうを きかない
+// ・ばんごうを いれたら 5ふんかん（つかっている あいだは のびる）は また きかない
+const PARENT_OK_MS = 5 * 60 * 1000;
+let parentUntil = 0;
+function isParentDevice() { try { return localStorage.getItem('manabi_parentmode') === '1'; } catch (e) { return false; } }
+function parentAllowed() { return isParentDevice() || Date.now() < parentUntil; }
 
 function showTab(name) {
-  if (name === 'parent' && !parentUnlocked) {
-    requireParent('おうちの人の 画面').then(ok => {
-      if (ok) { parentUnlocked = true; showTab('parent'); }
-      else if (!document.querySelector('.screen:not(.hidden)')) showTab('home');
-    });
-    return;
+  if (name !== 'parent') {   // ひらきっぱなしの ばんごう ダイアログは とじる
+    const pm = document.querySelector('.pin-modal .sub-btn');
+    if (pm) pm.click();
   }
-  if (name !== 'parent') parentUnlocked = false;
+  if (name === 'parent') {
+    if (!parentAllowed()) {
+      requireParent('おうちの人の 画面').then(ok => {
+        if (ok) { parentUntil = Date.now() + PARENT_OK_MS; showTab('parent'); }
+        else if (!document.querySelector('.screen:not(.hidden)')) showTab('home');
+      });
+      return;
+    }
+    parentUntil = Date.now() + PARENT_OK_MS;
+  }
   if (name === 'home') renderHome();
   else if (name === 'zukan') renderZukan();
   else if (name === 'shop') renderShop();

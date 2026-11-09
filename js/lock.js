@@ -52,6 +52,7 @@ let pinFails = 0, pinBlockedUntil = 0;
 // message: せつめい。confirmMode: 2かい いれて きめる（はじめて／かえる）。
 // 戻り値：入れた 4けた（キャンセルなら null）
 function lockPinDialog(message, confirmMode) {
+  if (document.querySelector('.pin-modal')) return Promise.resolve(null);   // もう ひらいて いるときは ふたつ めを ださない
   return new Promise(resolve => {
     const wrap = document.createElement('div');
     wrap.className = 'modal pin-modal';
