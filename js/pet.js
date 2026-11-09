@@ -88,6 +88,7 @@ function petSVG(stage, mood = 'happy', size = 64, opts, look) {
   // 「きらきらポコ」（ポコクエストの プレゼント）を つけている間は、1だん しんかした すがたで 見える（ポコキングは そのまま）。
   // ほんとうの 育ち具合（growth）は かわらない
   if (look && look.shine && !(opts && opts.noEvolve) && stage < 4) stage += 1;
+  const withBody = stage >= 3 && typeof pokoBodySVG === 'function';   // ポコまる・ポコキングは からだが ある
   const w = size;
   const h = Math.round(size * 0.94);
   const open = (inner) =>
@@ -105,8 +106,11 @@ function petSVG(stage, mood = 'happy', size = 64, opts, look) {
   const ry = [0, 16, 19, 21, 22][stage];
   const cy = 60 - ry - 3;
   const eyeY = cy - 4;
-  const deco = (typeof shopDraw === 'function') ? shopDraw(look, { rx, ry, cy, eyeY, y0: cy - ry }) : { back: '', aura: '', glow: '', wing: '', cape: '', defs: '', main: '#5CC9B0', belly: '#B8EBDD', eyes: '', cheek: '', mouth: '', neck: '', head: '', bow: '', sparkles: '', crown: '' };
-  let parts = deco.defs + deco.back + deco.aura + deco.glow + deco.wing + deco.cape;
+  const g = { rx, ry, cy, eyeY, y0: cy - ry };
+  if (withBody) g.bodyG = { rx: 15, ry: 13, cy: 40, y0: 27 };   // マント・つばさは からだに あわせる
+  const deco = (typeof shopDraw === 'function') ? shopDraw(look, g) : { back: '', aura: '', glow: '', wing: '', cape: '', defs: '', main: '#5CC9B0', belly: '#B8EBDD', eyes: '', cheek: '', mouth: '', neck: '', head: '', bow: '', sparkles: '', crown: '', outfit: '', shoes: '', hand: '' };
+  const bg = deco.defs + deco.back + deco.aura + deco.glow;
+  let parts = '';
   if (stage >= 2) {
     parts += `<path d="M${32 - rx + 6} ${cy - ry + 6} L${32 - rx + 8} ${cy - ry - 7} L${32 - rx + 17} ${cy - ry + 2} Z" fill="${deco.main}"/>`;
     parts += `<path d="M${32 + rx - 6} ${cy - ry + 6} L${32 + rx - 8} ${cy - ry - 7} L${32 + rx - 17} ${cy - ry + 2} Z" fill="${deco.main}"/>`;
@@ -131,8 +135,15 @@ function petSVG(stage, mood = 'happy', size = 64, opts, look) {
     parts += `<path d="M26 ${my} Q32 ${my + 7} 38 ${my}" stroke="#3B2F2A" stroke-width="2.2" fill="none" stroke-linecap="round"/>`;
   }
   parts += deco.cheek + deco.mouth + deco.eyes + deco.neck + deco.head;   // おしゃれの かざり
-  parts += deco.bow + deco.sparkles + deco.crown;                          // プレゼント（きらきら・王冠）
-  return open(parts);
+
+  if (!withBody) {
+    return open(bg + deco.wing + deco.cape + parts + deco.bow + deco.sparkles + deco.crown);   // プレゼント（きらきら・王冠）
+  }
+  // からだ つき：あたまを 小さく して 上に のせ、したに からだ・うで・あしを かく
+  const S = stage === 4 ? 0.64 : 0.67;
+  const ty = stage === 4 ? -1 : -1.5;
+  const headG = `<g transform="translate(${(32 * (1 - S)).toFixed(2)} ${ty}) scale(${S})">${parts}${deco.bow}${deco.crown}</g>`;
+  return open(bg + deco.wing + deco.cape + pokoBodySVG(deco, mood, !!deco.hand) + headG + deco.hand + deco.sparkles);
 }
 
 // ---- バッジ ----

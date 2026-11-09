@@ -471,7 +471,7 @@ const SHOP_DRAW = {
 
 // look（場所 → id）から、ポコの 各ぶぶんの 絵を つくる
 function shopDraw(look, g) {
-  const out = { back: '', aura: '', glow: '', wing: '', cape: '', defs: '', main: '#5CC9B0', belly: '#B8EBDD', eyes: '', cheek: '', mouth: '', neck: '', head: '', bow: '', sparkles: '', crown: '' };
+  const out = { back: '', aura: '', glow: '', wing: '', cape: '', defs: '', main: '#5CC9B0', belly: '#B8EBDD', eyes: '', cheek: '', mouth: '', neck: '', head: '', bow: '', sparkles: '', crown: '', outfit: '', shoes: '', hand: '' };
   if (!look) return out;
   const draw = (slot) => (look[slot] && SHOP_DRAW[look[slot]]) ? SHOP_DRAW[look[slot]](g) : '';
   out.back = draw('back');
@@ -482,6 +482,9 @@ function shopDraw(look, g) {
   out.mouth = draw('mouth');
   out.neck = draw('neck');
   out.head = draw('head');
+  out.outfit = draw('outfit');   // からだ（ポコまる〜）に つける もの
+  out.shoes = draw('shoes');
+  out.hand = draw('hand');
   // --- プレゼント（いろは クエストごとに ちがう）---
   const gift = slot => { const it = look[slot] ? shopItem(look[slot]) : null; return it && it.gift ? it : null; };
   const sh = gift('shine'), cr = gift('crown'), cp = gift('cape'), wg = gift('wing');
@@ -491,15 +494,16 @@ function shopDraw(look, g) {
     out.sparkles = perkStar(6, 10, 5, c.main) + perkStar(58, 12, 4, c.main) + perkStar(7, 48, 3.5, c.main) + perkStar(57, 46, 4.5, c.main);
     out.bow = `<path d="M32 ${by} L23 ${by - 5} L23 ${by + 5} Z" fill="${c.main}" stroke="${c.dark}" stroke-width="0.6"/><path d="M32 ${by} L41 ${by - 5} L41 ${by + 5} Z" fill="${c.main}" stroke="${c.dark}" stroke-width="0.6"/><circle cx="32" cy="${by}" r="2.6" fill="${c.dark}"/>`;
   }
+  const gc = g.bodyG || g;   // マント・つばさは、からだが あるときは からだに あわせる
   if (cp) {
     const c = cp.color;
-    out.cape = `<path d="M${32 - g.rx + 3} ${g.cy - 3} Q${32 - g.rx - 7} ${g.cy + g.ry} ${32 - g.rx + 3} ${g.cy + g.ry + 2} L${32 + g.rx - 3} ${g.cy + g.ry + 2} Q${32 + g.rx + 7} ${g.cy + g.ry} ${32 + g.rx - 3} ${g.cy - 3} Z" fill="${c.main}" stroke="${c.dark}" stroke-width="1"/>`;
+    out.cape = `<path d="M${32 - gc.rx + 3} ${gc.cy - 3} Q${32 - gc.rx - 7} ${gc.cy + gc.ry} ${32 - gc.rx + 3} ${gc.cy + gc.ry + 2} L${32 + gc.rx - 3} ${gc.cy + gc.ry + 2} Q${32 + gc.rx + 7} ${gc.cy + gc.ry} ${32 + gc.rx - 3} ${gc.cy - 3} Z" fill="${c.main}" stroke="${c.dark}" stroke-width="1"/>`;
   }
   if (wg) {
     const c = wg.color;
     const wing = s => {   // s=-1 ひだり／+1 みぎ
-      const x0 = 32 + s * (g.rx - 3), y0 = g.cy - 2;
-      const xo = 32 + s * Math.min(g.rx + 8, 30), yt = y0 - 16;
+      const x0 = 32 + s * (gc.rx - 3), y0 = gc.cy - 2;
+      const xo = 32 + s * Math.min(gc.rx + 8, 30), yt = y0 - 16;
       return `<path d="M${x0} ${y0} Q${xo} ${yt - 2} ${xo} ${y0 - 6} Q${xo - s * 1.5} ${y0 - 1} ${xo - s * 3.5} ${y0 - 1} Q${xo - s * 4} ${y0 + 4} ${xo - s * 7} ${y0 + 4} Q${xo - s * 8} ${y0 + 9} ${x0} ${y0 + 10} Z" fill="#FFFFFF" stroke="${c.main}" stroke-width="1.8" stroke-linejoin="round"/>`;
     };
     out.wing = wing(-1) + wing(1);
@@ -603,7 +607,7 @@ function renderDressRoom(root, shop, stage) {
       const isWorn = shop.wear[it.slot] === it.id;
       const card = el('div', 'shop-card owned' + (isWorn ? ' worn' : ''));
       const preview = el('div', 'shop-card-pic');
-      preview.innerHTML = petSVG(stage, 'happy', 64, null, { [it.slot]: it.id });
+      preview.innerHTML = petSVG(slotNeedsBody(it.slot) ? Math.max(stage, 3) : stage, 'happy', 64, null, { [it.slot]: it.id });
       card.appendChild(preview);
       card.appendChild(el('div', 'shop-card-name', it.name));
       let btn;
@@ -638,15 +642,20 @@ function renderStore(root, shop, stage, have) {
     if (items.length === 0) return;
     any = true;
     root.appendChild(el('h3', 'section-title', sl.label));
+    if (sl.body && petStage(loadPet().growth) < 3) {   // からだが できてから
+      root.appendChild(el('div', 'panel body-lock', `🔒 ポコまるに しんかすると、からだが できて「${sl.label}」が かえるよ！（いまは 見るだけ）`));
+    }
     const grid = el('div', 'shop-grid');
     items.forEach(it => {
       const card = el('div', 'shop-card');
       const preview = el('div', 'shop-card-pic');
-      preview.innerHTML = petSVG(stage, 'happy', 64, null, { [it.slot]: it.id });
+      preview.innerHTML = petSVG(slotNeedsBody(it.slot) ? Math.max(stage, 3) : stage, 'happy', 64, null, { [it.slot]: it.id });
       card.appendChild(preview);
       card.appendChild(el('div', 'shop-card-name', it.name));
       card.appendChild(el('div', 'shop-card-tier tier-' + it.tier, SHOP_TIERS[it.tier]));
-      const btn = el('button', have >= it.price ? 'main-btn shop-btn' : 'sub-btn shop-btn', `💰 ${it.price}`);
+      const locked = sl.body && petStage(loadPet().growth) < 3;   // からだが まだ ない
+      const btn = el('button', !locked && have >= it.price ? 'main-btn shop-btn' : 'sub-btn shop-btn', locked ? '🔒' : `💰 ${it.price}`);
+      btn.disabled = !!locked;
       btn.addEventListener('click', () => {
         const now = petBalance(loadPet());
         if (now < it.price) { showToast(`コインが たりないよ（あと ${it.price - now}コイン）`); return; }
