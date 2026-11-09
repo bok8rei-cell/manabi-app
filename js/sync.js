@@ -2,7 +2,7 @@
 function collectSyncData() {
   // playerNames（保存された名前の一覧）も含める。これを入れないと
   // 同期しても「今選んでいる1人」しか相手の端末に渡らない。
-  const data = { progress: {}, ranking: {}, diff: {}, extras: {}, playerName: state.playerName, playerNames: loadPlayerNames() };
+  const data = { progress: {}, ranking: {}, diff: {}, extras: {}, playerName: state.playerName, playerNames: loadPlayerNames(), deletedNames: loadDeletedNames() };
   // 全プレイヤーぶんの進捗・難易度を集める（名前別キーをまるごとスキャン）。
   // 旧形式（全員合算/共通）のキーは同期に乗せない。
   for (let i = 0; i < localStorage.length; i++) {
@@ -222,12 +222,15 @@ function applySyncData(data) {
     localStorage.setItem('manabi_playername', state.playerName);
     document.getElementById('player-name').value = state.playerName;
   }
-  if (data.playerName) registerPlayerName(data.playerName);
+  // けした なまえ：どうきで もどって こないように、きおくして 一覧から のぞく
+  saveDeletedNames([...loadDeletedNames(), ...(Array.isArray(data.deletedNames) ? data.deletedNames : [])]);
+  const gone = loadDeletedNames();
+  if (data.playerName && !gone.includes(data.playerName)) registerPlayerName(data.playerName);
 
   // 名前の一覧を統合（相手の端末で登録された名前もチップに追加する）
   const incomingNames = Array.isArray(data.playerNames) ? data.playerNames : [];
-  if (incomingNames.length) {
-    const mergedNames = Array.from(new Set([...loadPlayerNames(), ...incomingNames])).slice(0, 10);
+  if (incomingNames.length || gone.length) {
+    const mergedNames = Array.from(new Set([...loadPlayerNames(), ...incomingNames])).filter(n => !gone.includes(n)).slice(0, 10);
     localStorage.setItem('manabi_playernames', JSON.stringify(mergedNames));
     renderPlayerNameSaved();
   }
@@ -302,7 +305,8 @@ function mergeSyncData(a, b) {
   });
   merged.extras = mergeExtras(a.extras, b.extras);
   // 名前の一覧は両端末の和集合（重複を除いて最大10件）
-  merged.playerNames = Array.from(new Set([...(a.playerNames || []), ...(b.playerNames || [])])).slice(0, 10);
+  merged.deletedNames = Array.from(new Set([...(a.deletedNames || []), ...(b.deletedNames || [])])).slice(-50);
+  merged.playerNames = Array.from(new Set([...(a.playerNames || []), ...(b.playerNames || [])])).filter(n => !merged.deletedNames.includes(n)).slice(0, 10);
   return merged;
 }
 

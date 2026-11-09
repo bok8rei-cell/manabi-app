@@ -547,6 +547,22 @@ function renderParent() {
       card.appendChild(el('div', 'child-section', `💪 にがて ${mistakes.length}もん`));
       card.appendChild(el('div', 'report-line', top.join('　')));
     }
+    // なまえを けす（テストで つくった なまえなど）
+    const delBtn = el('button', 'sub-btn danger-btn', '🗑 この なまえを けす');
+    delBtn.addEventListener('click', () => {
+      if (typeof isLocked === 'function' && isLocked() && lockedName() === name) {
+        showToast('この iPad の せんよう なまえは けせないよ。「せってい」で ロックを といてからね');
+        return;
+      }
+      askConfirm(`「${name}」を けす？\n\nこの なまえの ポコ・せいせき・おしゃれ などの きろくが ぜんぶ きえます。もとには もどせません。\n（おなじ あいことばの ほかの iPad からも きえます）`, 'けす', 'やめる', () => {
+        if (deleteChildCompletely(name)) {
+          showToast(`「${name}」を けしました`);
+          autoSync();
+        }
+        renderParent();
+      }, { cancelFirst: true });
+    });
+    card.appendChild(delBtn);
     root.appendChild(card);
   });
 }

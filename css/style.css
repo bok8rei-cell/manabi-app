@@ -686,3 +686,9 @@ h2, h3 { margin: 0; }
 .sample-choices { margin-top: 8px; white-space: pre-wrap; line-height: 1.8; }
 .sample-ans { margin-top: 10px; font-weight: 800; color: #1B7F4B; }
 .sample-ex { margin-top: 6px; white-space: pre-wrap; font-size: 0.9rem; line-height: 1.6; background: #FFF8EC; border-radius: 12px; padding: 8px 10px; }
+
+.danger-btn { margin-top: 12px; color: #B42318; border-color: #F3B8B2; font-size: 0.85rem; }
+#player-name-add { margin-top: 8px; width: 100%; }
+
+.danger-btn { margin-top: 12px; color: #B42318; border-color: #F3B8B2; font-size: 0.85rem; }
+#player-name-add { margin-top: 8px; width: 100%; }

@@ -1,6 +1,6 @@
 // ===== まなびポコ（旧 BRAIN QUEST：零式） 共通の部品 =====
 
-const APP_VERSION = 'v43.6';
+const APP_VERSION = 'v43.7';
 const TOTAL_QUESTIONS = 10;
 const DONT_KNOW = '__DONTKNOW__';
 
@@ -355,6 +355,43 @@ function renderPlayerNameSaved() {
   if (typeof refreshHome === 'function') refreshHome();
 }
 
+// ---- けした なまえ（「けす」を おしたら ここに のこす。ほかの iPad の どうきで もどって こないように）----
+const DELETED_NAMES_KEY = 'manabi_deleted_names';
+function loadDeletedNames() {
+  try {
+    const a = JSON.parse(localStorage.getItem(DELETED_NAMES_KEY) || '[]');
+    return Array.isArray(a) ? a : [];
+  } catch (e) { return []; }
+}
+function isNameDeleted(name) { return loadDeletedNames().includes(name); }
+function saveDeletedNames(list) {
+  try { localStorage.setItem(DELETED_NAMES_KEY, JSON.stringify(Array.from(new Set(list)).slice(-50))); } catch (e) { /* 無視 */ }
+}
+function undeleteName(name) { saveDeletedNames(loadDeletedNames().filter(n => n !== name)); }
+
+// なまえと、その子の きろく（ポコ・せいせき・おしゃれ など）を ぜんぶ けす。もとには もどせない
+function deleteChildCompletely(name) {
+  if (!name) return false;
+  if (typeof isLocked === 'function' && isLocked() && lockedName() === name) return false;   // この iPad の せんよう なまえは けせない
+  const names = loadPlayerNames().filter(n => n !== name);
+  localStorage.setItem('manabi_playernames', JSON.stringify(names));
+  saveDeletedNames([...loadDeletedNames(), name]);
+  const tag = playerTag(name);
+  const del = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k && k.indexOf('manabi_') === 0 && (k.indexOf('_' + tag + '_') >= 0 || k.endsWith('_' + tag))) del.push(k);
+  }
+  del.forEach(k => localStorage.removeItem(k));
+  if (state.playerName === name) {
+    state.playerName = '';
+    localStorage.removeItem('manabi_playername');
+    playerNameInput.value = '';
+  }
+  renderPlayerNameSaved();
+  return true;
+}
+
 function registerPlayerName(name) {
   if (!name) return;
   const names = loadPlayerNames();
@@ -375,6 +412,7 @@ playerNameInput.addEventListener('input', () => {
 });
 playerNameInput.addEventListener('change', () => {
   if ((typeof isLocked === 'function' && isLocked())) return;
+  if (state.playerName) undeleteName(state.playerName);   // いちど けした なまえを また つかう ときは もどす
   registerPlayerName(state.playerName);
 });
 

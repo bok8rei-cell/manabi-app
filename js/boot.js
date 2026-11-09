@@ -16,6 +16,18 @@ byId('solo-toggle').addEventListener('change', (e) => {
   autoSync();
 });
 
+byId('player-name-add').addEventListener('click', () => {
+  if (isLocked()) { showToast('この iPad は ロックされています'); return; }
+  const n = (byId('player-name').value || '').trim();
+  if (!n) { showToast('なまえを いれてね'); return; }
+  undeleteName(n);
+  state.playerName = n;
+  localStorage.setItem('manabi_playername', n);
+  registerPlayerName(n);
+  showToast(`「${n}」を ついかしました`);
+  autoSync();
+});
+
 byId('sound-toggle').addEventListener('change', (e) => {
   try { localStorage.setItem('manabi_sound', e.target.checked ? 'on' : 'off'); } catch (err) { /* 無視 */ }
   if (e.target.checked) FX.correct();
