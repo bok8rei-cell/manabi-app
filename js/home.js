@@ -448,6 +448,23 @@ function renderParent() {
     : 'あいことばが まだ ありません。「せってい」→「データを どうきする」で いれてね。'));
   const gone = (typeof loadDeletedNames === 'function') ? loadDeletedNames() : [];
   head.appendChild(el('div', 'report-line diag-line', `この たんまつ：${APP_VERSION}　なまえ ${loadPlayerNames().length}人${gone.length ? '　けした なまえ：' + gone.join('、') : ''}`));
+  const peek = el('button', 'sub-btn wide', '☁️ クラウドの ようすを 見る');
+  const peekOut = el('div', 'report-line diag-line');
+  peek.addEventListener('click', async () => {
+    peekOut.textContent = 'しらべています…';
+    try {
+      const code = getActiveSyncCode();
+      if (!cloudDb || !code) { peekOut.textContent = 'あいことばが ありません'; return; }
+      const snap = await cloudDb.collection('syncCodes').doc(code).get();
+      if (!snap.exists) { peekOut.textContent = 'クラウドに データが ありません'; return; }
+      const d = snap.data();
+      const wv = d.writerVersion ? `${d.writerVersion}（${String(d.writtenAt || '').replace('T', ' ').slice(0, 16)} UTC）` : '不明（ふるい バージョンの たんまつが さいごに 書きました）';
+      peekOut.textContent = `クラウドの なまえ：${(d.playerNames || []).join('、') || 'なし'}
+けした なまえ：${(d.deletedNames || []).join('、') || 'なし'}
+さいごに 書いた たんまつ：${wv}`;
+      peekOut.style.whiteSpace = 'pre-wrap';
+    } catch (e) { peekOut.textContent = 'しらべられませんでした：' + (e && e.code ? e.code : (e && e.message) || ''); }
+  });
   const refresh = el('button', 'sub-btn wide', '🔄 いま さいしんに する');
   refresh.addEventListener('click', async () => {
     refresh.disabled = true;
@@ -456,6 +473,8 @@ function renderParent() {
     renderParent();
   });
   head.appendChild(refresh);
+  head.appendChild(peek);
+  head.appendChild(peekOut);
   root.appendChild(head);
   const samplePanel = el('div', 'panel');
   samplePanel.appendChild(el('div', 'report-line', '学年・教科・レベルごとの もんだいと 答え・とき方を 見られます（学校の 先生に 見せる ときに）。'));

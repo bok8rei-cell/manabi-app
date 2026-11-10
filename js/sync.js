@@ -365,6 +365,8 @@ async function performCloudSync() {
   const cloudData = snap.exists ? snap.data() : { progress: {}, ranking: {}, playerName: '' };
   const localData = collectSyncData();
   const merged = mergeSyncData(localData, cloudData);
+  merged.writerVersion = (typeof APP_VERSION !== 'undefined') ? APP_VERSION : '';   // さいごに 書いた たんまつの バージョン（ふるい たんまつは この 欄を 消す＝ふるいと わかる）
+  merged.writtenAt = new Date().toISOString();
   await docRef.set(merged);
   applySyncData(merged);
   return merged;
