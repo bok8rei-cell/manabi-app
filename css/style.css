@@ -693,3 +693,6 @@ h2, h3 { margin: 0; }
 .danger-btn { margin-top: 12px; color: #B42318; border-color: #F3B8B2; font-size: 0.85rem; }
 #player-name-add { margin-top: 8px; width: 100%; }
 .diag-line { font-size: 0.75rem; color: #8a7a6e; }
+.diag-details { margin-top: 10px; }
+.diag-details summary { cursor: pointer; font-size: 0.8rem; color: #8a7a6e; padding: 6px 0; }
+.diag-details .sub-btn { margin-top: 6px; }

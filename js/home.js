@@ -447,7 +447,7 @@ function renderParent() {
     ? (err ? 'どうきが できていません（くわしくは「せってい」→「どうき」）' : (lastSyncText() || 'まだ どうきしていません'))
     : 'あいことばが まだ ありません。「せってい」→「データを どうきする」で いれてね。'));
   const gone = (typeof loadDeletedNames === 'function') ? loadDeletedNames() : [];
-  head.appendChild(el('div', 'report-line diag-line', `この たんまつ：${APP_VERSION}　なまえ ${loadPlayerNames().length}人　あいことば：${getActiveSyncCode() || 'なし'}（ほかの たんまつと おなじか 見くらべてね）${gone.length ? '　けした なまえ：' + gone.join('、') : ''}`));
+  head.appendChild(el('div', 'report-line diag-line', `${APP_VERSION}・${loadPlayerNames().length}人`));   // ふだんは これだけ
   const peek = el('button', 'sub-btn wide', '☁️ クラウドの ようすを 見る');
   const peekOut = el('div', 'report-line diag-line');
   peek.addEventListener('click', async () => {
@@ -473,8 +473,17 @@ function renderParent() {
     renderParent();
   });
   head.appendChild(refresh);
-  head.appendChild(peek);
-  head.appendChild(peekOut);
+  // くわしい じょうほう（うまく いかない ときだけ ひらく）：あいことば・けした なまえ・クラウドの ようす
+  const more = document.createElement('details');
+  more.className = 'diag-details';
+  const sum = document.createElement('summary');
+  sum.textContent = 'くわしい じょうほう（うまく いかない とき）';
+  more.appendChild(sum);
+  more.appendChild(el('div', 'report-line diag-line', `あいことば：${getActiveSyncCode() || 'なし'}（ほかの たんまつと おなじか 見くらべてね。ひとに おしえないでね）`));
+  more.appendChild(el('div', 'report-line diag-line', `けした なまえ：${gone.length ? gone.join('、') : 'なし'}`));
+  more.appendChild(peek);
+  more.appendChild(peekOut);
+  head.appendChild(more);
   root.appendChild(head);
   const samplePanel = el('div', 'panel');
   samplePanel.appendChild(el('div', 'report-line', '学年・教科・レベルごとの もんだいと 答え・とき方を 見られます（学校の 先生に 見せる ときに）。'));
