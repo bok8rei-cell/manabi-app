@@ -886,7 +886,21 @@ const KANJI_DATA = {
   ]
 };
 
+// 国語「ちょうむずかしい」（レベル3）：1つ 上・2つ 上の 学年の もんだい（むずかしい がわ）や、中学の もんだい。
+// 学年（grade）の まま 上の もんだいを せんどり する かたち。2〜6年と 中1（7）だけ。
+function generateKanjiSuper(grade) {
+  const r = Math.random();
+  const readWrite = ['r', 'w', 'y', 's'];   // 小学生・中1に 読める 種類（文法・古文・敬語の 分類は のぞく）
+  if (grade <= 2) return generateKanjiProblem(r < 0.6 ? 2 : 3, 2);
+  if (grade === 3) return generateKanjiProblem(r < 0.3 ? 3 : (r < 0.8 ? 4 : 5), 2);
+  if (grade === 4) return generateKanjiProblem(r < 0.2 ? 4 : (r < 0.7 ? 5 : 6), 2);
+  if (grade === 5) return generateKanjiProblem(r < 0.55 ? 6 : 7, 2);
+  if (grade === 6) return r < 0.5 ? generateKanjiProblem(7, 2) : generateKokugoJHProblem(8, 1, readWrite);
+  return r < 0.3 ? generateKanjiProblem(7, 2) : generateKokugoJHProblem(r < 0.65 ? 8 : 9, 1, readWrite.concat('b'));   // 中1
+}
+
 function generateKanjiProblem(grade, diff = 1) {
+  if (diff >= 3 && grade >= 2 && grade <= 7) return generateKanjiSuper(grade);
   if (grade >= 8) return generateKokugoJHProblem(grade, diff);   // 中2・中3（kokugo_jh.js）
   const list = KANJI_DATA[grade] || KANJI_DATA[1];
   const half = Math.ceil(list.length / 2);

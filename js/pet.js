@@ -152,9 +152,20 @@ function playerBestStreak() {
   return Math.max(loadDayStreak().best, currentDayStreak());
 }
 
+// 「ちょうむずかしい」に 1つでも 上がったか
+function reachedSuperLevel() {
+  const prefix = `manabi_diff_${playerTag()}_`;
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k && k.indexOf(prefix) === 0 && localStorage.getItem(k) === '3') return true;
+  }
+  return false;
+}
+
 function computeBadges() {
   const p = loadPet();
   const best = playerBestStreak();
+  const owned = (typeof shopOwnedCount === 'function') ? shopOwnedCount() : 0;
   return [
     { icon: '🌱', label: 'はじめの いっぽ',   hint: 'はじめて せいかいする',   got: p.xp >= 1 },
     { icon: '🔥', label: '3日れんぞく',       hint: '3日つづけて べんきょう',  got: best >= 3 },
@@ -164,6 +175,16 @@ function computeBadges() {
     { icon: '🏅', label: '500もん せいかい',  hint: 'ぜんぶで 500もん',        got: p.xp >= 500 },
     { icon: '🎯', label: 'パーフェクト',      hint: '5もん以上で ぜんぶ せいかい', got: p.perfects >= 1 },
     { icon: '📅', label: 'ミッション 5かい',  hint: 'きょうのミッションを5回',  got: p.missions >= 5 },
-    { icon: '💪', label: 'にがて そつぎょう', hint: 'にがてを 10もん クリア',   got: p.cleared >= 10 }
+    { icon: '💪', label: 'にがて そつぎょう', hint: 'にがてを 10もん クリア',   got: p.cleared >= 10 },
+    // ---- ふやした バッジ（つぎの もくひょう）----
+    { icon: '🥈', label: '1000もん せいかい', hint: 'ぜんぶで 1000もん',        got: p.xp >= 1000 },
+    { icon: '🥇', label: '3000もん せいかい', hint: 'ぜんぶで 3000もん',        got: p.xp >= 3000 },
+    { icon: '✨', label: '14日れんぞく',      hint: '14日つづけて べんきょう',  got: best >= 14 },
+    { icon: '🎖️', label: 'パーフェクト 10かい', hint: 'パーフェクトを 10回',   got: p.perfects >= 10 },
+    { icon: '📆', label: 'ミッション 30かい', hint: 'きょうのミッションを30回', got: p.missions >= 30 },
+    { icon: '🦾', label: 'にがて めいじん',   hint: 'にがてを 50もん クリア',   got: p.cleared >= 50 },
+    { icon: '🛍️', label: 'おしゃれさん',      hint: 'おしゃれを 10こ もつ',     got: owned >= 10 },
+    { icon: '🐾', label: 'ポコまるに しんか', hint: 'ポコまる いじょうに そだてる', got: petStage(p.growth) >= 3 },
+    { icon: '🔥', label: 'ちょうむずかしい',  hint: '「ちょうむずかしい」に すすむ', got: reachedSuperLevel() }
   ];
 }

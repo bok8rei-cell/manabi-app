@@ -231,8 +231,10 @@ const KOKUGO_JH = {
 
 let _kokugoJhLast = '';
 
-function generateKokugoJHProblem(grade, diff = 1) {
-  const all = KOKUGO_JH[grade] || KOKUGO_JH[8];
+// cats：種類（r 読み・w 書き・y 熟語・慣用句 など）を しぼる とき だけ 渡す（小学生・中1むけの 「ちょうむずかしい」で 文法・古文を のぞく ため）
+function generateKokugoJHProblem(grade, diff = 1, cats) {
+  let all = KOKUGO_JH[grade] || KOKUGO_JH[8];
+  if (cats) { const f = all.filter(it => cats.includes(it.k)); if (f.length >= 10) all = f; }
   // やさしい：むずかしめ(h)を のぞく／ふつう：ぜんぶ／むずかしい：むずかしめ ＋ 書き取り ＋ 文法
   let pool = all.filter(it => diff === 0 ? !it.h : (diff === 2 ? (it.h || it.k === 'w' || it.k === 'g') : true));
   if (pool.length < 10) pool = all;

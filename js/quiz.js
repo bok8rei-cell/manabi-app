@@ -412,7 +412,7 @@ function checkAnswer() {
 
   s.answered = true;
   if (!s.fromMistakes) recordUnit(s.currentSubject, s.grade, p.unitLabel, ok && s.hintStage === 0);   // たんげんべつの きろく（ぶんせき用）
-  if (!s.fromMistakes) recordRecent(s.currentSubject, s.grade, ok && s.hintStage === 0);   // 最近の正解率（ヒントを使って正解したぶんは、自力ではないので 数えない）
+  if (!s.fromMistakes && getDiff(s.grade, s.currentSubject) < 3) recordRecent(s.currentSubject, s.grade, ok && s.hintStage === 0);   // 「ちょうむずかしい」の 結果は 「まえの学年に もどる」の 判定に 入れない   // 最近の正解率（ヒントを使って正解したぶんは、自力ではないので 数えない）
   updateHintUI();
 
   // 選択肢の色づけ・入力欄のロック
