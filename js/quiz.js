@@ -680,6 +680,18 @@ function renderResult(r) {
   if (s.hintCost > 0) root.appendChild(el('div', 'note', `💡 ヒントで ${s.hintCost}コイン つかったよ（${s.hintsUsed}かい）`));
   if (missionBonus) root.appendChild(el('div', 'note gold', '🎊 きょうの ミッション ぜんぶ クリア！ ボーナス +30コイン'));
   ((award && award.bonuses) || []).forEach(b => root.appendChild(el('div', 'note gold', `🎁 ${b.label} +${b.coins}コイン`)));
+  // そだちポイント：なにで とれたか／3つ そろったら おしらせ
+  if (award && award.earned && award.earned.length > 0) {
+    const lines = award.earned.map(t => '・' + t);
+    const box = el('div', 'note warm', `🌱 そだちポイント +${award.earned.length}`);
+    lines.forEach(t => box.appendChild(el('div', 'earned-line', t)));
+    root.appendChild(box);
+  }
+  if (award && award.allNow) {
+    const box = el('div', 'note gold', '🎉 きょうの そだちポイント 3つ そろったよ！');
+    box.appendChild(el('div', 'earned-line', 'ホームで ポコに ごはんを あげられるよ（300コイン）'));
+    root.appendChild(box);
+  }
 
   // ポコ
   const prog = petProgress(award.pet.growth);

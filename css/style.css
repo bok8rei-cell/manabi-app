@@ -706,3 +706,4 @@ h2, h3 { margin: 0; }
 .food-row.ok { color: #1B7F4B; font-weight: 700; }
 .food-card .wide { margin-top: 10px; }
 .food-note { margin-top: 6px; font-size: 0.8rem; text-align: center; color: #8a7a6e; }
+.earned-line { font-weight: 600; font-size: 0.85rem; margin-top: 2px; }

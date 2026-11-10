@@ -68,10 +68,11 @@ function awardPet({ xp = 0, coins = 0, perfect = false, mission = false, cleared
   if (p.growthDay.date !== today) p.growthDay = { date: today, base: false, amount: false, mission: false, c: 0 };
   const day = p.growthDay;
   let gain = 0;
-  if (!day.base) { day.base = true; gain += 1; }
+  const earned = [];   // いま とれた そだちポイントの ないよう
+  if (!day.base) { day.base = true; gain += 1; earned.push('はじめて べんきょうした'); }
   day.c += xp;
-  if (!day.amount && day.c >= GROWTH_AMOUNT_TARGET) { day.amount = true; gain += 1; }
-  if (mission && !day.mission) { day.mission = true; gain += 1; }
+  if (!day.amount && day.c >= GROWTH_AMOUNT_TARGET) { day.amount = true; gain += 1; earned.push(`きょう ${GROWTH_AMOUNT_TARGET}もん せいかいした`); }
+  if (mission && !day.mission) { day.mission = true; gain += 1; earned.push('きょうの ミッション ぜんぶ クリア'); }
   p.growth += gain;
 
   // そだちポイント 3つ そろった日だけ、れんぞく日数に かぞえる（ボーナスも ここで）
@@ -100,7 +101,8 @@ function awardPet({ xp = 0, coins = 0, perfect = false, mission = false, cleared
 
   const fresh = loadPet();
   const after = petStage(fresh.growth);
-  return { pet: fresh, before, after, levelUp: after > before, gain, bonuses };
+  const allNow = !!(day.base && day.amount && day.mission) && earned.length > 0;   // この 1かいで 3つ そろった
+  return { pet: fresh, before, after, levelUp: after > before, gain, bonuses, earned, allNow };
 }
 
 // ポコの絵。stage: 0=たまご 1〜4=せいちょう / mood: happy | cheer | think
