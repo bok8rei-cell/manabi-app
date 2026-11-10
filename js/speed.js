@@ -197,7 +197,6 @@ function finishSpeedQuiz() {
     message += '\n\n💡 「せってい」で なまえを入れると\nランキングに登録されるよ！';
   }
 
-  touchDayStreak();
   recordHistory(state.speedCorrect, SPEED_QUESTIONS);
   document.getElementById('speed-result-message').textContent = message;
 

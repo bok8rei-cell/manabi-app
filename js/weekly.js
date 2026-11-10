@@ -181,19 +181,23 @@ function weekEndPassed(weekStart) {   // その週が おわって、そのあ�
 }
 
 // プレゼントを わたして、いまの子に あたらしく とどいた id の 一覧を かえす
+let lastQuestNotes = [];   // いまの子に とどいた コイン・そだちポイントの おしらせ
 function grantQuestGifts() {
   const me = (state.playerName || '').trim();
+  lastQuestNotes = [];
   const today = weekStartOf(localDateStr());
   const players = weeklyPlayers();
   const got = [];
   const give = (id, names) => names.forEach(nm => { if (grantShopItem(id, nm) && nm === me) got.push(id); });
+  // コイン・そだちポイントの ボーナス（みんなに。1人 1かいずつ）
+  const bonus = (key, coins, growth, label, names) => names.forEach(nm => { if (payQuestBonus(nm, key, coins, growth) && nm === me) lastQuestNotes.push(label); });
   for (let ws = WEEKLY_START; ws <= today; ws = addDaysStr(ws, 7)) {
     const t = weekTally(ws);
     const n = questNumber(ws);
     const boss = weekBoss(ws), last = weekLastBoss(ws);
-    if (t.total >= WEEKLY_GOAL) give(`shine:${n}`, players);
-    if (boss && t.total >= WEEKLY_GOAL + boss.hp) give(`cape:${n}`, players);
-    if (last && t.total >= LAST_BOSS_TOTAL) give(`wing:${n}`, players);
+    if (t.total >= WEEKLY_GOAL) { give(`shine:${n}`, players); bonus(`${n}:goal`, QUEST_BONUS, 0, `たっせい ボーナス +${QUEST_BONUS}コイン`, players); }
+    if (boss && t.total >= WEEKLY_GOAL + boss.hp) { give(`cape:${n}`, players); bonus(`${n}:boss`, QUEST_BONUS, 0, `ウラボス げきは ボーナス +${QUEST_BONUS}コイン`, players); }
+    if (last && t.total >= LAST_BOSS_TOTAL) { give(`wing:${n}`, players); bonus(`${n}:last`, QUEST_BONUS, LAST_BOSS_GROWTH, `ラスボス げきは ボーナス +${QUEST_BONUS}コイン と そだちポイント +${LAST_BOSS_GROWTH}`, players); }
     if (ws < today && t.total >= WEEKLY_GOAL && weekEndPassed(ws)) {
       const top = t.rows.length ? t.rows[0].n : 0;
       if (top > 0) give(`crown:${n}`, t.rows.filter(r => r.n === top).map(r => r.name));
@@ -204,9 +208,10 @@ function grantQuestGifts() {
 
 function announceGifts(ids) {
   const names = ids.map(id => (shopItem(id) || {}).name).filter(Boolean);
-  if (names.length === 0) return false;
+  const notes = lastQuestNotes.splice(0);
+  if (names.length === 0 && notes.length === 0) return false;
   setTimeout(() => askConfirm(
-    `🎁 ポコクエストの プレゼントが とどいたよ！\n\n${names.join('\n')}\n\n「おしゃれ」の「きがえ」で ずっと つけられるよ！`,
+    `🎁 ポコクエストの プレゼントが とどいたよ！\n\n${names.concat(notes).join('\n')}${names.length ? '\n\n「おしゃれ」の「きがえ」で ずっと つけられるよ！' : ''}`,
     'おしゃれへ', 'あとで', () => { shopMode = 'dress'; showTab('shop'); }), 500);
   return true;
 }
@@ -220,11 +225,11 @@ function checkBossReveal(w) {
     { f: 'a', ok: w.revealed,
       text: `…ゴゴゴゴ…\n\n${w.boss.emoji} ウラボス「${w.boss.name}」が あらわれた！\n\nみんなで ${w.boss.hp}ダメージ あたえて たおせ！\n（せいかい 1もん ＝ 1ダメージ）` },
     { f: 'd', ok: w.defeated,
-      text: `🎉 ${w.boss.emoji} ${w.boss.name}を たおした！！\nみんなの ちからだ！\nごほうびに マントを プレゼント！\n「ウラボスキラー」の しょうごうも ゲット！` },
+      text: `🎉 ${w.boss.emoji} ${w.boss.name}を たおした！！\nみんなの ちからだ！\nごほうびに マントを プレゼント！\nさらに ${QUEST_BONUS}コインも！\n「ウラボスキラー」の しょうごうも ゲット！` },
     { f: 'l', ok: w.lastRevealed,
       text: `…ゴゴゴゴゴゴ…\n\n${w.last ? w.last.emoji : ''} ラスボス「${w.last ? w.last.name : ''}」が あらわれた！！\n\nここまで きた きみたちなら たおせる！\nあと ${w.last ? w.last.hp : 0}ダメージ！（ごうけい ${LAST_BOSS_TOTAL}もん）` },
     { f: 'z', ok: w.lastDefeated,
-      text: `🎉🎉 ラスボス ${w.last ? w.last.emoji : ''} ${w.last ? w.last.name : ''}を たおした！！\nでんせつの ゆうしゃだ！\nごほうびに つばさを プレゼント！\n「ラスボスキラー」の しょうごうも ゲット！` }
+      text: `🎉🎉 ラスボス ${w.last ? w.last.emoji : ''} ${w.last ? w.last.name : ''}を たおした！！\nでんせつの ゆうしゃだ！\nごほうびに つばさを プレゼント！\nさらに ${QUEST_BONUS}コインと\nそだちポイント +${LAST_BOSS_GROWTH}も！\n「ラスボスキラー」の しょうごうも ゲット！` }
   ];
   // 見ていない えんしゅつが いくつか たまっていたら、いちばん あたらしい 1つだけ 見せる（ぜんぶ 見たことに する）
   const pending = steps.filter(s => s.ok && seen.indexOf(s.f) < 0);
@@ -399,6 +404,6 @@ function appendQuestGuide(card, w) {
     rewards.appendChild(item);
   });
   guide.appendChild(rewards);
-  guide.appendChild(el('div', 'quest-guide-text', `もらった プレゼントは ずっと のこって、「おしゃれ」の「きがえ」で つけはずし できるよ。\nいろは ポコクエストごとに ちがうよ（こんかいは「${color.name}」）`));
+  guide.appendChild(el('div', 'quest-guide-text', `たっせい・ウラボス・ラスボスを たおすたびに ${QUEST_BONUS}コインも もらえるよ（ラスボスは そだちポイント +${LAST_BOSS_GROWTH}も！）\nもらった プレゼントは ずっと のこって、「おしゃれ」の「きがえ」で つけはずし できるよ。\nいろは ポコクエストごとに ちがうよ（こんかいは「${color.name}」）`));
   card.appendChild(guide);
 }

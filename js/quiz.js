@@ -589,7 +589,7 @@ function finishSession() {
   const correct = s.correct;
   const rate = total ? correct / total : 0;
 
-  const day = touchDayStreak();
+  const day = loadDayStreak();   // れんぞく日数は、そだちポイント3つが そろった ときに 数える（awardPet）
   recordHistory(correct, total);
 
   if (!s.fromMistakes && s.mode !== 'challenge') {
@@ -621,7 +621,8 @@ function finishSession() {
     }
   }
   const perfect = correct === total && total >= 5 && !s.fromMistakes && s.hintsUsed === 0;
-  const award = awardPet({ xp: correct, coins, perfect, mission: missionBonus, cleared: s.cleared });
+  const levelKey = (s.mode === 'challenge' && passed) ? `${s.grade}|${s.subject}|${s.diffLevel}` : '';
+  const award = awardPet({ xp: correct, coins, perfect, mission: missionBonus, cleared: s.cleared, levelKey });
 
   if (award.levelUp) FX.levelUp();
   else if (rate >= 0.8 || missionBonus) FX.clear();
@@ -669,7 +670,7 @@ function renderResult(r) {
   coin.appendChild(el('div', 'stat-label', 'コイン'));
   const streak = el('div', 'stat');
   streak.appendChild(el('div', 'stat-ico', '🔥'));
-  streak.appendChild(el('div', 'stat-num', `${day.count}日`));
+  streak.appendChild(el('div', 'stat-num', `${currentDayStreak()}日`));
   streak.appendChild(el('div', 'stat-label', 'れんぞく'));
   chips.appendChild(coin);
   chips.appendChild(streak);
@@ -678,6 +679,7 @@ function renderResult(r) {
   if (s.limitedCount > 0) root.appendChild(el('div', 'note', `⚖️ ${BALANCE_NAMES[s.currentSubject] || 'この きょうか'}は せいげんちゅうで、コインが すくなくなったよ（さんすう・こくごを やると もどるよ）`));
   if (s.hintCost > 0) root.appendChild(el('div', 'note', `💡 ヒントで ${s.hintCost}コイン つかったよ（${s.hintsUsed}かい）`));
   if (missionBonus) root.appendChild(el('div', 'note gold', '🎊 きょうの ミッション ぜんぶ クリア！ ボーナス +30コイン'));
+  ((award && award.bonuses) || []).forEach(b => root.appendChild(el('div', 'note gold', `🎁 ${b.label} +${b.coins}コイン`)));
 
   // ポコ
   const prog = petProgress(award.pet.growth);

@@ -164,7 +164,7 @@ function currentDayStreak(name) {
   return 0;
 }
 
-function studiedToday() { return loadDayStreak().last === localDateStr(); }
+function studiedToday() { const h = loadHistory()[localDateStr()]; return !!(h && h.q > 0); }   // 1もんでも やったか（れんぞく日数は ポイント3つの 日だけ）
 
 // ---- ドリルの問題数（10もん／3もん）----
 function drillSizeKey() { return `manabi_drillsize_${playerTag()}`; }

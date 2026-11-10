@@ -87,6 +87,7 @@ function renderHome() {
   else if (streak > 0) say = 'きのうも がんばったね！\nきょうも いっしょに やろう！';
   else say = 'きょうも いっしょに\nやろう！';
   byId('home-bubble').textContent = say;
+  renderFoodPanel();   // ポコの ごはん（js/bonus.js）
 
   const body = byId('home-body');
   body.innerHTML = '';
@@ -224,6 +225,8 @@ function renderHome() {
 function renderZukan() {
   const root = byId('zukan-content');
   root.innerHTML = '';
+  const bb = settleBadgeBonus();   // あたらしい バッジの ボーナス（js/bonus.js）
+  if (bb.coins > 0) showToast(`🎁 バッジ ボーナス +${bb.coins}コイン（${bb.labels.length}こ）`);
   const pet = loadPet();
   const prog = petProgress(pet.growth);
 
@@ -516,8 +519,10 @@ function renderParent() {
     card.appendChild(title);
 
     // きょう
-    const doneToday = streakInfo.last === today;
-    const daysAgo = streakInfo.last ? Math.round((new Date(today) - new Date(streakInfo.last)) / 86400000) : null;
+    const studyDays = Object.keys(hist).filter(d => hist[d] && hist[d].q > 0).sort();   // 1もんでも やった日（れんぞく日数は ポイント3つの 日）
+    const lastStudy = studyDays.length ? studyDays[studyDays.length - 1] : null;
+    const doneToday = lastStudy === today;
+    const daysAgo = lastStudy ? Math.round((new Date(today) - new Date(lastStudy)) / 86400000) : null;
     let todayText, todayCls;
     if (doneToday) { todayText = `✅ きょうは やりました（${todayQ}もん）`; todayCls = 'ok'; }
     else if (daysAgo === null) { todayText = '⏳ まだ いちども やっていません'; todayCls = 'wait'; }
@@ -528,7 +533,7 @@ function renderParent() {
     getRecommendations(name, grade).slice(0, 3).forEach(rec => {
       card.appendChild(el('div', 'parent-rec', '💡 ' + recommendText(rec)));
     });
-    card.appendChild(el('div', 'report-line', `🔥 れんぞく ${currentDayStreak(name)}日（さいこう ${Math.max(streakInfo.best, currentDayStreak(name))}日）　📅 さいごに やった日：${streakInfo.last ? formatDay(streakInfo.last) : 'まだ'}`));
+    card.appendChild(el('div', 'report-line', `🔥 れんぞく ${currentDayStreak(name)}日（さいこう ${Math.max(streakInfo.best, currentDayStreak(name))}日）　📅 さいごに やった日：${lastStudy ? formatDay(lastStudy) : 'まだ'}`));
 
     // この1しゅうかん
     card.appendChild(el('div', 'report-line', weekQ > 0

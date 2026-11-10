@@ -43,8 +43,12 @@ function mergeExtra(key, rawA, rawB) {
     ['xp', 'coins', 'spent', 'perfects', 'missions', 'cleared', 'growth'].forEach(f => { out[f] = Math.max(a[f] || 0, b[f] || 0); });
     const ga = a.growthDay || { date: '' }, gb = b.growthDay || { date: '' };
     out.growthDay = ga.date > gb.date ? ga : (gb.date > ga.date ? gb : {
-      date: ga.date, base: !!(ga.base || gb.base), amount: !!(ga.amount || gb.amount), mission: !!(ga.mission || gb.mission), c: Math.max(ga.c || 0, gb.c || 0)
+      date: ga.date, base: !!(ga.base || gb.base), amount: !!(ga.amount || gb.amount), mission: !!(ga.mission || gb.mission), c: Math.max(ga.c || 0, gb.c || 0),
+      food: Math.max(ga.food || 0, gb.food || 0), counted: !!(ga.counted || gb.counted)
     });
+    // もらった ボーナスの きろくは 和集合（2かい もらえないように）
+    out.paid = {};
+    ['streak', 'level', 'badge', 'quest'].forEach(k => { out.paid[k] = Array.from(new Set([...((a.paid || {})[k] || []), ...((b.paid || {})[k] || [])])); });
     return JSON.stringify(out);
   }
   if (key.indexOf('manabi_daystreak_') === 0) {
