@@ -127,7 +127,7 @@ GitHub Pages: `https://bok8rei-cell.github.io/manabi-app/`
 | `js/shakai_jh.js` | 社会（中2・中3）の問題データ（地理・歴史・公民、key `shakai`） |
 | `js/eigo.js` | 英語問題生成 |
 | `js/firebase-config.js` | Firebase 初期化（cloudDb をグローバル公開） |
-| `sw.js` | Service Worker（PWAオフライン対応） |
+| `sw.js` | Service Worker（PWAオフライン対応）。ネットワーク優先、失敗時は ignoreSearch で キャッシュを使う（?v= ?u= が ちがっても OK）。ページは どの URLでも index.html に フォールバック。更新時に キャッシュを けすので、更新のあと 1回 オンラインで ひらけば オフラインで 使える（iPhone の Chrome は Service Worker が使えない）|
 | `manifest.json` | PWAマニフェスト |
 
 ## クラウド同期の仕組み
@@ -168,6 +168,6 @@ Agent ツールで以下を実行：
 
 - iOS でPWAをホーム画面から削除すると localStorage が消えるが、プレイヤー名を再入力すれば Firestore から復元できる
 - Service Worker のキャッシュバージョンを上げないと端末に古いバージョンが残る
-- バージョンは `js/core.js` の APP_VERSION・`version.json`・`sw.js` の CACHE_NAME・`index.html` の `?v=` を同じ番号にそろえて上げる（現在 v43.19）
+- バージョンは `js/core.js` の APP_VERSION・`version.json`・`sw.js` の CACHE_NAME・`index.html` の `?v=` を同じ番号にそろえて上げる（現在 v43.20）
 - 日付は `localDateStr()`（js/store.js）を使う。`toISOString()` は UTC なので日本時間の朝に1日ずれる
 - `explain.js` を変更したら、先生エージェントに審査を依頼する（問題データと同じ扱い）

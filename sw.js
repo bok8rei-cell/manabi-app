@@ -1,6 +1,6 @@
 // オフラインでも使えるようにするための サービスワーカー
 // ファイルを更新したら CACHE_NAME のバージョンを上げてください
-const CACHE_NAME = 'manabi-app-v43.19';
+const CACHE_NAME = 'manabi-app-v43.20';
 
 const ASSETS = [
   './',
@@ -80,10 +80,20 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(
     fetch(event.request)
       .then((response) => {
-        const copy = response.clone();
-        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+        if (response && response.ok) {   // エラーの ページは キャッシュしない
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+        }
         return response;
       })
-      .catch(() => caches.match(event.request))
+      .catch(() =>
+        // オフライン：URLの ?以降（?u=… や ?v=…）が ちがっても、おなじ ファイルを 使う。
+        // ページ（アプリの 開きなおし）を ひらく ときは、どの URLでも index.html を 出す。
+        caches.match(event.request, { ignoreSearch: true }).then((hit) => {
+          if (hit) return hit;
+          if (event.request.mode === 'navigate') return caches.match('./index.html', { ignoreSearch: true });
+          return hit;
+        })
+      )
   );
 });

@@ -13,7 +13,10 @@ const firebaseConfig = {
 };
 
 let cloudDb = null;
-if (firebaseConfig.apiKey !== 'YOUR_API_KEY') {
-  firebase.initializeApp(firebaseConfig);
-  cloudDb = firebase.firestore();
+// オフラインで Firebase の ファイル（外の サイト）が よみこめなかった ときは、クラウドなしで うごかす
+if (firebaseConfig.apiKey !== 'YOUR_API_KEY' && typeof firebase !== 'undefined') {
+  try {
+    firebase.initializeApp(firebaseConfig);
+    cloudDb = firebase.firestore();
+  } catch (e) { cloudDb = null; }
 }
