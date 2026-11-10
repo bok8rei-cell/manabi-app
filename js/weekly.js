@@ -5,6 +5,8 @@
 
 const WEEKLY_GOAL = 1000;
 const WEEKLY_START = '2026-11-07';   // さいしょの週の はじまり（土）。これより前は 数えない
+// この日から ポコクエストを おやすみする（しばらく ようすを 見る）。もういちど はじめる ときは、この 日付を ずっと あとに するか '' に する
+const WEEKLY_PAUSE_FROM = '2026-11-14';
 const WEEKLY_KEEP = 60;              // 保存する週の数（ウラボスキラーの かずを 数えるため ながめに）
 
 // その日をふくむ週の はじまり（土曜日）の日付
@@ -25,6 +27,7 @@ function loadWeekCounts(name) {
 function addWeeklyCorrect() {
   const w = weekStartOf(localDateStr());
   if (w < WEEKLY_START) return;
+  if (WEEKLY_PAUSE_FROM && w >= WEEKLY_PAUSE_FROM) return;   // おやすみ中は かぞえない
   const o = loadWeekCounts();
   o[w] = (o[w] || 0) + 1;
   const keys = Object.keys(o).sort();
@@ -56,6 +59,7 @@ function weeklyStatus() {
   const mine = (t.rows.find(r => r.name === me) || { n: 0 }).n;
   const bi = started ? bossInfo(start, t.total) : bossInfo(WEEKLY_START, 0);
   return {
+    paused: !!(WEEKLY_PAUSE_FROM && start >= WEEKLY_PAUSE_FROM),
     start, end, started, rows: t.rows, total: t.total, mine, goal: WEEKLY_GOAL,
     left: Math.max(0, WEEKLY_GOAL - t.total), achieved: t.total >= WEEKLY_GOAL,
     boss: started ? bi.boss : null, revealed: bi.revealed, defeated: bi.defeated, hpLeft: bi.hpLeft,
@@ -191,7 +195,7 @@ function grantQuestGifts() {
   const give = (id, names) => names.forEach(nm => { if (grantShopItem(id, nm) && nm === me) got.push(id); });
   // コイン・そだちポイントの ボーナス（みんなに。1人 1かいずつ）
   const bonus = (key, coins, growth, label, names) => names.forEach(nm => { if (payQuestBonus(nm, key, coins, growth) && nm === me) lastQuestNotes.push(label); });
-  for (let ws = WEEKLY_START; ws <= today; ws = addDaysStr(ws, 7)) {
+  for (let ws = WEEKLY_START; ws <= today && !(WEEKLY_PAUSE_FROM && ws >= WEEKLY_PAUSE_FROM); ws = addDaysStr(ws, 7)) {
     const t = weekTally(ws);
     const n = questNumber(ws);
     const boss = weekBoss(ws), last = weekLastBoss(ws);
@@ -279,6 +283,14 @@ function appendFamilyParent(root) {
   const w = weeklyStatus();
   const panel = el('div', 'panel');
   panel.appendChild(el('h3', null, '🏆 ポコクエスト'));
+  if (w.paused) {
+    panel.appendChild(el('div', 'report-line', '🌙 いまは おやすみ中です（11/14から。ようすを 見て また はじめます）'));
+    const h1 = bossHistory(), h2 = lastBossHistory();
+    if (h1.length) panel.appendChild(el('div', 'report-line', `🏅 たおした ウラボス：${h1.length}たい ${h1.map(h => h.emoji + h.name).join('、')}`));
+    if (h2.length) panel.appendChild(el('div', 'report-line', `🏅 たおした ラスボス：${h2.length}たい ${h2.map(h => h.emoji + h.name).join('、')}`));
+    root.appendChild(panel);
+    return;
+  }
   if (!w.started) {
     panel.appendChild(el('div', 'report-line', `${mdLabel(WEEKLY_START)}（土）から スタート`));
     root.appendChild(panel);
@@ -313,7 +325,7 @@ function updateWeekChip() {
   const chip = byId('quiz-week');
   if (!chip) return;
   const w = weeklyStatus();
-  if (!w.started) { chip.classList.add('hidden'); return; }
+  if (!w.started || w.paused) { chip.classList.add('hidden'); return; }
   if (w.boss && w.revealed && w.last && w.lastRevealed) {
     chip.textContent = w.lastDefeated
       ? `🎉 ラスボスを たおした！ ／ じぶん ${w.mine}もん`
@@ -331,6 +343,18 @@ function updateWeekChip() {
 // ホームの カード
 function renderFamilyCard(body) {
   const w = weeklyStatus();
+  if (w.paused) {   // おやすみ中：さいごの週の プレゼント（おうかんなど）は とどける
+    const rest = el('div', 'family-card');
+    const rh = el('div', 'family-head');
+    rh.appendChild(el('div', 'family-title', '🏆 ポコクエスト'));
+    rest.appendChild(rh);
+    rest.appendChild(el('div', 'family-note', '🌙 いまは おやすみ中だよ。\nまた あたらしい ポコクエストを じゅんびするから、たのしみに まっててね！'));
+    const gifts = grantQuestGifts();
+    appendBossTitle(rest);
+    body.appendChild(rest);
+    announceGifts(gifts);
+    return;
+  }
   const card = el('div', 'family-card');
   const head = el('div', 'family-head');
   head.appendChild(el('div', 'family-title', '🏆 ポコクエスト'));
