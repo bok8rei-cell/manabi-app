@@ -446,6 +446,8 @@ function renderParent() {
   head.appendChild(el('div', 'report-line', hasCode
     ? (err ? 'どうきが できていません（くわしくは「せってい」→「どうき」）' : (lastSyncText() || 'まだ どうきしていません'))
     : 'あいことばが まだ ありません。「せってい」→「データを どうきする」で いれてね。'));
+  const gone = (typeof loadDeletedNames === 'function') ? loadDeletedNames() : [];
+  head.appendChild(el('div', 'report-line diag-line', `この たんまつ：${APP_VERSION}　なまえ ${loadPlayerNames().length}人${gone.length ? '　けした なまえ：' + gone.join('、') : ''}`));
   const refresh = el('button', 'sub-btn wide', '🔄 いま さいしんに する');
   refresh.addEventListener('click', async () => {
     refresh.disabled = true;
