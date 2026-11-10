@@ -81,22 +81,33 @@ function renderFoodPanel() {
   if (!state.playerName.trim()) return;
   const p = loadPet();
   const d = petToday(p);
-  const pts = [d.base, d.amount, d.mission];
-  const dots = pts.map(x => (x ? '●' : '○')).join('');
+  const done = [d.base, d.amount, d.mission].filter(Boolean).length;
   const card = el('div', 'panel food-card');
-  card.appendChild(el('div', 'food-points', `きょうの そだちポイント ${dots}　ごはん ${'🍙'.repeat(d.food || 0)}${'・'.repeat(FOOD_MAX - (d.food || 0))}`));
+  const head = el('div', 'food-head');
+  head.appendChild(el('span', 'food-title', 'きょうの そだちポイント'));
+  head.appendChild(el('span', 'food-count', `${done} / 3`));
+  card.appendChild(head);
+  [
+    [d.base, 'はじめて べんきょうする'],
+    [d.amount, `${GROWTH_AMOUNT_TARGET}もん せいかいする（いま ${Math.min(d.c || 0, GROWTH_AMOUNT_TARGET)}もん）`],
+    [d.mission, 'きょうの ミッション ぜんぶ']
+  ].forEach(([ok, label]) => {
+    card.appendChild(el('div', 'food-row' + (ok ? ' ok' : ''), `${ok ? '✅' : '⬜'} ${label}`));
+  });
   const left = petFoodLeft(p);
   const allDone = petDayAllDone(p);
-  let label, enabled = false;
-  if (!allDone) label = '🍙 ポコの ごはん（ポイントを 3つ そろえると かえるよ）';
-  else if (left <= 0) label = '🍙 きょうは もう おなかいっぱい！';
-  else { label = `🍙 ポコの ごはん ${FOOD_PRICE}コイン（きょう あと ${left}かい）`; enabled = true; }
+  let label, note, enabled = false;
+  if (!allDone) { label = '🍙 ポコの ごはん'; note = '3つ そろうと、ポコに ごはんが あげられるよ'; }
+  else if (left <= 0) { label = '🍙 ポコの ごはん'; note = 'きょうは もう おなかいっぱい！'; }
+  else { label = `🍙 ポコの ごはん　${FOOD_PRICE}コイン`; note = `そだちポイント +1（きょう あと ${left}かい）`; enabled = true; }
   const btn = el('button', enabled ? 'main-btn wide' : 'sub-btn wide', label);
   btn.disabled = !enabled;
   btn.addEventListener('click', () => {
     const now = petBalance(loadPet());
     if (now < FOOD_PRICE) { showToast(`コインが たりないよ（あと ${FOOD_PRICE - now}コイン）`); return; }
-    askConfirm(`ポコに ごはんを あげる？\n（${FOOD_PRICE}コイン つかいます）\nいま ${now}コイン`, 'あげる', 'やめる', () => {
+    askConfirm(`ポコに ごはんを あげる？
+（${FOOD_PRICE}コイン つかいます）
+いま ${now}コイン`, 'あげる', 'やめる', () => {
       const r = buyPokoFood();
       if (r.r === 'ok') {
         if (r.levelUp) { FX.levelUp(); showToast(`🎉 ポコが しんかした！ ${PET_STAGES[r.after].name}`); }
@@ -108,5 +119,6 @@ function renderFoodPanel() {
     }, { cancelFirst: true });
   });
   card.appendChild(btn);
+  card.appendChild(el('div', 'food-note', note));
   root.appendChild(card);
 }

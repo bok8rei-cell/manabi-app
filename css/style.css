@@ -698,5 +698,11 @@ h2, h3 { margin: 0; }
 .diag-details .sub-btn { margin-top: 6px; }
 
 /* ----- ポコの ごはん ----- */
-.food-card { margin-top: 8px; padding: 10px 12px; }
-.food-points { font-size: 0.85rem; font-weight: 700; margin-bottom: 8px; text-align: center; letter-spacing: 0.05em; }
+.food-card { margin-top: 8px; padding: 12px 14px; line-break: strict; word-break: keep-all; overflow-wrap: anywhere; text-wrap: balance; }
+.food-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
+.food-title { font-weight: 800; font-size: 0.95rem; }
+.food-count { font-weight: 800; color: var(--main-d); }
+.food-row { font-size: 0.9rem; line-height: 1.7; color: #8a7a6e; }
+.food-row.ok { color: #1B7F4B; font-weight: 700; }
+.food-card .wide { margin-top: 10px; }
+.food-note { margin-top: 6px; font-size: 0.8rem; text-align: center; color: #8a7a6e; }
