@@ -83,6 +83,7 @@ function perkStar(x, y, r, fill) {
   return `<path d="M${x} ${y - r} L${x + k} ${y - k} L${x + r} ${y} L${x + k} ${y + k} L${x} ${y + r} L${x - k} ${y + k} L${x - r} ${y} L${x - k} ${y - k} Z" fill="${fill || '#FFD43B'}"/>`;
 }
 
+let petSvgSeq = 0;
 function petSVG(stage, mood = 'happy', size = 64, opts, look) {
   if (look === undefined) look = (typeof shopLook === 'function') ? shopLook() : null;
   // 「きらきらポコ」（ポコクエストの プレゼント）を つけている間は、1だん しんかした すがたで 見える（ポコキングは そのまま）。
@@ -92,8 +93,9 @@ function petSVG(stage, mood = 'happy', size = 64, opts, look) {
   const withBody = realStage >= 3 && typeof pokoBodySVG === 'function';   // きらきらポコで 見かけが しんかしても、からだは まだ つかない
   const w = size;
   const h = Math.round(size * 0.94);
+  const uid = ++petSvgSeq;   // この 絵だけの ばんごう
   const open = (inner) =>
-    `<svg width="${w}" height="${h}" viewBox="0 0 64 60" role="img" aria-label="マスコットのポコ" xmlns="http://www.w3.org/2000/svg">${inner}</svg>`;
+    `<svg width="${w}" height="${h}" viewBox="0 0 64 60" role="img" aria-label="マスコットのポコ" xmlns="http://www.w3.org/2000/svg">${inner.replace(/pokoRainbow|pokoAura/g, m => m + '_' + uid)}</svg>`;
 
   if (stage === 0) {
     return open(
@@ -162,6 +164,29 @@ function reachedSuperLevel() {
   return false;
 }
 
+// 教科ごとの せいかい数（ぜんぶの 学年を あわせて）
+function subjectCorrectTotal(subject) {
+  const head = `manabi_progress_${playerTag()}_g`;   // 名前の 記号を 気にしなくて よい よう、文字の まえと うしろで しらべる
+  const tail = `_${subject}`;
+  let n = 0;
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k && k.indexOf(head) === 0 && k.endsWith(tail) && /^\d+$/.test(k.slice(head.length, k.length - tail.length))) { try { n += (JSON.parse(localStorage.getItem(k)) || {}).correct || 0; } catch (e) { /* 無視 */ } }
+  }
+  return n;
+}
+
+// 「ちょうむずかしい」に 上がった 教科・学年の 数
+function superLevelCount() {
+  const prefix = `manabi_diff_${playerTag()}_`;
+  let n = 0;
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k && k.indexOf(prefix) === 0 && localStorage.getItem(k) === '3') n++;
+  }
+  return n;
+}
+
 function computeBadges() {
   const p = loadPet();
   const best = playerBestStreak();
@@ -185,6 +210,16 @@ function computeBadges() {
     { icon: '🦾', label: 'にがて めいじん',   hint: 'にがてを 50もん クリア',   got: p.cleared >= 50 },
     { icon: '🛍️', label: 'おしゃれさん',      hint: 'おしゃれを 10こ もつ',     got: owned >= 10 },
     { icon: '🐾', label: 'ポコまるに しんか', hint: 'ポコまる いじょうに そだてる', got: petStage(p.growth) >= 3 },
-    { icon: '🔥', label: 'ちょうむずかしい',  hint: '「ちょうむずかしい」に すすむ', got: reachedSuperLevel() }
+    { icon: '🔥', label: 'ちょうむずかしい',  hint: '「ちょうむずかしい」に すすむ', got: reachedSuperLevel() },
+    // ---- さらに ふやした バッジ（たかい もくひょう）----
+    { icon: '💎', label: '5000もん せいかい',  hint: 'ぜんぶで 5000もん',        got: p.xp >= 5000 },
+    { icon: '🏆', label: '10000もん せいかい', hint: 'ぜんぶで 10000もん',       got: p.xp >= 10000 },
+    { icon: '🌈', label: '50日れんぞく',       hint: '50日つづけて べんきょう',  got: best >= 50 },
+    { icon: '🎆', label: 'パーフェクト 30かい', hint: 'パーフェクトを 30回',     got: p.perfects >= 30 },
+    { icon: '🔢', label: 'さんすう はかせ',    hint: 'さんすうを 1000もん せいかい', got: subjectCorrectTotal('math') >= 1000 },
+    { icon: '✏️', label: 'こくご はかせ',      hint: 'こくごを 1000もん せいかい', got: subjectCorrectTotal('kanji') >= 1000 },
+    { icon: '🔤', label: 'えいご はかせ',      hint: 'えいごを 1000もん せいかい', got: subjectCorrectTotal('eigo') >= 1000 },
+    { icon: '🐲', label: 'ポコキングに しんか', hint: 'ポコキングまで そだてる', got: petStage(p.growth) >= 4 },
+    { icon: '🔥', label: 'ちょうむずかしい 3つ', hint: '「ちょうむずかしい」に 3つ すすむ', got: superLevelCount() >= 3 }
   ];
 }
