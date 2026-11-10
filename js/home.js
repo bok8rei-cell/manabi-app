@@ -447,7 +447,7 @@ function renderParent() {
     ? (err ? 'どうきが できていません（くわしくは「せってい」→「どうき」）' : (lastSyncText() || 'まだ どうきしていません'))
     : 'あいことばが まだ ありません。「せってい」→「データを どうきする」で いれてね。'));
   const gone = (typeof loadDeletedNames === 'function') ? loadDeletedNames() : [];
-  head.appendChild(el('div', 'report-line diag-line', `この たんまつ：${APP_VERSION}　なまえ ${loadPlayerNames().length}人${gone.length ? '　けした なまえ：' + gone.join('、') : ''}`));
+  head.appendChild(el('div', 'report-line diag-line', `この たんまつ：${APP_VERSION}　なまえ ${loadPlayerNames().length}人　あいことば：${getActiveSyncCode() || 'なし'}（ほかの たんまつと おなじか 見くらべてね）${gone.length ? '　けした なまえ：' + gone.join('、') : ''}`));
   const peek = el('button', 'sub-btn wide', '☁️ クラウドの ようすを 見る');
   const peekOut = el('div', 'report-line diag-line');
   peek.addEventListener('click', async () => {
