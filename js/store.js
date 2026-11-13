@@ -217,15 +217,49 @@ function loadSkips(name) {
 
 function skipId(subject, grade, key) { return `${subject}|${grade}|${key}`; }
 
+// 「まだ ならってない」を おした もんだいは 2しゅうかん かくして、そのあと「おためし」で 1日 2もんだけ また 出す。
+// おためしで 2かい つづけて じりきで せいかいしたら「ならった」ことに して ふつうに 出す。
+// またボタンを おしたら、さらに 2しゅうかん かくす。おした 回数（n）は おうちの人の 画面に 出す。
+const SKIP_TRIAL_DAYS = 14;
+const SKIP_TRIAL_DAILY = 2;
+const SKIP_CLEAR_STREAK = 2;
+
+function skipTrialDue(e) { return !!(e && e.on && Date.now() - (e.t || 0) >= SKIP_TRIAL_DAYS * 86400000); }
+
 function isSkipped(subject, grade, key) {
   if (key === undefined || key === null || key === '') return false;
   const e = loadSkips()[skipId(subject, grade, key)];
-  return !!(e && e.on);
+  if (!e || !e.on) return false;
+  if (skipTrialDue(e)) {   // おためしの じき：1日 2もんまで
+    const used = e.trialDay === localDateStr() ? (e.trialN || 0) : 0;
+    return used >= SKIP_TRIAL_DAILY;
+  }
+  return true;
 }
 
 function setSkip(subject, grade, key, label, on) {
   const s = loadSkips();
-  s[skipId(subject, grade, key)] = { on: !!on, t: Date.now(), label: label || '' };
+  const id = skipId(subject, grade, key);
+  const prev = s[id] || {};
+  s[id] = on
+    ? { on: true, t: Date.now(), label: label || '', n: (prev.n || 0) + 1, ok: 0 }
+    : { on: false, t: Date.now(), label: label || '', n: 0, ok: 0 };
+  writeJSON(skipStoreKey(), s);
+}
+
+// おためしで 出した もんだいの けっか：2かい つづけて じりきで せいかいなら「ならった」
+function noteSkipTrial(subject, grade, key, ok) {
+  if (key === undefined || key === null || key === '') return;
+  const s = loadSkips();
+  const id = skipId(subject, grade, key);
+  const e = s[id];
+  if (!e || !skipTrialDue(e)) return;
+  const today = localDateStr();
+  e.trialN = (e.trialDay === today ? (e.trialN || 0) : 0) + 1;
+  e.trialDay = today;
+  e.ok = ok ? (e.ok || 0) + 1 : 0;
+  if (e.ok >= SKIP_CLEAR_STREAK) { e.on = false; e.n = 0; e.t = Date.now(); }
+  s[id] = e;
   writeJSON(skipStoreKey(), s);
 }
 

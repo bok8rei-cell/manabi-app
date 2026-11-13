@@ -407,7 +407,8 @@ function renderSkipList() {
     const grade = parts[1];
     const key = parts.slice(2).join('|');
     const row = el('div', 'skip-row');
-    row.appendChild(el('span', 'skip-name', `${gradeLabel(Number(grade))} ${subjectNameOf(Number(grade), subject)}：${e.label || key}`));
+    const daysLeft = Math.max(0, Math.ceil(((e.t || 0) + SKIP_TRIAL_DAYS * 86400000 - Date.now()) / 86400000));
+    row.appendChild(el('span', 'skip-name', `${gradeLabel(Number(grade))} ${subjectNameOf(Number(grade), subject)}：${e.label || key}${skipTrialDue(e) ? '（いま おためし中）' : `（あと ${daysLeft}日で おためし）`}`));
     const b = el('button', 'sub-btn', 'もどす');
     b.addEventListener('click', () => {
       setSkip(subject, grade, key, e.label, false);
@@ -600,6 +601,11 @@ function renderParent() {
       card.appendChild(el('div', 'child-section', `💪 にがて ${mistakes.length}もん`));
       card.appendChild(el('div', 'report-line', top.join('　')));
     }
+    // 「まだ ならってない」を 2かい いじょう おした たんげん（学校の すすみぐあいの めやす）
+    Object.entries(loadSkips(name)).filter(([, e]) => e && e.on && (e.n || 0) >= 2).forEach(([id, e]) => {
+      const parts = id.split('|');
+      card.appendChild(el('div', 'report-line', `🤔 「まだ ならってない」を ${e.n}かい おした：${gradeLabel(Number(parts[1]))} ${subjectNameOf(Number(parts[1]), parts[0])}「${e.label || parts.slice(2).join('|')}」`));
+    });
     // 学校で いま やっている たんげん
     const fc = loadFocus(name);
     const focusRow = el('div', 'report-line', fc.units.length
