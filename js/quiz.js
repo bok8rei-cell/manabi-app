@@ -191,6 +191,8 @@ function renderQuestion() {
   updateLimitChip();
   byId('quiz-emoji').textContent = p.emoji || '';
   byId('quiz-emoji').classList.toggle('hidden', !p.emoji);
+  const figBox = byId('quiz-figure');   // 図の ある もんだい（js/math_figure.js）
+  if (p.figure) { figBox.innerHTML = p.figure; figBox.classList.remove('hidden'); } else { figBox.innerHTML = ''; figBox.classList.add('hidden'); }
   byId('quiz-question').textContent = p.question;
   byId('quiz-read-btn').classList.toggle('hidden', !FX.canSpeak() || !!p.noRead);
   byId('quiz-read-btn').textContent = p.speakEn ? '🔊 えいごを きく' : '🔊 よみあげ';
@@ -519,7 +521,7 @@ byId('quiz-action-btn').addEventListener('click', () => {
 byId('quiz-read-btn').addEventListener('click', () => {
   if (!session || !session.current) return;
   if (session.current.speakEn) FX.speakEn(session.current.speakEn);
-  else FX.speak(session.current.question);
+  else FX.speak(session.current.readText || session.current.question);
 });
 
 byId('quiz-quit-btn').addEventListener('click', () => {

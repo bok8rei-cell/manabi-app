@@ -1172,6 +1172,10 @@ function genGrade6(diff = 1) {
 function generateMathProblem(grade, diff = 1) {
   const gens = { 1: genGrade1, 2: genGrade2, 3: genGrade3, 4: genGrade4, 5: genGrade5, 6: genGrade6, 7: genGrade7, 8: genGrade8, 9: genGrade9 };   // 8＝中2・9＝中3（math_jh.js）
   const make = () => {
+    if (diff < 3 && typeof genFigure === 'function') {   // 図の ある もんだい（時計・ものさし・グラフ・図形）
+      const f = genFigure(grade, diff);
+      if (f) { f.key = lastMathType; f.unitLabel = MATH_UNIT_LABELS[lastMathType] || ''; return f; }
+    }
     if (diff >= 3) {   // ちょうむずかしい（js/math_super.js）。ない学年は むずかしい(2)で 出す
       const sp = (typeof genSuper === 'function') ? genSuper(grade) : null;
       if (sp) { sp.key = lastMathType; sp.unitLabel = MATH_UNIT_LABELS[lastMathType] || ''; return sp; }

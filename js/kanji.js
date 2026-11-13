@@ -901,6 +901,7 @@ function generateKanjiSuper(grade) {
 
 function generateKanjiProblem(grade, diff = 1) {
   if (diff >= 3 && grade >= 2 && grade <= 7) return generateKanjiSuper(grade);
+  if (grade >= 1 && grade <= 7 && typeof generateDokkaiProblem === 'function' && Math.random() < 0.16) return generateDokkaiProblem(grade);   // 読解（js/dokkai.js）
   if (grade >= 8) return generateKokugoJHProblem(grade, diff);   // 中2・中3（kokugo_jh.js）
   const list = KANJI_DATA[grade] || KANJI_DATA[1];
   const half = Math.ceil(list.length / 2);
