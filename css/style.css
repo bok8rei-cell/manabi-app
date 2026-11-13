@@ -720,3 +720,20 @@ h2, h3 { margin: 0; }
 .room-hero { text-align: center; }
 .room-pic svg { max-width: 100%; height: auto; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.12); }
 .room-card-pic svg { width: 100%; height: auto; border-radius: 8px; }
+
+/* ----- おうちの人からの メッセージ・みんなの ポコ ----- */
+.msg-card { margin-top: 8px; padding: 12px 14px; text-align: center; background: #FFF4F8; border: 2px solid #F8BBD0; }
+.msg-from { font-weight: 800; font-size: 0.9rem; color: #C2185B; }
+.msg-stamp { font-size: 3.2rem; line-height: 1.2; margin: 4px 0; }
+.msg-text { font-size: 1.05rem; font-weight: 800; line-height: 1.5; margin-bottom: 8px; }
+.msg-dialog { max-height: 88vh; overflow-y: auto; }
+.msg-stamps { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 8px 0; }
+.stamp-btn { width: 52px; height: 52px; font-size: 1.8rem; border-radius: 14px; border: 2px solid var(--line); background: #fff; }
+.stamp-btn.selected { border-color: #F06595; background: #FFE3EC; }
+.msg-input { display: block; width: 100%; box-sizing: border-box; margin: 10px 0; padding: 10px; font-size: 1rem; border: 2px solid #E9D9C4; border-radius: 12px; }
+.everyone-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.everyone-cell { text-align: center; padding: 6px; border-radius: 14px; background: #fff; border: 2px solid var(--line); }
+.everyone-cell.me { border-color: var(--main-d); }
+.everyone-pic svg { width: 100%; height: auto; border-radius: 8px; }
+.everyone-name { font-weight: 800; margin-top: 4px; }
+.everyone-stage { font-size: 0.8rem; color: #8a7a6e; }

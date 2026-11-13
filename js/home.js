@@ -86,7 +86,9 @@ function renderHome() {
   else if (studiedToday()) say = 'いいちょうし！\nもうすこし やってみる？';
   else if (streak > 0) say = 'きのうも がんばったね！\nきょうも いっしょに やろう！';
   else say = 'きょうも いっしょに\nやろう！';
+  if (typeof hasUnreadMsg === 'function' && hasUnreadMsg()) say = '💌 おうちの人から\nメッセージが きてるよ！';
   byId('home-bubble').textContent = say;
+  if (typeof renderMessageCard === 'function') renderMessageCard();
   renderFoodPanel();   // ポコの ごはん（js/bonus.js）
 
   const body = byId('home-body');
@@ -250,6 +252,8 @@ function renderZukan() {
   const coin = el('div', 'zukan-coin', `💰 ${petBalance(pet)} コイン`);
   hero.appendChild(coin);
   root.appendChild(hero);
+
+  if (typeof appendEveryonesPoko === 'function') appendEveryonesPoko(root);   // みんなの ポコ（js/message.js）
 
   root.appendChild(el('h3', 'section-title', 'そだつ すがた'));
   const stages = el('div', 'stage-row');
@@ -495,6 +499,9 @@ function renderParent() {
   more.appendChild(peekOut);
   head.appendChild(more);
   root.appendChild(head);
+  const allBtn = el('button', 'sub-btn wide', '💌 みんなに メッセージを おくる');
+  allBtn.addEventListener('click', () => openMessageDialog(loadPlayerNames(), 'みんな', renderParent));
+  head.appendChild(allBtn);
   const samplePanel = el('div', 'panel');
   samplePanel.appendChild(el('div', 'report-line', '学年・教科・レベルごとの もんだいと 答え・とき方を 見られます（学校の 先生に 見せる ときに）。'));
   const sampleBtn = el('button', 'sub-btn wide', '📖 もんだいを 見る');
@@ -601,6 +608,14 @@ function renderParent() {
       card.appendChild(el('div', 'child-section', `💪 にがて ${mistakes.length}もん`));
       card.appendChild(el('div', 'report-line', top.join('　')));
     }
+    // おうちの人から メッセージ
+    const lastMsg = loadMsg(name);
+    card.appendChild(el('div', 'report-line', lastMsg
+      ? `💌 さいごに おくった：${lastMsg.stamp} ${lastMsg.text}（${msgTimeLabel(lastMsg.t)}）${lastMsg.readT >= lastMsg.t ? ' ✔ みたよ' : ' …まだ'}`
+      : '💌 メッセージ：まだ おくっていません'));
+    const msgBtn = el('button', 'sub-btn wide', '💌 メッセージを おくる');
+    msgBtn.addEventListener('click', () => openMessageDialog([name], name, renderParent));
+    card.appendChild(msgBtn);
     // 「まだ ならってない」を 2かい いじょう おした たんげん（学校の すすみぐあいの めやす）
     Object.entries(loadSkips(name)).filter(([, e]) => e && e.on && (e.n || 0) >= 2).forEach(([id, e]) => {
       const parts = id.split('|');
