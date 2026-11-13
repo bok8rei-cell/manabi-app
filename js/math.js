@@ -1182,6 +1182,17 @@ function generateMathProblem(grade, diff = 1) {
     return q;
   };
   let p = make();
+  // 学校で いま やっている たんげん（おうちの人が えらんだ もの）を 約6わり の 確率で 多めに
+  const focus = (typeof focusMathUnits === 'function') ? focusMathUnits(grade) : new Set();
+  if (focus.size > 0) {
+    if (Math.random() < 0.6 && !focus.has(p.unitLabel)) {
+      for (let i = 0; i < 30; i++) {
+        const q = make();
+        if (focus.has(q.unitLabel)) { p = q; break; }
+      }
+    }
+    return p;
+  }
   // はんぷく練習：この子が じりきで 9わり みたない たんげんを、半分くらいの 確率で 多めに 出す（ぜんぶ できている子は ふつうどおり）
   const weak = weakMathUnits(grade);
   if (weak.size > 0 && Math.random() < 0.5 && !weak.has(p.unitLabel)) {

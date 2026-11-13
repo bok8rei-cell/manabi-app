@@ -104,6 +104,12 @@ function renderHome() {
     body.appendChild(card);
   }
 
+  // いま 学校で やっている たんげん（おうちの人が えらんだ とき）
+  const fcur = loadFocus();
+  if (fcur.units.length && fcur.grade === grade) {
+    body.appendChild(el('div', 'focus-note', `📚 いま 学校で やっている たんげんを おおめに だすよ：${fcur.units.join('、')}（算数）`));
+  }
+
   // 学年
   const pills = el('div', 'grade-pills');
   pills.setAttribute('role', 'group');
@@ -594,6 +600,16 @@ function renderParent() {
       card.appendChild(el('div', 'child-section', `💪 にがて ${mistakes.length}もん`));
       card.appendChild(el('div', 'report-line', top.join('　')));
     }
+    // 学校で いま やっている たんげん
+    const fc = loadFocus(name);
+    const focusRow = el('div', 'report-line', fc.units.length
+      ? `📚 いま 学校で やっている たんげん（${gradeLabel(fc.grade)}）：${fc.units.join('、')}`
+      : '📚 いま 学校で やっている たんげん：えらんでいません');
+    card.appendChild(focusRow);
+    const focusBtn = el('button', 'sub-btn wide', '📚 たんげんを えらぶ');
+    focusBtn.addEventListener('click', () => openFocusPicker(name, renderParent));
+    card.appendChild(focusBtn);
+
     // なまえを けす（テストで つくった なまえなど）
     const delBtn = el('button', 'sub-btn danger-btn', '🗑 この なまえを けす');
     delBtn.addEventListener('click', () => {

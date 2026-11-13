@@ -92,6 +92,7 @@ GitHub Pages: `https://bok8rei-cell.github.io/manabi-app/`
 | `js/core.js` | なまえ：追加（せってい→「なまえを ついかする」）／けす（おうちの人の画面→各子のカードの「この なまえを けす」。deleteChildCompletely が 一覧と きろくを けし、`manabi_deleted_names` に のこして どうきで もどらないようにする）。バージョン・自動更新（ひらいたとき／もどったとき／5分ごとに確認。勉強中は待ち、ホームなど下のタブが見える画面で自動入れかえ）・教科/難易度・チャレンジ管理・なまえ・進捗・showScreen |
 | `js/quiz.js` | 学習セッション共通（makeProblem：さいきん出した問題は出さない／出し切ったら一番むかしに出したものから。`manabi_seen_{名前}` に教科×学年ごと150こ。同期しない）（ドリル/ミッション/にがて復習/チャレンジ）と結果画面 |
 | `js/samples.js` | 「もんだいを 見る」（おうちの人の画面から開く。学年・教科・レベルを選ぶと、そのレベルの問題5問と答え・とき方を見せる。学校の先生に見せる用。GENERATORS を直接呼ぶので成績・「さいきん出した問題」には残らない） |
+| `js/focus.js` | 「いま 学校で やっている たんげん」（おうちの人の画面から 子ごとに 3つまで えらぶ。算数のその学年で おおめに（約7わり）出る。`manabi_focus_{名前}`、どうきは あたらしい ほう）。math.js の generateMathProblem が focusMathUnits を見る |
 | `js/home.js` | ホーム・ずかん・きろく・せってい画面、showTab |
 | `js/steps.js` | 算数の全種類の「解き方」（なぜ）とヒントの材料。答えが一致したときだけ使う。ヒントは答えが出る手前まで（hintPlan / MATH_HINT_MAX） |
 | `js/recommend.js` | 正解率が低い教科は、前の学年に もどって ふくしゅうをすすめる（最近20もん／12問以上／6割未満） |
@@ -168,6 +169,6 @@ Agent ツールで以下を実行：
 
 - iOS でPWAをホーム画面から削除すると localStorage が消えるが、プレイヤー名を再入力すれば Firestore から復元できる
 - Service Worker のキャッシュバージョンを上げないと端末に古いバージョンが残る
-- バージョンは `js/core.js` の APP_VERSION・`version.json`・`sw.js` の CACHE_NAME・`index.html` の `?v=` を同じ番号にそろえて上げる（現在 v43.20）
+- バージョンは `js/core.js` の APP_VERSION・`version.json`・`sw.js` の CACHE_NAME・`index.html` の `?v=` を同じ番号にそろえて上げる（現在 v43.21）
 - 日付は `localDateStr()`（js/store.js）を使う。`toISOString()` は UTC なので日本時間の朝に1日ずれる
 - `explain.js` を変更したら、先生エージェントに審査を依頼する（問題データと同じ扱い）

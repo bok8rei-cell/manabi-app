@@ -707,3 +707,11 @@ h2, h3 { margin: 0; }
 .food-card .wide { margin-top: 10px; }
 .food-note { margin-top: 6px; font-size: 0.8rem; text-align: center; color: #8a7a6e; }
 .earned-line { font-weight: 600; font-size: 0.85rem; margin-top: 2px; }
+
+/* ----- いま 学校で やっている たんげん ----- */
+.focus-note { margin: 8px 0; padding: 8px 12px; border-radius: 14px; background: #E8F7EE; font-size: 0.85rem; font-weight: 700; line-height: 1.6; }
+.focus-card { max-height: 86vh; overflow-y: auto; text-align: left; }
+.focus-card .modal-text { text-align: center; }
+.focus-desc { font-size: 0.8rem; color: #8a7a6e; margin: 4px 0 8px; text-align: center; }
+.focus-units { margin-top: 10px; }
+.focus-count { margin: 10px 0 4px; font-weight: 800; text-align: center; }
