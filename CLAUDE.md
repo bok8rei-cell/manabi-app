@@ -106,6 +106,8 @@ GitHub Pages: `https://bok8rei-cell.github.io/manabi-app/`
 | `js/pokobody.js` | ポコの からだ（ポコまる・ポコキングから あたまの したに からだ・うで・あしが つく。petSVG が pokoBodySVG を呼ぶ）と、からだに つける「ふく／くつ／もちもの」（outfit・shoes・hand。13＋5＋7こ）。からだが ない ポコっち までは おみせで 🔒 |
 | `js/room.js` | ポコの へや（おしゃれ → 🏠 へや）。7つの場所（かべがみ・ゆか・まど・かべの かざり・かぐ・すみの もの・おもちゃ）に 1こずつ おける。40こ（100〜2000コイン。もとの かべ・ゆかは 0コイン）。買った もの・おいた ものは おしゃれと おなじ `manabi_shop_{名前}` の own / wear に のこす（shopItem が roomItem も 見る。ぜんぶはずす・いつもの は へやに さわらない） |
 | `js/message.js` | おうちの人からの メッセージ・スタンプ（親の画面→子ごと／みんなに。`manabi_msg_{名前}`＝{text,stamp,t,readT}、どうきは あたらしい ほう・既読は max）。子どもの ホームに「💌 おうちの人から」＋「みたよ！」（既読）。ずかんの「みんなの ポコ」（それぞれの へや つき）も ここ |
+| `js/math_figure.js` | 算数の「図のある問題」（時計・ものさし・ぼうグラフ・おれせんグラフ・ますの面積・分度器・三角形の角・円グラフ・三角形の面積・円）。問題に figure(SVG)と explain を もたせ、quiz.js の quiz-figure に出す。算数の約12%（やさしいは7%）。math.js の make() から genFigure |
+| `js/dokkai.js` | 国語の「読解」（みじかい文章＋4択。1〜2年・3〜4年・5〜6年と中1 の3まとまり、25文章50問）。文章は figure 欄に出し、readText で よみあげ。kanji.js が約16%で generateDokkaiProblem を呼ぶ |
 | `js/fx.js` | 効果音・ふるえ・よみあげ・紙ふぶき |
 | `js/explain.js` | 算数の「やさしい解説」を問題文から生成（答えが一致したときだけ表示） |
 | `js/lock.js` | （おうちの人の画面の番号：おうち用スイッチがオンの端末は聞かない／入れたら5分は聞かない。home.js の parentAllowed）端末ロック（この iPad は ○○ せんよう＝manabi_lock）と おうちの人の 4けた番号（manabi_pinhash＝しお＋SHA-256。この端末だけ・同期しない。コードに番号は書かない）。ロック解除／おうちの人の画面／おうち用スイッチ／番号変更で番号が必要。更新で初めて入ったとき、おうち用端末以外は いまの名前で自動ロック |
@@ -172,6 +174,6 @@ Agent ツールで以下を実行：
 
 - iOS でPWAをホーム画面から削除すると localStorage が消えるが、プレイヤー名を再入力すれば Firestore から復元できる
 - Service Worker のキャッシュバージョンを上げないと端末に古いバージョンが残る
-- バージョンは `js/core.js` の APP_VERSION・`version.json`・`sw.js` の CACHE_NAME・`index.html` の `?v=` を同じ番号にそろえて上げる（現在 v43.24）
+- バージョンは `js/core.js` の APP_VERSION・`version.json`・`sw.js` の CACHE_NAME・`index.html` の `?v=` を同じ番号にそろえて上げる（現在 v43.25）
 - 日付は `localDateStr()`（js/store.js）を使う。`toISOString()` は UTC なので日本時間の朝に1日ずれる
 - `explain.js` を変更したら、先生エージェントに審査を依頼する（問題データと同じ扱い）
