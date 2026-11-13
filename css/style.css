@@ -715,3 +715,8 @@ h2, h3 { margin: 0; }
 .focus-desc { font-size: 0.8rem; color: #8a7a6e; margin: 4px 0 8px; text-align: center; }
 .focus-units { margin-top: 10px; }
 .focus-count { margin: 10px 0 4px; font-weight: 800; text-align: center; }
+
+/* ----- ポコの へや ----- */
+.room-hero { text-align: center; }
+.room-pic svg { max-width: 100%; height: auto; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.12); }
+.room-card-pic svg { width: 100%; height: auto; border-radius: 8px; }

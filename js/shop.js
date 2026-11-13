@@ -86,6 +86,8 @@ const SHOP_GIFT_NAMES = { shine: 'きらきらポコ', crown: 'おうかん', ca
 function shopItem(id) {
   const fixed = SHOP_ITEMS.find(it => it.id === id);
   if (fixed) return fixed;
+  const rm = (typeof roomItem === 'function') ? roomItem(id) : null;   // ポコの へやの もの（js/room.js）
+  if (rm) return rm;
   const m = /^(shine|crown|cape|wing):(\d+)$/.exec(String(id));   // プレゼント
   if (!m || typeof questColor !== 'function') return null;
   const n = Number(m[2]);
@@ -160,9 +162,15 @@ function wearShopItem(id, name) {
   return true;
 }
 
+function keepRoomWear(s) {   // へやの おきものは さわらない
+  const keep = {};
+  Object.keys(s.wear || {}).forEach(k => { if (typeof isRoomSlot === 'function' && isRoomSlot(k)) keep[k] = s.wear[k]; });
+  return keep;
+}
+
 function takeOffAllShop(name) {
   const s = loadShop(name);
-  s.wear = {};
+  s.wear = keepRoomWear(s);
   saveShop(s, name);
 }
 
@@ -182,7 +190,7 @@ function wearShopFav(name) {
   const s = loadShop(name);
   const wear = {};
   Object.keys(s.fav).forEach(k => { const it = shopItem(s.fav[k]); if (it && it.slot === k && s.own[it.id]) wear[k] = it.id; });
-  s.wear = wear;
+  s.wear = Object.assign(keepRoomWear(s), wear);
   saveShop(s, name);
 }
 
@@ -521,7 +529,7 @@ function shopDraw(look, g) {
 // ---- おしゃれの がめん：「きがえ」と「おみせ」 ----
 let shopMode = null;   // 'dress'（きがえ）| 'store'（おみせ）
 
-function shopOwnedCount() { return Object.keys(loadShop().own).filter(id => shopItem(id)).length; }
+function shopOwnedCount() { return Object.keys(loadShop().own).filter(id => { const it = shopItem(id); return it && !(typeof isRoomSlot === 'function' && isRoomSlot(it.slot)); }).length; }
 
 // ポコを おおきく 見る（ホームと おなじ すがた）
 function showPetBig() {
@@ -554,12 +562,13 @@ function renderShop() {
 
   // きりかえ
   const sw = el('div', 'shop-switch');
-  [['dress', `👗 きがえ（${owned}こ）`], ['store', '🛍️ おみせ']].forEach(([key, label]) => {
+  [['dress', `👗 きがえ（${owned}こ）`], ['store', '🛍️ おみせ'], ['room', '🏠 へや']].forEach(([key, label]) => {
     const b = el('button', 'shop-switch-btn' + (mode === key ? ' active' : ''), label);
     b.addEventListener('click', () => { shopMode = key; renderShop(); });
     sw.appendChild(b);
   });
   root.appendChild(sw);
+  if (mode === 'room') { renderRoomView(root); return; }   // ポコの へや（js/room.js）
 
   // ポコ（タップで おおきく）
   const hero = el('div', 'shop-hero');
