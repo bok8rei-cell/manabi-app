@@ -79,6 +79,7 @@ function renderFoodPanel() {
   if (!root) return;
   root.innerHTML = '';
   if (!state.playerName.trim()) return;
+  if (typeof appendTestWeekCard === 'function') appendTestWeekCard(root);   // js/testweek.js（テスト週間）
   const p = loadPet();
   const d = petToday(p);
   const done = [d.base, d.amount, d.mission].filter(Boolean).length;

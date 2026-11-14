@@ -123,6 +123,7 @@ function notLearned() {
   FX.stopSpeak();
   const p = s.current;
   const subject = s.currentSubject;
+  if (s.mode === 'testweek') { showToast('テストの もんだいは とばせないよ。わからない ときは「わからない」を おしてね'); return; }
   if (p.key === undefined || p.key === null || p.key === '') {
     showToast('この もんだいは、つぎに すすんでね');
     return;
@@ -173,6 +174,7 @@ function nextQuestion() {
 function quizTagText() {
   const name = subjectNameOf(session.grade, session.currentSubject);
   if (session.mode === 'challenge') return `🚀 チャレンジ ・ ${name}`;
+  if (session.mode === 'testweek') return `📝 テスト対策 ・ ${name}`;
   if (session.fromMistakes) return `💪 にがて ふくしゅう ・ ${name}`;
   if (session.mode === 'mission') return `⭐ ミッション ・ ${name}`;
   return name;
@@ -409,14 +411,15 @@ function checkAnswer() {
         byId('quiz-hint').textContent = 'こたえを かいてね';
         return;
       }
-      ok = isMathAnswerCorrect(p, input.value);
+      ok = (s.mode === 'testweek') ? testAnswerCorrect(p, input.value) : isMathAnswerCorrect(p, input.value);
     }
   }
 
   s.answered = true;
   if (!s.fromMistakes) noteSkipTrial(s.currentSubject, s.grade, p.key, ok && s.hintStage === 0);   // 「まだ ならってない」の おためし
   if (!s.fromMistakes) recordUnit(s.currentSubject, s.grade, p.unitLabel, ok && s.hintStage === 0);   // たんげんべつの きろく（ぶんせき用）
-  if (!s.fromMistakes && getDiff(s.grade, s.currentSubject) < 3) recordRecent(s.currentSubject, s.grade, ok && s.hintStage === 0);   // 「ちょうむずかしい」の 結果は 「まえの学年に もどる」の 判定に 入れない   // 最近の正解率（ヒントを使って正解したぶんは、自力ではないので 数えない）
+  if (s.mode === 'testweek') noteTestWeek(s.testSetId, p.twIdx, ok && s.hintStage === 0);   // テスト週間：じりきで せいかいした もんだいを おぼえる（js/testweek.js）
+  if (!s.fromMistakes && s.mode !== 'testweek' && getDiff(s.grade, s.currentSubject) < 3) recordRecent(s.currentSubject, s.grade, ok && s.hintStage === 0);   // 「ちょうむずかしい」の 結果は 「まえの学年に もどる」の 判定に 入れない   // 最近の正解率（ヒントを使って正解したぶんは、自力ではないので 数えない）
   updateHintUI();
 
   // 選択肢の色づけ・入力欄のロック
@@ -682,6 +685,10 @@ function renderResult(r) {
   root.appendChild(chips);
 
   if (s.limitedCount > 0) root.appendChild(el('div', 'note', `⚖️ ${BALANCE_NAMES[s.currentSubject] || 'この きょうか'}は せいげんちゅうで、コインが すくなくなったよ（さんすう・こくごを やると もどるよ）`));
+  if (s.mode === 'testweek' && typeof testSetById === 'function' && testSetById(s.testSetId)) {
+    const set = testSetById(s.testSetId), pr = testsetProgress(set);
+    root.appendChild(el('div', 'note warm', `📝 ${set.title}：じりきで せいかい ${pr.done} / ${pr.total} もん（のこり ${pr.total - pr.done}もん）`));
+  }
   if (s.luckyCount > 0) root.appendChild(el('div', 'note gold', `🍀 ラッキー教科！ ${s.luckyCount}もんぶん コインが 1.5ばいに なったよ`));
   if (s.hintCost > 0) root.appendChild(el('div', 'note', `💡 ヒントで ${s.hintCost}コイン つかったよ（${s.hintsUsed}かい）`));
   if (missionBonus) root.appendChild(el('div', 'note gold', '🎊 きょうの ミッション ぜんぶ クリア！ ボーナス +30コイン'));

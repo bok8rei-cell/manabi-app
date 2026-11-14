@@ -795,3 +795,11 @@ h2, h3 { margin: 0; }
 .lucky-panel { margin-top: 8px; padding: 10px 14px; background: #F0FAEC; border-color: #BFE3B0; }
 .lucky-title { font-weight: 800; font-size: 0.95rem; color: #2F7D32; }
 .lucky-note { font-size: 0.8rem; color: #4F6F52; line-height: 1.5; margin-top: 2px; }
+
+/* ----- テスト週間 ----- */
+.testweek-panel { margin-top: 8px; padding: 12px 14px; background: #FFF4E5; border-color: #F5C98C; }
+.testweek-title { font-weight: 800; font-size: 1rem; color: #B45309; }
+.testweek-note { font-size: 0.85rem; color: #7A5A2E; line-height: 1.6; }
+.testweek-bar { height: 8px; border-radius: 4px; background: #F2DDBE; margin: 6px 0 2px; overflow: hidden; }
+.testweek-fill { height: 100%; background: #F59E0B; }
+.testweek-panel .wide { margin-top: 8px; }
