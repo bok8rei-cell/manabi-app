@@ -16,7 +16,7 @@ const LAST_BOSS_GROWTH = 5;
 
 function petPaid(p) {
   const o = (p.paid && typeof p.paid === 'object') ? p.paid : {};
-  ['streak', 'level', 'badge', 'quest'].forEach(k => { if (!Array.isArray(o[k])) o[k] = []; });
+  ['streak', 'level', 'badge', 'quest', 'roulette'].forEach(k => { if (!Array.isArray(o[k])) o[k] = []; });
   p.paid = o;
   return o;
 }
@@ -122,4 +122,5 @@ function renderFoodPanel() {
   card.appendChild(btn);
   card.appendChild(el('div', 'food-note', note));
   root.appendChild(card);
+  if (typeof appendRouletteCard === 'function') appendRouletteCard(root);   // js/roulette.js
 }

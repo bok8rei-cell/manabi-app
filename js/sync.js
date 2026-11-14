@@ -48,7 +48,7 @@ function mergeExtra(key, rawA, rawB) {
     });
     // もらった ボーナスの きろくは 和集合（2かい もらえないように）
     out.paid = {};
-    ['streak', 'level', 'badge', 'quest'].forEach(k => { out.paid[k] = Array.from(new Set([...((a.paid || {})[k] || []), ...((b.paid || {})[k] || [])])); });
+    ['streak', 'level', 'badge', 'quest', 'roulette'].forEach(k => { out.paid[k] = Array.from(new Set([...((a.paid || {})[k] || []), ...((b.paid || {})[k] || [])])); });
     return JSON.stringify(out);
   }
   if (key.indexOf('manabi_daystreak_') === 0) {
