@@ -784,3 +784,9 @@ h2, h3 { margin: 0; }
 .shop-card-tier.tier-first { background: linear-gradient(90deg, #FFB3C6, #FFD43B); color: #7A1F2B; }
 .roulette-first { margin: 6px 0 4px; padding: 8px 10px; border-radius: 12px; background: #FFF3C4; border: 1px solid #F5D76E; font-size: 0.82rem; font-weight: 700; line-height: 1.6; color: #6B4400; }
 .roulette-first.got { background: #E9F7EF; border-color: #A8DDBD; color: #1B7F4B; }
+
+.shop-card-tier.tier-second { background: linear-gradient(90deg, #E5E7EB, #BFC5CE); color: #374151; }
+.shop-card-tier.tier-third { background: linear-gradient(90deg, #F3C9A0, #D9915B); color: #5A2E10; }
+.roulette-first-title { font-weight: 800; margin-bottom: 2px; }
+.roulette-first-row { font-weight: 700; }
+.roulette-first-row.taken { color: #1B7F4B; }
