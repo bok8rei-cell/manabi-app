@@ -18,7 +18,7 @@ const SHOP_SLOTS = [
   { key: 'wing',  label: 'つばさ', gift: true }
 ];
 
-const SHOP_TIERS = { s: 'ちいさい', n: 'ふつう', r: 'レア', sr: 'スーパーレア', ur: 'でんせつ' };
+const SHOP_TIERS = { s: 'ちいさい', n: 'ふつう', r: 'レア', sr: 'スーパーレア', ur: 'でんせつ', first: 'いちばんのり' };
 
 // ねだん：ちいさい 200〜300／ふつう 600〜800／レア 1500〜1800／スーパーレア 5000／でんせつ 20000（ぜんぶで 約51,550コイン）
 const SHOP_ITEMS = [
@@ -78,7 +78,9 @@ const SHOP_ITEMS = [
   { id: 'kaiser',     name: 'カイゼルひげ',                 slot: 'mouth', price: 600,  tier: 'n' },
   { id: 'blackbeard', name: 'もじゃもじゃ くろひげ',        slot: 'mouth', price: 800,  tier: 'n' },
   { id: 'santabeard', name: 'サンタの もじゃもじゃ しろひげ', slot: 'mouth', price: 800, tier: 'n' },
-  { id: 'wizard',     name: 'まほうつかいの ながい ひげ',   slot: 'mouth', price: 1500, tier: 'r' }
+  { id: 'wizard',     name: 'まほうつかいの ながい ひげ',   slot: 'mouth', price: 1500, tier: 'r' },
+  // --- スペシャルルーレットで いちばんのりの 子だけ（おみせ・ふつうの ルーレットにも 出ない。js/roulette.js）---
+  { id: 'firstmedal', name: 'いちばんのり きんのメダル', slot: 'neck', price: 0, tier: 'first', special: true }
 ];
 
 const SHOP_GIFT_NAMES = { shine: 'きらきらポコ', crown: 'おうかん', cape: 'マント', wing: 'つばさ' };
@@ -420,6 +422,9 @@ const SHOP_DRAW = {
   pearl: g => { const c = shopChain(g, 'none', 0); return shopPearls(g) + `<circle cx="32" cy="${c.midY + 3.2}" r="2.6" fill="#FDF2F8" stroke="#E5C8D6" stroke-width="0.7"/>`; },
   medal: g => { const c = shopChain(g, 'none', 0); return `<path d="M${c.x0 + 3} ${c.y0 - 0.5} L32 ${c.midY + 1.5} L${c.x1 - 3} ${c.y0 - 0.5}" stroke="#3B82F6" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>` +
     `<circle cx="32" cy="${c.midY + 4}" r="4.3" fill="#FBBF24" stroke="#B45309" stroke-width="0.9"/><path d="${shopStarPath(32, c.midY + 4, 2.4)}" fill="#fff" opacity="0.85"/>`; },
+  // いちばんのり きんのメダル：あかい リボンと、おおきな 金の メダル（まんなかに あかい ほし）
+  firstmedal: g => { const c = shopChain(g, 'none', 0); return `<path d="M${c.x0 + 3} ${c.y0 - 0.5} L32 ${c.midY + 1.5} L${c.x1 - 3} ${c.y0 - 0.5}" stroke="#E5484D" stroke-width="2.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>` +
+    `<circle cx="32" cy="${c.midY + 5.2}" r="5.8" fill="#FFD43B" stroke="#B45309" stroke-width="1"/><circle cx="32" cy="${c.midY + 5.2}" r="4.2" fill="none" stroke="#fff" stroke-width="0.7" opacity="0.8"/><path d="${shopStarPath(32, c.midY + 5.2, 3)}" fill="#E5484D"/>`; },
   diamond: g => { const c = shopChain(g, '#9CA3AF', 1.9); const y = c.midY + 1.5; return c.svg +
     `<path d="M32 ${y} L36 ${y + 3} L32 ${y + 8} L28 ${y + 3} Z" fill="#67E8F9" stroke="#0891B2" stroke-width="0.8"/><path d="M28 ${y + 3} L36 ${y + 3}" stroke="#fff" stroke-width="0.7" opacity="0.8"/>` +
     `<path d="M39 ${y - 1} L40 ${y + 1} L42 ${y + 2} L40 ${y + 3} L39 ${y + 5} L38 ${y + 3} L36 ${y + 2} L38 ${y + 1} Z" fill="#fff" opacity="0.9"/>`; },
@@ -647,7 +652,7 @@ function renderDressRoom(root, shop, stage) {
 function renderStore(root, shop, stage, have) {
   let any = false;
   SHOP_SLOTS.forEach(sl => {
-    const items = SHOP_ITEMS.filter(it => it.slot === sl.key && !shop.own[it.id]);
+    const items = SHOP_ITEMS.filter(it => it.slot === sl.key && !shop.own[it.id] && !it.special);
     if (items.length === 0) return;
     any = true;
     root.appendChild(el('h3', 'section-title', sl.label));

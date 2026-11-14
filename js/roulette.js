@@ -38,7 +38,7 @@ function rouletteItemChoices(name) {
   const own = loadShop(name).own;
   // あたま・め・ほっぺ・くち・くび・いろ・はいけい の かざりだけ（からだの ふく・くつは ポコまる いじょうで ないと つけられないので ぬく）
   const faceSlots = SHOP_SLOTS.filter(sl => !sl.gift).map(sl => sl.key);
-  return SHOP_ITEMS.filter(it => !it.gift && faceSlots.includes(it.slot) && it.price <= ROULETTE_ITEM_MAX_PRICE && !own[it.id]);
+  return SHOP_ITEMS.filter(it => !it.gift && !it.special && faceSlots.includes(it.slot) && it.price <= ROULETTE_ITEM_MAX_PRICE && !own[it.id]);
 }
 
 // けっかを きめる（まだ わたさない）：{ idx, coins, itemId, label }
@@ -58,15 +58,36 @@ function roulettePlan(kind, name) {
   return { idx, coins: slot, itemId: '', label: `${slot}コイン` };
 }
 
+// スペシャルの いちばんのり（おうち ぜんたいで 1人だけ。はやい ほうが かち。どうきで きまる）
+const FIRST_KEY = 'manabi_first_special';
+const FIRST_COINS = 1000;
+const FIRST_ITEM = 'firstmedal';
+function rouletteFirst() {
+  try { const o = JSON.parse(localStorage.getItem(FIRST_KEY) || 'null'); return (o && o.t && o.n) ? o : null; } catch (e) { return null; }
+}
+
 // まわして、あたった ものを わたす。まわせないときは null
 function rouletteSpin(kind) {
   const p = loadPet();
   if (rouletteState(kind, p) !== 'ready') return null;
   const today = localDateStr();
   const plan = roulettePlan(kind);
-  petPaid(p).roulette.push(rouletteKey(today, kind));
+  const paid = petPaid(p);
+  paid.roulette.push(rouletteKey(today, kind));
   p.coins += plan.coins;
+  // スペシャルの いちばんのり：まだ だれも いないなら この子。きまっている子が この子で、まだ わたしていなければ わたす
+  if (kind === 's') {
+    let first = rouletteFirst();
+    if (!first) { first = { n: state.playerName.trim(), t: Date.now(), d: today }; localStorage.setItem(FIRST_KEY, JSON.stringify(first)); }
+    if (playerTag(first.n) === playerTag() && !paid.roulette.includes('first:s')) {
+      paid.roulette.push('first:s');
+      p.coins += FIRST_COINS;
+      plan.first = true;
+      plan.label += `\n🏅 スペシャル いちばんのり！\n「いちばんのり きんのメダル」と ${FIRST_COINS}コイン`;
+    }
+  }
   writeJSON(petKey(), p);
+  if (plan.first) { const s0 = loadShop(); s0.own[FIRST_ITEM] = 1; saveShop(s0); }
   if (plan.itemId) {
     const s = loadShop();
     s.own[plan.itemId] = 1;
@@ -75,7 +96,7 @@ function rouletteSpin(kind) {
   try {
     const rec = JSON.parse(localStorage.getItem(`manabi_roulette_${playerTag()}`) || '{}');
     if (rec.date !== today) { rec.date = today; rec.n = ''; rec.s = ''; }
-    rec[kind] = plan.label;
+    rec[kind] = plan.label.split('\n')[0] + (plan.first ? ' 🏅' : '');
     localStorage.setItem(`manabi_roulette_${playerTag()}`, JSON.stringify(rec));
   } catch (e) { /* 表示だけ。なくても こまらない */ }
   return plan;
@@ -160,6 +181,15 @@ function appendRouletteCard(root) {
   const p = loadPet();
   const card = el('div', 'panel food-card roulette-panel');
   card.appendChild(el('div', 'food-head')).appendChild(el('span', 'food-title', '🎰 きょうの ルーレット'));
+  const first = rouletteFirst();
+  if (!first) {
+    card.appendChild(el('div', 'roulette-first', `👑 スペシャルで「いちばんのり」の 子だけ、ここでしか 手に入らない「いちばんのり きんのメダル」と ${FIRST_COINS}コインが もらえるよ！（まだ だれも たっせい していないよ）`));
+  } else {
+    const d = String(first.d || '').split('-');
+    const when = d.length === 3 ? `（${Number(d[1])}月${Number(d[2])}日）` : '';
+    const mine = playerTag(first.n) === playerTag();
+    card.appendChild(el('div', 'roulette-first got', `🏅 スペシャル いちばんのりは ${first.n} さん${when}${mine ? ' ← あなた！' : ''}`));
+  }
   const today = localDateStr();
   [['n', 'そだちポイント 3つで 1かい'], ['s', `べんきょう 60ぷんで 1かい（いま ${formatStudy(studySecondsOn(today))}）`]].forEach(([kind, cond]) => {
     const st = rouletteState(kind, p);
