@@ -51,8 +51,9 @@ function balanceInfo(subject, name) {
 
 // せいかい 1もんの ごほうびを きめる。1（ふつう）か BALANCE_TAPER（せいげんちゅう）を かえす。
 // ポコクエストの数も ここで 足す（ヒントなしのときだけ。せいげんちゅうは 10もんで 1）
-function applyCorrectReward(subject, noHint) {
+function applyCorrectReward(subject, noHint, grade) {
   const limited = balanceInfo(subject).limited;
+  const lucky = !limited && isLuckySubject(subject, grade);
   bumpSubjectCount(subject);
   if (noHint) {
     if (!limited) {
@@ -64,7 +65,53 @@ function applyCorrectReward(subject, noHint) {
       if (t.n % 10 === 0) addWeeklyCorrect();
     }
   }
-  return limited ? BALANCE_TAPER : 1;
+  return limited ? BALANCE_TAPER : (lucky ? LUCKY_RATE : 1);
+}
+
+// ---- ラッキー教科：1しゅうかんごとに かわる 教科の せいかいは コイン 1.5ばい ----
+// 学年に ない 教科は とばして じゅんばんに まわす（学年ごとに ちがう ことが ある）。せいげんちゅうの 教科は 1.5ばいに ならない
+const LUCKY_ORDER = ['eigo', 'rikashakai', 'kotowaza', 'kanji', 'math'];
+const LUCKY_RATE = 1.5;
+
+function luckySubjectsOfGroup(group, grade) {
+  if (group === 'rikashakai') return (grade >= 8) ? ['rika', 'shakai'] : ['rikashakai'];
+  return [group];
+}
+
+function luckyAvailable(key, grade) {
+  const s = SUBJECTS.find(x => x.key === key);
+  return !!s && (!s.grades || s.grades.includes(grade));
+}
+
+// いま（その週）の ラッキー教科の グループ名。学年が わからなければ null
+function luckyGroupFor(grade, dateStr) {
+  if (!grade) return null;
+  const list = LUCKY_ORDER.filter(g => luckySubjectsOfGroup(g, grade).some(k => luckyAvailable(k, grade)));
+  if (list.length === 0) return null;
+  const [y, m, d] = weekStartOf(dateStr || localDateStr()).split('-').map(Number);
+  const idx = Math.round(Date.UTC(y, m - 1, d) / 86400000 / 7);
+  return list[((idx % list.length) + list.length) % list.length];
+}
+
+function isLuckySubject(subject, grade) {
+  const g = luckyGroupFor(grade);
+  return !!g && luckySubjectsOfGroup(g, grade).includes(subject);
+}
+
+// ホームに ならべる 「こんしゅうの ラッキー教科」カード（ごはん・ルーレットの なかま）
+function appendLuckyCard(root) {
+  const name = state.playerName.trim();
+  if (!name) return;
+  const grade = loadGrade();
+  const g = luckyGroupFor(grade);
+  if (!g) return;
+  const limited = luckySubjectsOfGroup(g, grade).some(k => balanceInfo(k).limited);
+  const card = el('div', 'panel food-card lucky-panel');
+  card.appendChild(el('div', 'lucky-title', `🍀 こんしゅうの ラッキー教科：${BALANCE_NAMES[g]}`));
+  card.appendChild(el('div', 'lucky-note', limited
+    ? 'いまは せいげんちゅうなので、1.5ばいには ならないよ（さんすう・こくごを やると もどるよ）'
+    : 'この 教科の せいかいは、コインが 1.5ばい！（土よう日から 金よう日まで）'));
+  root.appendChild(card);
 }
 
 function limitedSubjectsNow() {

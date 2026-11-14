@@ -790,3 +790,8 @@ h2, h3 { margin: 0; }
 .roulette-first-title { font-weight: 800; margin-bottom: 2px; }
 .roulette-first-row { font-weight: 700; }
 .roulette-first-row.taken { color: #1B7F4B; }
+
+/* ----- ラッキー教科 ----- */
+.lucky-panel { margin-top: 8px; padding: 10px 14px; background: #F0FAEC; border-color: #BFE3B0; }
+.lucky-title { font-weight: 800; font-size: 0.95rem; color: #2F7D32; }
+.lucky-note { font-size: 0.8rem; color: #4F6F52; line-height: 1.5; margin-top: 2px; }

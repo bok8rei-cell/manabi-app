@@ -81,8 +81,8 @@ function rouletteSpin(kind) {
   const plan = roulettePlan(kind);
   const paid = petPaid(p);
   paid.roulette.push(rouletteKey(today, kind));
-  p.coins += plan.coins;
-  // スペシャルの じゅんばん：まだ 3人に なっていなければ、この子が つぎの ばんごうに なる。なった ばんごうの メダルを わたす（1かいだけ）
+  // スペシャルの じゅんばん：まだ 3人に なっていなければ、この子が つぎの ばんごうに なる。
+  // なった ばんごうの メダルを わたし、ルーレットは その ばんごうの コインの わくで とまる（1ばん=1000／2ばん=500／3ばん=300。うえのせは しない）
   if (kind === 's') {
     const list = rouletteRanks();
     let idx = list.findIndex(e => playerTag(e.n) === playerTag());
@@ -92,13 +92,17 @@ function rouletteSpin(kind) {
       idx = list.length - 1;
     }
     const m = idx >= 0 ? MEDALS[idx] : null;
-    if (m && !paid.roulette.includes(m.paid)) {
+    const wi = m ? ROULETTE_WHEELS.s.slots.indexOf(m.coins) : -1;
+    if (m && wi >= 0 && !paid.roulette.includes(m.paid)) {
       paid.roulette.push(m.paid);
-      p.coins += m.coins;
       plan.medal = m;
-      plan.label += `\n${m.icon} スペシャル ${m.label}！\n「${m.label} ${m.name}」と ${m.coins}コイン`;
+      plan.idx = wi;
+      plan.coins = m.coins;
+      plan.itemId = '';
+      plan.label = `${m.coins}コイン\n${m.icon} スペシャル ${m.label}！\n「${m.label} ${m.name}」も もらえたよ`;
     }
   }
+  p.coins += plan.coins;
   writeJSON(petKey(), p);
   if (plan.medal) { const s0 = loadShop(); s0.own[plan.medal.item] = 1; saveShop(s0); }
   if (plan.itemId) {
@@ -196,7 +200,7 @@ function appendRouletteCard(root) {
   card.appendChild(el('div', 'food-head')).appendChild(el('span', 'food-title', '🎰 きょうの ルーレット'));
   const ranks = rouletteRanks();
   const box = el('div', 'roulette-first');
-  box.appendChild(el('div', 'roulette-first-title', 'スペシャルを はやく まわした 3にんに、ここでしか 手に入らない メダルが もらえるよ！'));
+  box.appendChild(el('div', 'roulette-first-title', 'スペシャルを はやく まわした 3にんは、ルーレットで 1000・500・300コインが あたって、ここでしか 手に入らない メダルも もらえるよ！'));
   MEDALS.forEach((m, i) => {
     const e = ranks[i];
     let who = 'まだ だれも いないよ';

@@ -122,5 +122,6 @@ function renderFoodPanel() {
   card.appendChild(btn);
   card.appendChild(el('div', 'food-note', note));
   root.appendChild(card);
+  if (typeof appendLuckyCard === 'function') appendLuckyCard(root);   // js/balance.js
   if (typeof appendRouletteCard === 'function') appendRouletteCard(root);   // js/roulette.js
 }

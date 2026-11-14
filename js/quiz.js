@@ -434,9 +434,10 @@ function checkAnswer() {
     s.correct++;
     s.combo++;
     // 教科の バランス：やりすぎた 教科は ごほうびが へる（家族ミッションの数も ここで 数える）
-    const factor = applyCorrectReward(s.currentSubject, s.hintStage === 0);
+    const factor = applyCorrectReward(s.currentSubject, s.hintStage === 0, s.grade);
     s.rewardUnits += factor;
     if (factor < 1) s.limitedCount++;
+    if (factor > 1) s.luckyCount = (s.luckyCount || 0) + 1;
     updateWeekChip();
     updateLimitChip();
     FX.correct();
@@ -681,6 +682,7 @@ function renderResult(r) {
   root.appendChild(chips);
 
   if (s.limitedCount > 0) root.appendChild(el('div', 'note', `⚖️ ${BALANCE_NAMES[s.currentSubject] || 'この きょうか'}は せいげんちゅうで、コインが すくなくなったよ（さんすう・こくごを やると もどるよ）`));
+  if (s.luckyCount > 0) root.appendChild(el('div', 'note gold', `🍀 ラッキー教科！ ${s.luckyCount}もんぶん コインが 1.5ばいに なったよ`));
   if (s.hintCost > 0) root.appendChild(el('div', 'note', `💡 ヒントで ${s.hintCost}コイン つかったよ（${s.hintsUsed}かい）`));
   if (missionBonus) root.appendChild(el('div', 'note gold', '🎊 きょうの ミッション ぜんぶ クリア！ ボーナス +30コイン'));
   ((award && award.bonuses) || []).forEach(b => root.appendChild(el('div', 'note gold', `🎁 ${b.label} +${b.coins}コイン`)));
