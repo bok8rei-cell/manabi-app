@@ -762,3 +762,4 @@ h2, h3 { margin: 0; }
 .rank-time { text-align: right; min-width: 70px; }
 .rank-t1 { font-weight: 800; font-size: 0.9rem; }
 .rank-t2 { font-size: 0.75rem; color: #8a7a6e; }
+.dokkai-note { margin-top: 8px; font-size: 0.75rem; color: #8a7a6e; text-align: right; }
