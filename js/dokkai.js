@@ -91,7 +91,11 @@ const DOKKAI = {
   ]
 };
 
-function _dokkaiBand(grade) { return grade <= 2 ? 12 : (grade <= 4 ? 34 : 56); }
+// 中1（7）は、5〜6年の ぶんと、中1むけ（7、dokkai_more.js）を はんぶんずつ
+function _dokkaiBand(grade) {
+  if (grade === 7 && DOKKAI[7] && randInt(0, 1) === 1) return 7;
+  return grade <= 2 ? 12 : (grade <= 4 ? 34 : 56);
+}
 
 let _dokkaiLast = '';
 

@@ -288,8 +288,66 @@ function normalizeSyncCode(s) {
 
 const syncCodeInput = document.getElementById('sync-code');
 syncCodeInput.value = localStorage.getItem('manabi_synccode') || '';
-syncCodeInput.addEventListener('input', () => {
-  localStorage.setItem('manabi_synccode', normalizeSyncCode(syncCodeInput.value));
+// あいことばを かえる ときは、おうちの人の ばんごうが いる（子どもが さわって 記録が わかれる じこを ふせぐ）。
+// ・クラウドに まだ その あいことばの「はこ」が ないときは、まちがいでは ないか たしかめる（からの はこが できて きろくが わかれるのを ふせぐ）
+const SYNC_CODE_RE = /^[a-z0-9]{6,20}$/;
+function confirmP(text, okLabel, cancelLabel) {
+  return new Promise(resolve => {
+    askConfirm(text, okLabel, cancelLabel, () => resolve(true), { cancelFirst: true });
+    const modal = document.getElementById('modal');
+    const cancel = document.getElementById('modal-cancel');
+    const prev = cancel.onclick;
+    cancel.onclick = () => { prev(); resolve(false); };
+    modal.onclick = (e) => { if (e.target === modal) { modal.classList.add('hidden'); resolve(false); } };
+  });
+}
+async function syncCodeParentOk() {
+  if (!getActiveSyncCode()) return true;   // まだ ないとき（さいしょの せってい）は ばんごう なし
+  if (typeof parentAllowed === 'function' && parentAllowed()) return true;
+  const ok = await requireParent('あいことばを かえる');
+  if (ok && typeof parentUntil !== 'undefined' && typeof PARENT_OK_MS !== 'undefined') parentUntil = Date.now() + PARENT_OK_MS;
+  return ok;
+}
+// あいことばを あたらしく きめる。きめたら true（やめたら false）
+async function changeSyncCode(raw) {
+  const msg = document.getElementById('sync-message');
+  const code = normalizeSyncCode(raw);
+  const current = getActiveSyncCode();
+  if (code === current) return true;
+  if (code && !SYNC_CODE_RE.test(code)) { msg.textContent = 'あいことばは 6〜20もじの えいすうじだよ。'; return false; }
+  if (!(await syncCodeParentOk())) return false;
+  if (code && cloudDb) {
+    try {
+      const snap = await cloudDb.collection('syncCodes').doc(code).get();
+      if (!snap.exists) {
+        const go = await confirmP(`この あいことば「${code}」の クラウドの はこは、まだ ありません（はじめて）。
+まちがえて いない？ ほかの iPad と ちがうと、きろくが わかれます。
+このまま つかう？`, 'つかう', 'やめる');
+        if (!go) return false;
+      }
+    } catch (e) { /* つながらないときは そのまま すすむ */ }
+  }
+  localStorage.setItem('manabi_synccode', code);
+  syncCodeInput.value = code;
+  return true;
+}
+syncCodeInput.readOnly = true;   // ふれても かわらない。かえる ときは ばんごうを いれてから
+syncCodeInput.addEventListener('focus', async () => {
+  if (!syncCodeInput.readOnly) return;
+  syncCodeInput.blur();
+  if (await syncCodeParentOk()) { syncCodeInput.readOnly = false; syncCodeInput.focus(); }
+});
+syncCodeInput.addEventListener('change', async () => {
+  const typed = syncCodeInput.value;
+  syncCodeInput.readOnly = true;
+  const ok = await changeSyncCode(typed);
+  syncCodeInput.value = getActiveSyncCode();
+  if (ok && getActiveSyncCode()) {
+    const msg = document.getElementById('sync-message');
+    msg.textContent = 'あいことばを いれたよ。どうきしているよ…';
+    await autoSync();
+    msg.textContent = 'つながったよ！\n' + lastSyncText();
+  }
 });
 
 function mergeRankingList(existing, incoming, key) {
@@ -486,9 +544,8 @@ document.getElementById('sync-code-paste-btn').addEventListener('click', async (
   const msg = document.getElementById('sync-message');
   try {
     const text = normalizeSyncCode(await navigator.clipboard.readText());
-    if (!/^[a-z0-9]{6,20}$/.test(text)) { msg.textContent = 'コピーした あいことばが みつからないよ。もういちど コピーしてね。'; return; }
-    localStorage.setItem('manabi_synccode', text);
-    syncCodeInput.value = text;
+    if (!SYNC_CODE_RE.test(text)) { msg.textContent = 'コピーした あいことばが みつからないよ。もういちど コピーしてね。'; return; }
+    if (!(await changeSyncCode(text))) { msg.textContent = 'あいことばは かえなかったよ。'; return; }
     msg.textContent = 'あいことばを いれたよ。どうきしているよ…';
     await autoSync();
     msg.textContent = 'つながったよ！ これからは じどうで そろいます。\n' + lastSyncText();
@@ -500,6 +557,7 @@ document.getElementById('sync-code-paste-btn').addEventListener('click', async (
 document.getElementById('sync-code-gen-btn').addEventListener('click', () => {
   const current = getActiveSyncCode();
   const make = async () => {
+    if (!(await syncCodeParentOk())) return;
     const code = generateSyncCode();
     localStorage.setItem('manabi_synccode', code);
     syncCodeInput.value = code;
