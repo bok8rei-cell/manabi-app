@@ -189,6 +189,7 @@ function renderQuestion() {
   byId('quiz-tag').textContent = quizTagText();
   updateWeekChip();
   updateLimitChip();
+  if (typeof updateQuizTimeChip === 'function') updateQuizTimeChip();   // きょうの べんきょう じかん
   byId('quiz-emoji').textContent = p.emoji || '';
   byId('quiz-emoji').classList.toggle('hidden', !p.emoji);
   const figBox = byId('quiz-figure');   // 図の ある もんだい（js/math_figure.js）

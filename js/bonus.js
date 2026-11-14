@@ -83,6 +83,7 @@ function renderFoodPanel() {
   const d = petToday(p);
   const done = [d.base, d.amount, d.mission].filter(Boolean).length;
   const card = el('div', 'panel food-card');
+  if (typeof formatStudy === 'function') card.appendChild(el('div', 'food-time', `⏱ きょうの べんきょう じかん：${formatStudy(studySecondsOn(localDateStr()))}`));
   const head = el('div', 'food-head');
   head.appendChild(el('span', 'food-title', 'きょうの そだちポイント'));
   head.appendChild(el('span', 'food-count', `${done} / 3`));

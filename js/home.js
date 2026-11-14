@@ -254,6 +254,7 @@ function renderZukan() {
   root.appendChild(hero);
 
   if (typeof appendEveryonesPoko === 'function') appendEveryonesPoko(root);   // みんなの ポコ（js/message.js）
+  if (typeof appendStudyRanking === 'function') appendStudyRanking(root);      // べんきょう じかん ランキング（js/studytime.js）
 
   root.appendChild(el('h3', 'section-title', 'そだつ すがた'));
   const stages = el('div', 'stage-row');
@@ -608,6 +609,8 @@ function renderParent() {
       card.appendChild(el('div', 'child-section', `💪 にがて ${mistakes.length}もん`));
       card.appendChild(el('div', 'report-line', top.join('　')));
     }
+    if (typeof appendStudyTimeParent === 'function') appendStudyTimeParent(card, name);   // べんきょう じかん（js/studytime.js）
+
     // おうちの人から メッセージ
     const lastMsg = loadMsg(name);
     card.appendChild(el('div', 'report-line', lastMsg
