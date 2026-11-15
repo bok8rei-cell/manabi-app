@@ -1,6 +1,6 @@
-// ===== おしゃれ：フード型の かぶりもの（どうぶつ 8しゅるい）=====
+// ===== おしゃれ：フード型の かぶりもの（どうぶつ 10しゅるい）=====
 // かおの まわりを ぐるっと おおう フード。かおは フードの あなから 見える。あたまの うえに その どうぶつの かおが ある。
-// 「あたま」の かざり（ぼうしと おなじ 場所）。ねだんは 600コイン（ふつう）。js/shop.js の あとに よみこむ。
+// 「あたま」の かざり（ぼうしと おなじ 場所）。ねだんは 600コイン（ふつう）。ドラゴン・ユニコーンは 2000コイン（レア）。js/shop.js の あとに よみこむ。
 (() => {
 // かぶりもの（フード）：かおの まわりを ぐるっと おおい、あたまの うえに どうぶつの かおが ある
 const HG = g => {
@@ -55,12 +55,41 @@ D.wolf = g => { const h = HG(g); const ear = s => { const x = 32 + s * h.rxO * 0
 D.dino = g => { const h = HG(g); const sp = (x, s) => `<path d="M${x - 3} ${h.top + 4.4} L${x} ${Math.max(0.6, h.top - s)} L${x + 3} ${h.top + 4.4} Z" fill="#F59E0B" stroke="#B45309" stroke-width="0.7" stroke-linejoin="round"/>`;
   const eye = s => `<circle cx="${32 + s * h.rxO * 0.6}" cy="${h.top + 6.2}" r="2.5" fill="#FEF08A"/><circle cx="${32 + s * h.rxO * 0.6}" cy="${h.top + 6.2}" r="1.2" fill="#111827"/>`;
   return sp(32, 7.5) + sp(25, 5) + sp(39, 5) + ringPath(g, '#4ADE80', '#15803D', false) + `<ellipse cx="32" cy="${h.cyI}" rx="${h.rxI + 0.6}" ry="${h.ryI + 0.6}" fill="none" stroke="#BBF7D0" stroke-width="2.2"/>` + teeth(g, 7, -Math.PI * 0.94, -Math.PI * 0.06, 0.2, 0.4) + teeth(g, 4, Math.PI * 0.2, Math.PI * 0.8, 0.12, 0.4) + eye(-1) + eye(1); };
+// ---- めずらしい どうぶつ（レア・2000コイン）----
+// ---- めずらしい どうぶつの フード（レア）----
+const clipY = y => Math.max(0.8, y);
+const outerPt = (h, a, out) => [32 + (h.rxO + out) * Math.cos(a), h.cyO + (h.ryO + out) * Math.sin(a)];
+D.dragon = g => {
+  const h = HG(g);
+  const horn = s => { const x = 32 + s * h.rxO * 0.52, y = h.cyO - h.ryO * 0.78; return `<path d="M${x - 3.6} ${y + 3.4} Q${x + s * 0.6} ${y - 4} ${x + s * 5.6} ${clipY(y - 9.5)} Q${x + s * 2.4} ${y - 1} ${x + 3.6} ${y + 3.4} Z" fill="#FDE68A" stroke="#B45309" stroke-width="0.9" stroke-linejoin="round"/>`; };
+  let crest = '';
+  for (let k = -2; k <= 2; k++) { const a = -Math.PI / 2 + k * 0.3; const b0 = outerPt(h, a - 0.1, 0.5), b1 = outerPt(h, a + 0.1, 0.5), t = outerPt(h, a, 4.2 - Math.abs(k) * 0.5); crest += `<path d="M${b0[0].toFixed(1)} ${b0[1].toFixed(1)} L${t[0].toFixed(1)} ${clipY(t[1]).toFixed(1)} L${b1[0].toFixed(1)} ${b1[1].toFixed(1)} Z" fill="#F97316" stroke="#9A3412" stroke-width="0.7" stroke-linejoin="round"/>`; }
+  let scales = '';
+  const mcy = (h.cyO + h.cyI) / 2, mrx = (h.rxO + h.rxI) / 2, mry = (h.ryO + h.ryI) / 2;
+  for (let i = 0; i < 18; i++) { const a = Math.PI * 2 * i / 18; if (Math.abs(a - Math.PI * 1.5) < 0.9) continue; const x = 32 + mrx * Math.cos(a), y = mcy + mry * Math.sin(a); scales += `<path d="M${(x - 1.9).toFixed(1)} ${y.toFixed(1)} q1.9 2.4 3.8 0" stroke="#9F1239" stroke-width="0.9" fill="none" stroke-linecap="round"/>`; }
+  const eye = s => `<ellipse cx="${32 + s * 8.6}" cy="${h.ty - 1.6}" rx="2.6" ry="1.8" fill="#FDE047"/><path d="M${32 + s * 8.6} ${h.ty - 3} v2.8" stroke="#111827" stroke-width="1"/>`;
+  return horn(-1) + horn(1) + crest + ringPath(g, '#E5484D', '#9F1239', false) + scales +
+    `<ellipse cx="32" cy="${h.ty + 1.6}" rx="6.2" ry="3.6" fill="#FCA5A5"/><circle cx="29.8" cy="${h.ty + 0.6}" r="0.9" fill="#7F1D1D"/><circle cx="34.2" cy="${h.ty + 0.6}" r="0.9" fill="#7F1D1D"/>` +
+    `<path d="M29 ${h.ty + 4.4} l1 2 l1 -2 M33 ${h.ty + 4.4} l1 2 l1 -2" stroke="#fff" stroke-width="0.8" fill="#fff"/>` + eye(-1) + eye(1) + teeth(g, 3, -Math.PI * 0.62, -Math.PI * 0.38, 0.12, 0.38);
+};
+D.unicorn = g => {
+  const h = HG(g); const cols = ['#F9A8D4', '#C4B5FD', '#93C5FD', '#86EFAC', '#FDE68A'];
+  let mane = '';
+  for (let i = 0; i < 9; i++) { const a = Math.PI * (1.18 - i * 0.135); const p = outerPt(h, a, 1.2); mane += `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="${(3.7 + (i % 2) * 0.7).toFixed(1)}" fill="${cols[i % 5]}" stroke="#fff" stroke-width="0.8"/>`; }
+  const ear = s => { const x = 32 + s * h.rxO * 0.62, y = h.cyO - h.ryO * 0.78; return `<path d="M${x - 4} ${y + 3} L${x + s * 1} ${clipY(y - 7)} L${x + 4} ${y + 3} Z" fill="#fff" stroke="#C4B5FD" stroke-width="1" stroke-linejoin="round"/><path d="M${x - 1.8} ${y + 2.4} L${x + s * 0.6} ${clipY(y - 3.6)} L${x + 1.8} ${y + 2.4} Z" fill="#F9A8D4"/>`; };
+  const tip = clipY(h.top - 7.5);
+  const horn = `<path d="M29.2 ${h.top + 5.4} L32 ${tip} L34.8 ${h.top + 5.4} Z" fill="#FDE047" stroke="#B45309" stroke-width="0.8" stroke-linejoin="round"/><path d="M29.9 ${h.top + 3.4} l4.2 -1.7 M30.6 ${h.top + 0.8} l2.8 -1.2" stroke="#B45309" stroke-width="0.7"/>`;
+  const eyeC = s => `<path d="M${32 + s * 8 - 2.4} ${h.ty - 0.6} q2.4 -2.8 4.8 0" stroke="#4C1D95" stroke-width="1.1" fill="none" stroke-linecap="round"/><path d="M${32 + s * 8 + s * 2.4} ${h.ty - 1.2} l${s * 1.2} -1" stroke="#4C1D95" stroke-width="0.8"/>`;
+  return mane + ear(-1) + ear(1) + ringPath(g, '#FFFFFF', '#C4B5FD', true, 3.4) + horn +
+    `<ellipse cx="32" cy="${h.ty + 2.6}" rx="4.8" ry="2.8" fill="#FBCFE8"/><circle cx="30.4" cy="${h.ty + 2.4}" r="0.7" fill="#BE185D"/><circle cx="33.6" cy="${h.ty + 2.4}" r="0.7" fill="#BE185D"/>` + eyeC(-1) + eyeC(1);
+};
 const HOOD_ITEMS = [
-  ['bear', 'クマの フード'], ['panda', 'パンダの フード'], ['tiger', 'トラの フード'], ['lion', 'ライオンの フード'],
-  ['frog', 'カエルの フード'], ['shark', 'サメの フード'], ['wolf', 'オオカミの フード'], ['dino', 'きょうりゅうの フード']
+  ['bear', 'クマの フード', 600], ['panda', 'パンダの フード', 600], ['tiger', 'トラの フード', 600], ['lion', 'ライオンの フード', 600],
+  ['frog', 'カエルの フード', 600], ['shark', 'サメの フード', 600], ['wolf', 'オオカミの フード', 600], ['dino', 'きょうりゅうの フード', 600],
+  ['dragon', 'ドラゴンの フード', 2000], ['unicorn', 'ユニコーンの フード', 2000]
 ];
-HOOD_ITEMS.forEach(([k, name]) => {
+HOOD_ITEMS.forEach(([k, name, price]) => {
   SHOP_DRAW['hood_' + k] = D[k];
-  SHOP_ITEMS.push({ id: 'hood_' + k, name, slot: 'head', price: 600, tier: 'n', added: '2026-11-15' });
+  SHOP_ITEMS.push({ id: 'hood_' + k, name, slot: 'head', price, tier: price >= 1500 ? 'r' : 'n', added: '2026-11-15' });
 });
 })();
