@@ -803,3 +803,31 @@ h2, h3 { margin: 0; }
 .testweek-bar { height: 8px; border-radius: 4px; background: #F2DDBE; margin: 6px 0 2px; overflow: hidden; }
 .testweek-fill { height: 100%; background: #F59E0B; }
 .testweek-panel .wide { margin-top: 8px; }
+
+/* ----- バーガークエスト ----- */
+.burger-panel { margin-top: 8px; padding: 12px 14px; background: #FFF1E6; border-color: #F7B98B; }
+.bq-title { font-weight: 800; font-size: 1.05rem; color: #C2410C; }
+.bq-note { font-size: 0.85rem; color: #7A4A2A; line-height: 1.6; margin-top: 2px; }
+.bq-win { font-weight: 800; color: #1B7F4B; }
+.bq-row { display: flex; align-items: center; gap: 8px; padding: 5px 0; border-top: 1px dashed #F0D3BC; font-size: 0.9rem; }
+.bq-row.me .bq-name { color: #C2410C; }
+.bq-name { font-weight: 800; min-width: 4.5em; max-width: 6em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bq-dots { display: inline-flex; gap: 2px; flex: 1; }
+.bq-dot { width: 1.1em; text-align: center; font-weight: 800; }
+.bq-dot.done { color: #1B7F4B; }
+.bq-dot.miss { color: #C0392B; }
+.bq-dot.today { color: #F59E0B; }
+.bq-dot.future { color: #B9A89A; }
+.bq-tail { font-size: 0.8rem; color: #7A4A2A; white-space: nowrap; }
+.bq-tail.ok { color: #1B7F4B; font-weight: 800; }
+.bq-legend { font-size: 0.72rem; color: #9A7E69; margin-top: 4px; }
+.bq-tickets { margin-top: 8px; display: flex; flex-direction: column; gap: 4px; }
+.bq-ticket { background: #FFF; border: 2px dashed #F59E0B; border-radius: 10px; padding: 6px 10px; font-weight: 800; font-size: 0.9rem; }
+.bq-ticket.used { opacity: 0.5; text-decoration: line-through; }
+.bq-ticket-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 6px; }
+.bq-ticket-row .main-btn, .bq-ticket-row .sub-btn { width: auto; flex: 0 0 auto; padding-left: 14px; padding-right: 14px; }
+.burger-parent { margin-top: 8px; }
+.bq-form { display: flex; flex-direction: column; gap: 6px; margin: 8px 0; }
+.bq-field { display: flex; flex-direction: column; gap: 2px; font-size: 0.82rem; font-weight: 700; color: #7A4A2A; }
+.bq-field input, .bq-field select { font-size: 1rem; padding: 8px 10px; border: 1px solid #E5D5C8; border-radius: 10px; background: #fff; }
+.burger-parent .wide { margin-top: 8px; }

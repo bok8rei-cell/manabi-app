@@ -27,7 +27,7 @@ function collectSyncData() {
 }
 
 // ---- ポコ・にがて・毎日の連続日数も同期する ----
-const EXTRA_PREFIXES = ['manabi_pet_', 'manabi_mistakes_', 'manabi_daystreak_', 'manabi_history_', 'manabi_grade_', 'manabi_skip_', 'manabi_recent_', 'manabi_week_', 'manabi_solo_', 'manabi_shop_', 'manabi_subj_', 'manabi_taper_', 'manabi_unit_', 'manabi_focus_', 'manabi_msg_', 'manabi_time_', 'manabi_first_', 'manabi_testset_'];
+const EXTRA_PREFIXES = ['manabi_pet_', 'manabi_mistakes_', 'manabi_daystreak_', 'manabi_history_', 'manabi_grade_', 'manabi_skip_', 'manabi_recent_', 'manabi_week_', 'manabi_solo_', 'manabi_shop_', 'manabi_subj_', 'manabi_taper_', 'manabi_unit_', 'manabi_focus_', 'manabi_msg_', 'manabi_time_', 'manabi_first_', 'manabi_testset_', 'manabi_burger', 'manabi_pdays_'];
 
 function parseJSONOr(raw, fallback) {
   try { return raw ? JSON.parse(raw) : fallback; } catch (e) { return fallback; }
@@ -48,7 +48,7 @@ function mergeExtra(key, rawA, rawB) {
     });
     // もらった ボーナスの きろくは 和集合（2かい もらえないように）
     out.paid = {};
-    ['streak', 'level', 'badge', 'quest', 'roulette'].forEach(k => { out.paid[k] = Array.from(new Set([...((a.paid || {})[k] || []), ...((b.paid || {})[k] || [])])); });
+    ['streak', 'level', 'badge', 'quest', 'roulette', 'burger'].forEach(k => { out.paid[k] = Array.from(new Set([...((a.paid || {})[k] || []), ...((b.paid || {})[k] || [])])); });
     return JSON.stringify(out);
   }
   if (key.indexOf('manabi_daystreak_') === 0) {
@@ -104,6 +104,22 @@ function mergeExtra(key, rawA, rawB) {
       out[id] = { m: Object.assign({}, x.m, y.m), n: Math.max(x.n || 0, y.n || 0) };
     });
     return JSON.stringify(out);
+  }
+  if (key === 'manabi_burger') {   // バーガークエスト：あたらしい クエストが かち。おなじ クエストなら 券を つかった きろく（used）は あわせる
+    const a = parseJSONOr(rawA, null), b = parseJSONOr(rawB, null);
+    if (!a || !a.id) return b ? rawB : rawA;
+    if (!b || !b.id) return rawA;
+    if (a.id !== b.id) return (b.t || 0) > (a.t || 0) ? rawB : rawA;
+    const newer = (b.t || 0) > (a.t || 0) ? b : a;
+    const used = {};
+    new Set([...Object.keys(a.used || {}), ...Object.keys(b.used || {})]).forEach(n => {
+      const x = (a.used || {})[n] || {}, y = (b.used || {})[n] || {};
+      used[n] = { set: Math.max(x.set || 0, y.set || 0), side: Math.max(x.side || 0, y.side || 0) };
+    });
+    return JSON.stringify(Object.assign({}, newer, { used, closed: !!(a.closed || b.closed), t: Math.max(a.t || 0, b.t || 0) }));
+  }
+  if (key.indexOf('manabi_pdays_') === 0) {   // 3ポイントの 日：どちらかに あれば あった
+    return JSON.stringify(Object.assign({}, parseJSONOr(rawA, {}), parseJSONOr(rawB, {})));
   }
   if (key.indexOf('manabi_focus_') === 0) {   // 学校で やっている たんげん：あたらしく えらんだ ほう
     const a = parseJSONOr(rawA, {}), b = parseJSONOr(rawB, {});

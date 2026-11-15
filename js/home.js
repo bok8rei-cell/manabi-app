@@ -510,6 +510,7 @@ function renderParent() {
   samplePanel.appendChild(sampleBtn);
   root.appendChild(samplePanel);
   appendFamilyParent(root);   // ポコクエスト（ウラボスの ネタバレは おうちの人だけ）
+  if (typeof appendBurgerParent === 'function') appendBurgerParent(root);   // バーガークエスト（js/burger.js）
 
   const names = loadPlayerNames();
   if (names.length === 0) {

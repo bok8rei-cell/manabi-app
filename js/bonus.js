@@ -16,7 +16,7 @@ const LAST_BOSS_GROWTH = 5;
 
 function petPaid(p) {
   const o = (p.paid && typeof p.paid === 'object') ? p.paid : {};
-  ['streak', 'level', 'badge', 'quest', 'roulette'].forEach(k => { if (!Array.isArray(o[k])) o[k] = []; });
+  ['streak', 'level', 'badge', 'quest', 'roulette', 'burger'].forEach(k => { if (!Array.isArray(o[k])) o[k] = []; });
   p.paid = o;
   return o;
 }
@@ -79,6 +79,7 @@ function renderFoodPanel() {
   if (!root) return;
   root.innerHTML = '';
   if (!state.playerName.trim()) return;
+  if (typeof appendBurgerCard === 'function') appendBurgerCard(root);   // js/burger.js（バーガークエスト）
   if (typeof appendTestWeekCard === 'function') appendTestWeekCard(root);   // js/testweek.js（テスト週間）
   const p = loadPet();
   const d = petToday(p);

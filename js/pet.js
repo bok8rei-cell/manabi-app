@@ -79,6 +79,7 @@ function awardPet({ xp = 0, coins = 0, perfect = false, mission = false, cleared
   if (day.base && day.amount && day.mission && !day.counted) {
     day.counted = true;
     const st = touchDayStreak();
+    if (typeof recordPointDay === 'function') recordPointDay();   // バーガークエスト用：3ポイントの 日を おぼえる（js/burger.js）
     Object.keys(STREAK_BONUS).map(Number).sort((a, b) => a - b).forEach(m => {
       const k = String(m);
       if (st.count >= m && !paid.streak.includes(k)) {
