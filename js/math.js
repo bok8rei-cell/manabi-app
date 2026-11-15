@@ -1185,6 +1185,8 @@ function generateMathProblem(grade, diff = 1) {
     q.unitLabel = MATH_UNIT_LABELS[lastMathType] || '';
     return q;
   };
+  // さくらんぼ計算（1年）・にがての たんげんの「さかのぼり」（js/math_bridge.js）
+  if (typeof bridgePick === 'function') { const b = bridgePick(grade); if (b) return b; }
   let p = make();
   // 学校で いま やっている たんげん（おうちの人が えらんだ もの）を 約6わり の 確率で 多めに
   const focus = (typeof focusMathUnits === 'function') ? focusMathUnits(grade) : new Set();
@@ -1208,15 +1210,17 @@ function generateMathProblem(grade, diff = 1) {
   return p;
 }
 
-// その学年の算数で、8もん以上 答えて じりき正解が 90%未満の たんげん
+// その学年の算数で、じりき正解が 95%（UNIT_GOAL）みまんの たんげん。さいきん 20もんで みる（store.js の unitRate）
 function weakMathUnits(grade) {
   const out = new Set();
   try {
-    if (typeof loadUnits !== 'function') return out;
+    if (typeof loadUnits !== 'function' || typeof unitRate !== 'function') return out;
     const u = loadUnits();
     Object.keys(u).forEach(k => {
       const [g, subj, unit] = k.split('|');
-      if (Number(g) === grade && subj === 'math' && u[k].t >= 8 && u[k].c / u[k].t < 0.9) out.add(unit);
+      if (Number(g) !== grade || subj !== 'math') return;
+      const r = unitRate(u[k]);
+      if (r && r.rate < UNIT_GOAL) out.add(unit);
     });
   } catch (e) { /* 無視 */ }
   return out;

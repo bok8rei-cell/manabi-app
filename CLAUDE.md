@@ -88,8 +88,9 @@ GitHub Pages: `https://bok8rei-cell.github.io/manabi-app/`
 |---|---|
 | `index.html` | 全画面のHTML（SPA）。下タブ: ホーム/ずかん/おしゃれ/きろく/せってい |
 | `css/style.css` | 全スタイル（v37〜 明るい「おもちゃ箱」テーマ。ダークテーマは廃止） |
-| `js/store.js` | 日付(ローカル日付)・にがて復習・今日のミッション・毎日の連続日数・たんげんべつ成績（recordUnit／`manabi_unit_{名前}` = 学年|教科|たんげん → {t 答えた数, c 自力せいかい, d 最終日}。同期はたんげん×項目ごとの max。親の画面「よわい たんげん」に表示、書き出しにも入る） |
+| `js/store.js` | 日付(ローカル日付)・にがて復習・今日のミッション・毎日の連続日数・たんげんべつ成績（recordUnit／`manabi_unit_{名前}` = 学年|教科|たんげん → {t 答えた数, c 自力せいかい, d 最終日, r さいきん20もんの '1'/'0'}。同期はたんげん×項目ごとの max（r は t が 大きい ほう）。にがての はんていは unitRate（さいきん20もん、なければ これまで）で 95%（UNIT_GOAL）みまん。親の画面「よわい たんげん」に表示、書き出しにも入る） |
 | `js/core.js` | なまえ：追加（せってい→「なまえを ついかする」）／けす（おうちの人の画面→各子のカードの「この なまえを けす」。deleteChildCompletely が 一覧と きろくを けし、`manabi_deleted_names` に のこして どうきで もどらないようにする）。バージョン・自動更新（ひらいたとき／もどったとき／5分ごとに確認。勉強中は待ち、ホームなど下のタブが見える画面で自動入れかえ）・教科/難易度・チャレンジ管理・なまえ・進捗・showScreen |
+| `js/quiz.js`（にた もんだい・まちがいの きろく） | 算数の ドリル／ミッションで まちがえたら、すぐ おなじ しゅるいの「にた もんだい」を 1もん ふやして 出す（1かいで 3もんまで、「🔁」の 表示）。まちがえた こたえは recordWrong（store.js）で `manabi_wrong_{なまえ}` に のこす（どうきは あわせて 200こ。書き出しに 入る＝ぶんせき用）。昇段チャレンジの こたえは たんげんべつの きろくに 入れない |
 | `js/quiz.js` | 学習セッション共通（makeProblem：さいきん出した問題は出さない／出し切ったら一番むかしに出したものから。`manabi_seen_{名前}` に教科×学年ごと150こ。同期しない）（ドリル/ミッション/にがて復習/チャレンジ）と結果画面 |
 | `js/samples.js` | 「もんだいを 見る」（おうちの人の画面から開く。学年・教科・レベルを選ぶと、そのレベルの問題5問と答え・とき方を見せる。学校の先生に見せる用。GENERATORS を直接呼ぶので成績・「さいきん出した問題」には残らない） |
 | `js/focus.js` | 「いま 学校で やっている たんげん」（おうちの人の画面から 子ごとに 3つまで えらぶ。算数のその学年で おおめに（約7わり）出る。`manabi_focus_{名前}`、どうきは あたらしい ほう）。math.js の generateMathProblem が focusMathUnits を見る |
@@ -127,6 +128,7 @@ GitHub Pages: `https://bok8rei-cell.github.io/manabi-app/`
 | `js/math_jh.js` | 数学（中2=genGrade8・中3=genGrade9）の問題生成。問題に `params` を持たせる |
 | `js/algebra.js` | 文字式の答えあわせ（展開・因数分解・直線の式・解）。parsePoly などの多項式パーサー |
 | `js/math_extra.js` | 算数の追加問題（1年：くりあがり・くりさがり・3つのたし算・文章題、5年：小数×小数・小数÷小数・平均・体積・分数の文章題・約分）と その解き方。genGrade1/genGrade5 から genExtra1/genExtra5 で呼ぶ。約分系は answerType reducedFraction（約分した形だけ正解） |
+| `js/math_bridge.js` | 算数の「さかのぼり」と さくらんぼ計算。generateMathProblem の さいしょに bridgePick：1年は いつも 約3わり さくらんぼけいさん（bCherry、くりあがり。学校の しゅくだいに あわせて）。さいきん20もんで じりき 8わり みまんの たんげんが あれば、約35%で その手前の だんかいの もんだい（BRIDGE_MAP：小数のかけ算→小数点の いち、あまりの いみ→あまりを どうする？、お金→硬貨の 絵で かぞえる、公倍数→ならべて さがす など）。mathProblemOfType は まちがえた すぐ あとの「にた もんだい」用 |
 | `js/math_super.js` | 算数「ちょうむずかしい」（レベル3。3年。maxDiff／SUPER_LEVEL は core.js）。昇段チャレンジで むずかしい→ちょうむずかしい に上がる。他学年・教科は最大レベル2のまま |
 | `js/math_super_more.js` | 算数「ちょうむずかしい」（1・2・4・5・6年、各6種類。問題に params を持たせ、解き方は params から作る） |
 | `js/steps_jh.js` | 中2・中3数学の「解き方」とヒント（steps.js と同じ決まり） |
@@ -181,6 +183,6 @@ Agent ツールで以下を実行：
 
 - iOS でPWAをホーム画面から削除すると localStorage が消えるが、プレイヤー名を再入力すれば Firestore から復元できる
 - Service Worker のキャッシュバージョンを上げないと端末に古いバージョンが残る
-- バージョンは `js/core.js` の APP_VERSION・`version.json`・`sw.js` の CACHE_NAME・`index.html` の `?v=` を同じ番号にそろえて上げる（現在 v43.40）
+- バージョンは `js/core.js` の APP_VERSION・`version.json`・`sw.js` の CACHE_NAME・`index.html` の `?v=` を同じ番号にそろえて上げる（現在 v43.41）
 - 日付は `localDateStr()`（js/store.js）を使う。`toISOString()` は UTC なので日本時間の朝に1日ずれる
 - `explain.js` を変更したら、先生エージェントに審査を依頼する（問題データと同じ扱い）

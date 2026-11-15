@@ -318,6 +318,10 @@ function loadUnits(name) {
   return r && typeof r === 'object' && !Array.isArray(r) ? r : {};
 }
 
+// r：さいきん 20もんの けっか（'1'＝じりきで せいかい／'0'）。にがての はんていは こちらを つかう（これまで ぜんぶ だと なかなか かわらないため）
+const UNIT_RECENT_N = 20;
+const UNIT_GOAL = 0.95;   // さいきん 20もんで 95%いじょう なら「そつぎょう」
+
 function recordUnit(subject, grade, unitLabel, ok) {
   const u = loadUnits();
   const id = `${grade}|${subject}|${unitLabel || 'そのほか'}`;
@@ -325,8 +329,30 @@ function recordUnit(subject, grade, unitLabel, ok) {
   e.t += 1;
   if (ok) e.c += 1;
   e.d = localDateStr();
+  e.r = ((typeof e.r === 'string' ? e.r : '') + (ok ? '1' : '0')).slice(-UNIT_RECENT_N);
   u[id] = e;
   writeJSON(unitKey(), u);
+}
+
+// その たんげんの いまの ちから：{ n, rate, recent }。さいきんの きろくが 5もん いじょう あれば それ、なければ これまで ぜんぶ（8もん いじょう）
+function unitRate(e) {
+  if (!e) return null;
+  if (typeof e.r === 'string' && e.r.length >= 5) {
+    const ok = e.r.split('').filter(x => x === '1').length;
+    return { n: e.r.length, ok, rate: ok / e.r.length, recent: true };
+  }
+  if (e.t >= 8) return { n: e.t, ok: e.c, rate: e.c / e.t, recent: false };
+  return null;
+}
+
+// ---- まちがえた ときの こたえ（ぶんせき用：なぜ まちがえたかを あとで しらべる）----
+// `manabi_wrong_{なまえ}` = [{ d 日付, at 時刻, g 学年, s 教科, u たんげん, q もんだい, a せいかい, y こたえた もの, h ヒント, m モード }]（あたらしい じゅん 200こ）
+function wrongKey(name) { return `manabi_wrong_${playerTag(name)}`; }
+function recordWrong(entry) {
+  const list = readJSON(wrongKey(), []);
+  const arr = Array.isArray(list) ? list : [];
+  arr.unshift(Object.assign({ d: localDateStr(), at: Date.now() }, entry));
+  writeJSON(wrongKey(), arr.slice(0, 200));
 }
 
 // { n: 答えた数, rate: せいかいりつ(0〜1) }

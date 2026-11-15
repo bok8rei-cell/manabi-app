@@ -164,7 +164,13 @@ function nextQuestion() {
     session.currentId = entry.id || null;
   } else {
     const diff = getDiff(session.grade, session.subject);
-    session.current = makeProblem(session.grade, session.subject, diff);
+    let again = null;   // まちがえた すぐ あとの「にた もんだい」
+    if (session.retryKey && session.subject === 'math' && typeof mathProblemOfType === 'function') {
+      again = mathProblemOfType(session.grade, diff, session.retryKey, session.retryQ);
+      if (again) again.retry = true;
+    }
+    session.retryKey = null;
+    session.current = again || makeProblem(session.grade, session.subject, diff);
     session.currentSubject = session.subject;
     session.currentId = null;
   }
@@ -175,6 +181,7 @@ function quizTagText() {
   const name = subjectNameOf(session.grade, session.currentSubject);
   if (session.mode === 'challenge') return `🚀 チャレンジ ・ ${name}`;
   if (session.mode === 'testweek') return `📝 テスト対策 ・ ${name}`;
+  if (session.current && session.current.retry) return `🔁 にた もんだいで もういちど ・ ${name}`;
   if (session.fromMistakes) return `💪 にがて ふくしゅう ・ ${name}`;
   if (session.mode === 'mission') return `⭐ ミッション ・ ${name}`;
   return name;
@@ -417,7 +424,7 @@ function checkAnswer() {
 
   s.answered = true;
   if (!s.fromMistakes) noteSkipTrial(s.currentSubject, s.grade, p.key, ok && s.hintStage === 0);   // 「まだ ならってない」の おためし
-  if (!s.fromMistakes) recordUnit(s.currentSubject, s.grade, p.unitLabel, ok && s.hintStage === 0);   // たんげんべつの きろく（ぶんせき用）
+  if (!s.fromMistakes && s.mode !== 'challenge') recordUnit(s.currentSubject, s.grade, p.unitLabel, ok && s.hintStage === 0);   // たんげんべつの きろく（ぶんせき用）。昇段チャレンジは まだ ならっていない レベルなので 入れない
   if (s.mode === 'testweek') noteTestWeek(s.testSetId, p.twIdx, ok && s.hintStage === 0);   // テスト週間：じりきで せいかいした もんだいを おぼえる（js/testweek.js）
   if (!s.fromMistakes && s.mode !== 'testweek' && getDiff(s.grade, s.currentSubject) < 3) recordRecent(s.currentSubject, s.grade, ok && s.hintStage === 0);   // 「ちょうむずかしい」の 結果は 「まえの学年に もどる」の 判定に 入れない   // 最近の正解率（ヒントを使って正解したぶんは、自力ではないので 数えない）
   updateHintUI();
@@ -449,6 +456,17 @@ function checkAnswer() {
     s.combo = 0;
     FX.wrong();
     s.wrongList.push({ q: (p.emoji ? p.emoji + ' ' : '') + p.question, a: p.answer });
+    // まちがえた こたえを のこす（なぜ まちがえたかを あとで しらべる。js/store.js）
+    const typedEl = byId('answer-input');
+    const typed = isDK ? 'わからない' : (p.type === 'choice' ? String(s.selected) : (typedEl ? typedEl.value.trim() : ''));
+    if (typeof recordWrong === 'function') recordWrong({ g: s.grade, s: s.currentSubject, u: p.unitLabel || '', q: String(p.question || '').slice(0, 160), a: String(p.answer), y: typed.slice(0, 40), h: s.hintStage, m: s.mode });
+    // 算数は、まちがえた すぐ あとに「にた もんだい」（おなじ しゅるいで かずが ちがう）を もう1もん。1かいの べんきょうで 3もんまで
+    if (s.currentSubject === 'math' && !s.problems && (s.mode === 'drill' || s.mode === 'mission') && (s.retryCount || 0) < 3 && p.key) {
+      s.retryKey = p.key;
+      s.retryQ = p.question;
+      s.retryCount = (s.retryCount || 0) + 1;
+      s.total += 1;
+    }
   }
 
   // にがて：まちがえたら保存、復習問題は結果に応じて更新

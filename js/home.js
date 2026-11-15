@@ -583,17 +583,17 @@ function renderParent() {
     const weak = [];
     const unitData = loadUnits(name);
     Object.keys(unitData).forEach(k => {
-      const u = unitData[k];
-      if (u.t >= 8) weak.push({ k, rate: u.c / u.t, t: u.t, c: u.c });
+      const r = (typeof unitRate === 'function') ? unitRate(unitData[k]) : null;
+      if (r) weak.push({ k, rate: r.rate, t: r.n, c: r.ok, recent: r.recent });
     });
     if (weak.length > 0) {
-      card.appendChild(el('div', 'child-section', '🔍 よわい たんげん（じりきで せいかい した わりあい）'));
+      card.appendChild(el('div', 'child-section', '🔍 よわい たんげん（さいきん 20もんで じりきで せいかい した わりあい。95%で そつぎょう）'));
       weak.sort((x, y) => x.rate - y.rate).slice(0, 4).forEach(w => {
         const [g, subj, unit] = w.k.split('|');
         const row = el('div', 'report-row');
         row.appendChild(el('span', 'subject-name', `${gradeLabel(Number(g))} ${subjectNameOf(Number(g), subj)}　${unit}`));
         const rate = Math.round(w.rate * 100);
-        const detail = el('span', 'subject-detail', `${w.c}/${w.t} `);
+        const detail = el('span', 'subject-detail', `${w.recent ? 'さいきん ' : ''}${w.c}/${w.t} `);
         detail.appendChild(el('span', 'subject-rate ' + (rate >= 80 ? 'high' : rate >= 50 ? 'mid' : 'low'), `${rate}%`));
         row.appendChild(detail);
         card.appendChild(row);

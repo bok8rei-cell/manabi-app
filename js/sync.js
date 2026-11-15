@@ -27,7 +27,7 @@ function collectSyncData() {
 }
 
 // ---- ポコ・にがて・毎日の連続日数も同期する ----
-const EXTRA_PREFIXES = ['manabi_pet_', 'manabi_mistakes_', 'manabi_daystreak_', 'manabi_history_', 'manabi_grade_', 'manabi_skip_', 'manabi_recent_', 'manabi_week_', 'manabi_solo_', 'manabi_shop_', 'manabi_subj_', 'manabi_taper_', 'manabi_unit_', 'manabi_focus_', 'manabi_msg_', 'manabi_time_', 'manabi_first_', 'manabi_testset_', 'manabi_burger', 'manabi_pdays_', 'manabi_shopseen_'];
+const EXTRA_PREFIXES = ['manabi_pet_', 'manabi_mistakes_', 'manabi_daystreak_', 'manabi_history_', 'manabi_grade_', 'manabi_skip_', 'manabi_recent_', 'manabi_week_', 'manabi_solo_', 'manabi_shop_', 'manabi_subj_', 'manabi_taper_', 'manabi_unit_', 'manabi_focus_', 'manabi_msg_', 'manabi_time_', 'manabi_first_', 'manabi_testset_', 'manabi_burger', 'manabi_pdays_', 'manabi_shopseen_', 'manabi_wrong_'];
 
 function parseJSONOr(raw, fallback) {
   try { return raw ? JSON.parse(raw) : fallback; } catch (e) { return fallback; }
@@ -118,6 +118,12 @@ function mergeExtra(key, rawA, rawB) {
     });
     return JSON.stringify(Object.assign({}, newer, { used, closed: !!(a.closed || b.closed), t: Math.max(a.t || 0, b.t || 0) }));
   }
+  if (key.indexOf('manabi_wrong_') === 0) {   // まちがえた こたえの きろく：りょうほう あわせて、あたらしい じゅんに 200こ
+    const a = parseJSONOr(rawA, []), b = parseJSONOr(rawB, []);
+    const seen = new Set(), out = [];
+    [...(Array.isArray(a) ? a : []), ...(Array.isArray(b) ? b : [])].sort((x, y) => (y.at || 0) - (x.at || 0)).forEach(e => { const k = (e.at || 0) + '|' + e.q + '|' + e.y; if (!seen.has(k)) { seen.add(k); out.push(e); } });
+    return JSON.stringify(out.slice(0, 200));
+  }
   if (key.indexOf('manabi_shopseen_') === 0) {   // おみせの「NEW」を 見た日：あたらしい ほう
     const a = parseJSONOr(rawA, {}), b = parseJSONOr(rawB, {});
     return JSON.stringify({ d: [a.d, b.d].filter(Boolean).sort().pop() || '' });
@@ -134,7 +140,11 @@ function mergeExtra(key, rawA, rawB) {
     const out = {};
     new Set([...Object.keys(a), ...Object.keys(b)]).forEach(k => {
       const x = a[k] || {}, y = b[k] || {};
+      // さいきんの けっか r は、たくさん 答えている ほう（おなじ なら ながい ほう）を のこす
+      const rx = typeof x.r === 'string' ? x.r : '', ry = typeof y.r === 'string' ? y.r : '';
+      const r = ((y.t || 0) > (x.t || 0) || ((y.t || 0) === (x.t || 0) && ry.length > rx.length)) ? ry : rx;
       out[k] = { t: Math.max(x.t || 0, y.t || 0), c: Math.max(x.c || 0, y.c || 0), d: [x.d, y.d].filter(Boolean).sort().pop() || '' };
+      if (r) out[k].r = r;
     });
     return JSON.stringify(out);
   }
