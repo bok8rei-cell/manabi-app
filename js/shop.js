@@ -80,16 +80,50 @@ const SHOP_ITEMS = [
   { id: 'santabeard', name: 'サンタの もじゃもじゃ しろひげ', slot: 'mouth', price: 800, tier: 'n' },
   { id: 'wizard',     name: 'まほうつかいの ながい ひげ',   slot: 'mouth', price: 1500, tier: 'r' },
   // --- ふやした かざり（メガネ・ぼうし・ネクタイ）---
-  { id: 'sqglasses',  name: 'くろぶちの しかくい メガネ', slot: 'eyes', price: 250, tier: 's' },
-  { id: 'sqred',      name: 'あかぶちの しかくい メガネ', slot: 'eyes', price: 250, tier: 's' },
-  { id: 'hachimaki',  name: 'はちまき',           slot: 'head',  price: 250,  tier: 's' },
-  { id: 'bowtie',     name: 'ちょうネクタイ',     slot: 'neck',  price: 300,  tier: 's' },
-  { id: 'knitcap',    name: 'ニットぼうし',       slot: 'head',  price: 600,  tier: 'n' },
+  { id: 'sqglasses',  name: 'くろぶちの しかくい メガネ', slot: 'eyes', price: 250, tier: 's', added: '2026-11-15' },
+  { id: 'sqred',      name: 'あかぶちの しかくい メガネ', slot: 'eyes', price: 250, tier: 's', added: '2026-11-15' },
+  { id: 'hachimaki',  name: 'はちまき',           slot: 'head',  price: 250,  tier: 's', added: '2026-11-15' },
+  { id: 'bowtie',     name: 'ちょうネクタイ',     slot: 'neck',  price: 300,  tier: 's', added: '2026-11-15' },
+  { id: 'knitcap',    name: 'ニットぼうし',       slot: 'head',  price: 600,  tier: 'n', added: '2026-11-15' },
   // --- スペシャルルーレットで はやく たっせい した 3にんだけ（おみせ・ふつうの ルーレットにも 出ない。js/roulette.js）---
   { id: 'firstmedal', name: 'いちばんのり きんのメダル', slot: 'neck', price: 0, tier: 'first', special: true },
   { id: 'secondmedal', name: 'にばんのり ぎんのメダル', slot: 'neck', price: 0, tier: 'second', special: true },
   { id: 'thirdmedal', name: 'さんばんのり どうのメダル', slot: 'neck', price: 0, tier: 'third', special: true }
 ];
+
+// あたらしい かざり：ふやした日（added: 'YYYY-MM-DD'）から 14日かん「NEW」を つける。ホームにも「おみせに ふえたよ」を 出す（見たら きえる）
+// かざりを ふやすときは かならず added に その日の 日付を 入れる
+const SHOP_NEW_DAYS = 14;
+function shopDaysSince(dateStr) {
+  const [y, m, d] = String(dateStr).split('-').map(Number);
+  const [ty, tm, td] = localDateStr().split('-').map(Number);
+  return Math.round((Date.UTC(ty, tm - 1, td) - Date.UTC(y, m - 1, d)) / 86400000);
+}
+function shopIsNew(it) { return !!it.added && !it.special && shopDaysSince(it.added) >= 0 && shopDaysSince(it.added) <= SHOP_NEW_DAYS; }
+function shopSeenKey(name) { return `manabi_shopseen_${playerTag(name)}`; }
+function shopSeenDate(name) { const o = readJSON(shopSeenKey(name), null); return (o && o.d) || ''; }
+// まだ 見ていない あたらしい かざり（もっていない もの）
+function shopUnseenNew() {
+  const own = loadShop().own, seen = shopSeenDate();
+  return SHOP_ITEMS.filter(it => shopIsNew(it) && !own[it.id] && it.added > seen);
+}
+function shopMarkSeen() {
+  const latest = SHOP_ITEMS.filter(shopIsNew).map(it => it.added).sort().pop();
+  if (latest && latest > shopSeenDate()) writeJSON(shopSeenKey(), { d: latest });
+}
+// ホームの おしらせ
+function appendShopNewCard(root) {
+  if (!state.playerName.trim()) return;
+  const list = shopUnseenNew();
+  if (list.length === 0) return;
+  const card = el('div', 'panel food-card shopnew-panel');
+  card.appendChild(el('div', 'shopnew-title', `🛍️ おみせに あたらしい かざりが ${list.length}こ ふえたよ！`));
+  card.appendChild(el('div', 'shopnew-note', list.slice(0, 3).map(it => it.name).join('、') + (list.length > 3 ? ' ほか' : '')));
+  const btn = el('button', 'main-btn wide', '🛍️ おみせを 見に いく');
+  btn.addEventListener('click', () => { shopMode = 'store'; showTab('shop'); });
+  card.appendChild(btn);
+  root.appendChild(card);
+}
 
 const SHOP_GIFT_NAMES = { shine: 'きらきらポコ', crown: 'おうかん', cape: 'マント', wing: 'つばさ' };
 
@@ -608,7 +642,7 @@ function renderShop() {
 
   // きりかえ
   const sw = el('div', 'shop-switch');
-  [['dress', `👗 きがえ（${owned}こ）`], ['store', '🛍️ おみせ'], ['room', '🏠 へや']].forEach(([key, label]) => {
+  [['dress', `👗 きがえ（${owned}こ）`], ['store', shopUnseenNew().length > 0 ? '🛍️ おみせ 🆕' : '🛍️ おみせ'], ['room', '🏠 へや']].forEach(([key, label]) => {
     const b = el('button', 'shop-switch-btn' + (mode === key ? ' active' : ''), label);
     b.addEventListener('click', () => { shopMode = key; renderShop(); });
     sw.appendChild(b);
@@ -692,8 +726,11 @@ function renderDressRoom(root, shop, stage) {
 // おみせ：まだ もっていない かざり。かうと「きがえ」に はいる
 function renderStore(root, shop, stage, have) {
   let any = false;
+  const unseen = shopUnseenNew().length;   // この ひらきで「NEW」を 見せる ために さきに 数える
+  if (unseen > 0) root.appendChild(el('div', 'panel shopnew-note-box', `🆕 あたらしい かざりが ${unseen}こ ふえたよ！（「NEW」の しるしを さがしてね）`));
+  shopMarkSeen();
   SHOP_SLOTS.forEach(sl => {
-    const items = SHOP_ITEMS.filter(it => it.slot === sl.key && !shop.own[it.id] && !it.special);
+    const items = SHOP_ITEMS.filter(it => it.slot === sl.key && !shop.own[it.id] && !it.special).sort((a, b) => (shopIsNew(b) ? 1 : 0) - (shopIsNew(a) ? 1 : 0));
     if (items.length === 0) return;
     any = true;
     root.appendChild(el('h3', 'section-title', sl.label));
@@ -706,7 +743,9 @@ function renderStore(root, shop, stage, have) {
       const preview = el('div', 'shop-card-pic');
       preview.innerHTML = petSVG(slotNeedsBody(it.slot) ? Math.max(stage, 3) : stage, 'happy', 64, null, { [it.slot]: it.id });
       card.appendChild(preview);
-      card.appendChild(el('div', 'shop-card-name', it.name));
+      const nameEl = el('div', 'shop-card-name', it.name);
+      if (shopIsNew(it)) nameEl.appendChild(el('span', 'new-badge', 'NEW'));
+      card.appendChild(nameEl);
       card.appendChild(el('div', 'shop-card-tier tier-' + it.tier, SHOP_TIERS[it.tier]));
       const locked = sl.body && petStage(loadPet().growth) < 3;   // からだが まだ ない
       const btn = el('button', !locked && have >= it.price ? 'main-btn shop-btn' : 'sub-btn shop-btn', locked ? '🔒' : `💰 ${it.price}`);

@@ -838,3 +838,11 @@ h2, h3 { margin: 0; }
 .bq-quick { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
 .bq-quick .sub-btn { width: auto; flex: 0 0 auto; padding: 6px 12px; }
 .bq-hint { font-size: 0.75rem; font-weight: 600; color: #9A7E69; line-height: 1.5; }
+
+/* ----- おみせの NEW ----- */
+.new-badge { display: inline-block; margin-left: 4px; padding: 1px 5px; border-radius: 6px; background: #E5484D; color: #fff; font-size: 0.62rem; font-weight: 800; vertical-align: middle; letter-spacing: 0.03em; }
+.shopnew-panel { margin-top: 8px; padding: 10px 14px; background: #FDF2F8; border-color: #F5B8D4; }
+.shopnew-title { font-weight: 800; font-size: 0.95rem; color: #BE185D; }
+.shopnew-note { font-size: 0.8rem; color: #8A4B6B; line-height: 1.5; margin: 2px 0 4px; }
+.shopnew-panel .wide { margin-top: 6px; }
+.shopnew-note-box { background: #FDF2F8; border-color: #F5B8D4; color: #BE185D; font-weight: 800; font-size: 0.85rem; text-align: center; }

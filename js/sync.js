@@ -27,7 +27,7 @@ function collectSyncData() {
 }
 
 // ---- ポコ・にがて・毎日の連続日数も同期する ----
-const EXTRA_PREFIXES = ['manabi_pet_', 'manabi_mistakes_', 'manabi_daystreak_', 'manabi_history_', 'manabi_grade_', 'manabi_skip_', 'manabi_recent_', 'manabi_week_', 'manabi_solo_', 'manabi_shop_', 'manabi_subj_', 'manabi_taper_', 'manabi_unit_', 'manabi_focus_', 'manabi_msg_', 'manabi_time_', 'manabi_first_', 'manabi_testset_', 'manabi_burger', 'manabi_pdays_'];
+const EXTRA_PREFIXES = ['manabi_pet_', 'manabi_mistakes_', 'manabi_daystreak_', 'manabi_history_', 'manabi_grade_', 'manabi_skip_', 'manabi_recent_', 'manabi_week_', 'manabi_solo_', 'manabi_shop_', 'manabi_subj_', 'manabi_taper_', 'manabi_unit_', 'manabi_focus_', 'manabi_msg_', 'manabi_time_', 'manabi_first_', 'manabi_testset_', 'manabi_burger', 'manabi_pdays_', 'manabi_shopseen_'];
 
 function parseJSONOr(raw, fallback) {
   try { return raw ? JSON.parse(raw) : fallback; } catch (e) { return fallback; }
@@ -117,6 +117,10 @@ function mergeExtra(key, rawA, rawB) {
       used[n] = { set: Math.max(x.set || 0, y.set || 0), side: Math.max(x.side || 0, y.side || 0) };
     });
     return JSON.stringify(Object.assign({}, newer, { used, closed: !!(a.closed || b.closed), t: Math.max(a.t || 0, b.t || 0) }));
+  }
+  if (key.indexOf('manabi_shopseen_') === 0) {   // おみせの「NEW」を 見た日：あたらしい ほう
+    const a = parseJSONOr(rawA, {}), b = parseJSONOr(rawB, {});
+    return JSON.stringify({ d: [a.d, b.d].filter(Boolean).sort().pop() || '' });
   }
   if (key.indexOf('manabi_pdays_') === 0) {   // 3ポイントの 日：どちらかに あれば あった
     return JSON.stringify(Object.assign({}, parseJSONOr(rawA, {}), parseJSONOr(rawB, {})));

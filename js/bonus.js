@@ -79,6 +79,7 @@ function renderFoodPanel() {
   if (!root) return;
   root.innerHTML = '';
   if (!state.playerName.trim()) return;
+  if (typeof appendShopNewCard === 'function') appendShopNewCard(root);   // js/shop.js（おみせに あたらしい かざり）
   if (typeof appendBurgerCard === 'function') appendBurgerCard(root);   // js/burger.js（バーガークエスト）
   if (typeof appendTestWeekCard === 'function') appendTestWeekCard(root);   // js/testweek.js（テスト週間）
   const p = loadPet();
