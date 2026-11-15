@@ -1,6 +1,6 @@
-// ===== おしゃれ：フード型の かぶりもの（どうぶつ 10しゅるい）=====
+// ===== おしゃれ：フード型の かぶりもの（どうぶつ 11しゅるい）=====
 // かおの まわりを ぐるっと おおう フード。かおは フードの あなから 見える。あたまの うえに その どうぶつの かおが ある。
-// 「あたま」の かざり（ぼうしと おなじ 場所）。ねだんは 600コイン（ふつう）。ドラゴン・ユニコーンは 2000コイン（レア）。js/shop.js の あとに よみこむ。
+// 「あたま」の かざり（ぼうしと おなじ 場所）。ねだんは 600コイン（ふつう）。ドラゴン・ユニコーン・ペガサスは 2000コイン（レア）。js/shop.js の あとに よみこむ。
 (() => {
 // かぶりもの（フード）：かおの まわりを ぐるっと おおい、あたまの うえに どうぶつの かおが ある
 const HG = g => {
@@ -83,10 +83,28 @@ D.unicorn = g => {
   return mane + ear(-1) + ear(1) + ringPath(g, '#FFFFFF', '#C4B5FD', true, 3.4) + horn +
     `<ellipse cx="32" cy="${h.ty + 2.6}" rx="4.8" ry="2.8" fill="#FBCFE8"/><circle cx="30.4" cy="${h.ty + 2.4}" r="0.7" fill="#BE185D"/><circle cx="33.6" cy="${h.ty + 2.4}" r="0.7" fill="#BE185D"/>` + eyeC(-1) + eyeC(1);
 };
+D.pegasus = g => {
+  const h = HG(g);
+  const wing = s => {
+    const a = -Math.PI / 2 + s * 0.95; const b = outerPt(h, a, -0.8);
+    const x = b[0], y = b[1];
+    // 3まいの はねが ひろがる（そとがわ・うえむきに）
+    const f = (dx, dy, l) => `<path d="M${x} ${y} Q${x + s * dx * 0.5} ${clipY(y + dy * 0.2 - 4)} ${x + s * dx} ${clipY(y + dy)} Q${x + s * dx * 0.7} ${clipY(y + dy * 0.2 + 3)} ${x + s * 2} ${y + 3} Z" fill="#FFFFFF" stroke="#93C5FD" stroke-width="0.9" stroke-linejoin="round"/>`;
+    return f(11, -9) + f(12, -3) + f(10, 3);
+  };
+  const ear = s => { const x = 32 + s * h.rxO * 0.34, y = h.top + 3.2; return `<path d="M${x - 3.4} ${y + 2} L${x + s * 0.6} ${clipY(y - 6.5)} L${x + 3.4} ${y + 2} Z" fill="#fff" stroke="#93C5FD" stroke-width="0.9" stroke-linejoin="round"/><path d="M${x - 1.6} ${y + 1.8} L${x + s * 0.4} ${clipY(y - 3)} L${x + 1.6} ${y + 1.8} Z" fill="#FBCFE8"/>`; };
+  let mane = '';
+  const cols = ['#F9A8D4', '#C4B5FD', '#93C5FD', '#86EFAC', '#FDE68A'];
+  for (let i = 0; i < 7; i++) { const a = Math.PI * (-0.18 + i * 0.12); const p = outerPt(h, a, 0.4); mane += `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="${(3.3 + (i % 2) * 0.7).toFixed(1)}" fill="${cols[i % 5]}" stroke="#fff" stroke-width="0.7"/>`; }
+  const eyeC = s => `<ellipse cx="${32 + s * 8.4}" cy="${h.ty - 0.4}" rx="1.9" ry="2.3" fill="#1F2937"/><circle cx="${32 + s * 8.4 - 0.6}" cy="${h.ty - 1.2}" r="0.7" fill="#fff"/><path d="M${32 + s * 8.4 + s * 1.6} ${h.ty - 2.2} l${s * 1.3} -0.9" stroke="#1F2937" stroke-width="0.8"/>`;
+  return wing(-1) + wing(1) + mane + ringPath(g, '#E0F2FE', '#7DD3FC', true, 3.4) + ear(-1) + ear(1) +
+    `<path d="M32 ${h.top + 0.6} L34.6 ${h.top + 4.4} L32 ${h.top + 8} L29.4 ${h.top + 4.4} Z" fill="#fff" opacity="0.95"/>` +
+    `<ellipse cx="32" cy="${h.ty + 2.8}" rx="4.4" ry="2.6" fill="#FBCFE8"/><circle cx="30.6" cy="${h.ty + 2.8}" r="0.7" fill="#BE185D"/><circle cx="33.4" cy="${h.ty + 2.8}" r="0.7" fill="#BE185D"/>` + eyeC(-1) + eyeC(1);
+};
 const HOOD_ITEMS = [
   ['bear', 'クマの フード', 600], ['panda', 'パンダの フード', 600], ['tiger', 'トラの フード', 600], ['lion', 'ライオンの フード', 600],
   ['frog', 'カエルの フード', 600], ['shark', 'サメの フード', 600], ['wolf', 'オオカミの フード', 600], ['dino', 'きょうりゅうの フード', 600],
-  ['dragon', 'ドラゴンの フード', 2000], ['unicorn', 'ユニコーンの フード', 2000]
+  ['dragon', 'ドラゴンの フード', 2000], ['unicorn', 'ユニコーンの フード', 2000], ['pegasus', 'ペガサスの フード', 2000]
 ];
 HOOD_ITEMS.forEach(([k, name, price]) => {
   SHOP_DRAW['hood_' + k] = D[k];
