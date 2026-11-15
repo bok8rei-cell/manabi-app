@@ -130,6 +130,26 @@ function burgerDots(flags) {
   return wrap;
 }
 
+// 「バーガークエストとは？」の せつめい（はじまる まえは ひらいた まま、はじまったら たたんで おく）
+function burgerAbout(q, open) {
+  const box = document.createElement('details');
+  box.className = 'bq-about';
+  box.open = !!open;
+  const sum = document.createElement('summary');
+  sum.textContent = `${q.title}とは？`;
+  box.appendChild(sum);
+  [
+    `みんなで ${q.days}日かん ちょうせんする クエストだよ！`,
+    '「そだちポイント 3つ」を そろえた日が「できた日」だよ。',
+    `${q.days}日の うち ${q.need}日 以上 できた子が、ぜんいん そろったら…みんなに ${q.reward}けん！`,
+    `${q.days}日 ぜんぶ できた子は、${q.side}けんも ゲット！（ぜんいん そろったときだけ）`,
+    '1人でも とどかないと、みんなの 券は もらえないよ。みんなで こえを かけ あおう！',
+    `じぶんの がんばりは コインにも なるよ（${q.need}日で +${BURGER_COIN_NEED}、${q.days}日 ぜんぶで さらに +${BURGER_COIN_FULL}）`,
+    'みんなの ようすは、ホームの この カードで 見られるよ。'
+  ].forEach(t => box.appendChild(el('div', 'bq-about-line', `・${t}`)));
+  return box;
+}
+
 function appendBurgerCard(root) {
   const q = loadBurger();
   if (!state.playerName.trim() || !burgerVisible(q)) return;
@@ -140,8 +160,9 @@ function appendBurgerCard(root) {
   card.appendChild(el('div', 'bq-title', `🍔 ${q.title}`));
 
   if (st.phase === 'soon') {
-    card.appendChild(el('div', 'bq-note', `もうすぐ はじまるよ！ あと ${st.daysToStart}日（${Number(q.start.split('-')[1])}月${Number(q.start.split('-')[2])}日から ${q.days}日かん）`));
-    card.appendChild(el('div', 'bq-note', `みんなで ${q.days}日の うち ${q.need}日 以上、「そだちポイント 3つ」を そろえると ${q.reward}！`));
+    card.appendChild(el('div', 'bq-count', st.daysToStart === 1 ? 'スタートまで あと 1日！ あした から！' : `スタートまで あと ${st.daysToStart}日！`));
+    card.appendChild(el('div', 'bq-note', `${Number(q.start.split('-')[1])}月${Number(q.start.split('-')[2])}日から ${q.days}日かん`));
+    card.appendChild(burgerAbout(q, true));
     root.appendChild(card);
     return;
   }
@@ -169,6 +190,7 @@ function appendBurgerCard(root) {
     card.appendChild(row);
   });
   card.appendChild(el('div', 'bq-legend', '● できた　× できなかった　○ これから／きょう'));
+  card.appendChild(burgerAbout(q, false));
 
   const tickets = burgerTickets(q, st);
   if (tickets.length > 0) {
@@ -210,6 +232,15 @@ function appendBurgerParent(root) {
     const iDate = document.createElement('input');
     iDate.type = 'date'; iDate.value = localDateStr(); iDate.min = localDateStr();
     wDate.appendChild(iDate);
+    const quick = el('div', 'bq-quick');
+    [['きょう', 0], ['あした', 1], ['3日後', 3], ['1しゅうかん後', 7]].forEach(([label, n]) => {
+      const b = el('button', 'sub-btn', label);
+      b.type = 'button';
+      b.addEventListener('click', () => { iDate.value = addDaysStr(localDateStr(), n); });
+      quick.appendChild(b);
+    });
+    wDate.appendChild(quick);
+    wDate.appendChild(el('span', 'bq-hint', 'あとの 日を えらぶと「予約」に なります。はじまる 日まで、みんなの ホームに「あと ○日」の カウントダウンと「バーガークエストとは？」の せつめいが 出ます。'));
     form.appendChild(wDate);
     const wNeed = el('label', 'bq-field');
     wNeed.appendChild(el('span', '', `${BURGER_DAYS}日の うち なん日 そろえる？`));
@@ -226,13 +257,14 @@ function appendBurgerParent(root) {
       if (date < localDateStr()) { showToast('はじまる 日は きょう いこうに してね'); return; }
       if (names.length < 2) { showToast('2人 以上 とうろく されて いる ときに 出せます'); return; }
       const nm = (iTitle.value.trim() || 'バーガークエスト');
-      askConfirm(`「${nm}」を 出す？\n${date}から ${BURGER_DAYS}日かん。ぜんいん（${names.length}人）が ${sNeed.value}日 以上で ${iReward.value.trim() || 'バーガーセット'}けん。\n（みんなの ホームに 出ます）`, '出す', 'やめる', () => {
+      const daysTo = daysBetween(localDateStr(), date);
+      askConfirm(`「${nm}」を ${daysTo > 0 ? `予約する？（${daysTo}日後に スタート）` : '出す？'}\n${date}から ${BURGER_DAYS}日かん。ぜんいん（${names.length}人）が ${sNeed.value}日 以上で ${iReward.value.trim() || 'バーガーセット'}けん。\n（みんなの ホームに 出ます）`, '出す', 'やめる', () => {
         saveBurger({
           id: `bq-${Date.now().toString(36)}`, title: nm, reward: iReward.value.trim() || 'バーガーセット', side: iSide.value.trim() || 'サイドメニュー',
           start: date, days: BURGER_DAYS, need: Number(sNeed.value), names: names.slice(), used: {}, closed: false
         });
         autoSync();
-        showToast('クエストを 出したよ！');
+        showToast(daysTo > 0 ? `予約したよ！ ${daysTo}日後に スタート` : 'クエストを 出したよ！');
         renderParent();
       }, { cancelFirst: true });
     });
@@ -243,7 +275,7 @@ function appendBurgerParent(root) {
   }
 
   const st = burgerStatus(q);
-  const stateWord = { soon: `${st.daysToStart}日後に はじまります`, going: 'ちょうせんちゅう', cleared: '🎉 ぜんいん クリア！', failed: 'ざんねん（ぜんいん そろいませんでした）' }[st.phase];
+  const stateWord = { soon: `予約ずみ：${st.daysToStart}日後に はじまります`, going: 'ちょうせんちゅう', cleared: '🎉 ぜんいん クリア！', failed: 'ざんねん（ぜんいん そろいませんでした）' }[st.phase];
   panel.appendChild(el('div', 'report-line', `「${q.title}」 ${q.start} 〜 ${st.end}（${q.need}日 いじょうで ${q.reward}）／${stateWord}`));
   q.names.forEach(n => {
     const per = st.people[n];

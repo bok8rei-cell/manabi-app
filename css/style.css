@@ -831,3 +831,10 @@ h2, h3 { margin: 0; }
 .bq-field { display: flex; flex-direction: column; gap: 2px; font-size: 0.82rem; font-weight: 700; color: #7A4A2A; }
 .bq-field input, .bq-field select { font-size: 1rem; padding: 8px 10px; border: 1px solid #E5D5C8; border-radius: 10px; background: #fff; }
 .burger-parent .wide { margin-top: 8px; }
+.bq-count { font-weight: 800; font-size: 1.15rem; color: #C2410C; margin-top: 4px; }
+.bq-about { margin-top: 8px; background: #fff; border-radius: 12px; padding: 6px 10px; font-size: 0.82rem; color: #5A4636; }
+.bq-about summary { font-weight: 800; cursor: pointer; padding: 4px 0; }
+.bq-about-line { line-height: 1.6; margin-top: 2px; }
+.bq-quick { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.bq-quick .sub-btn { width: auto; flex: 0 0 auto; padding: 6px 12px; }
+.bq-hint { font-size: 0.75rem; font-weight: 600; color: #9A7E69; line-height: 1.5; }
