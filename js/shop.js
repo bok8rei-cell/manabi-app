@@ -79,6 +79,12 @@ const SHOP_ITEMS = [
   { id: 'blackbeard', name: 'もじゃもじゃ くろひげ',        slot: 'mouth', price: 800,  tier: 'n' },
   { id: 'santabeard', name: 'サンタの もじゃもじゃ しろひげ', slot: 'mouth', price: 800, tier: 'n' },
   { id: 'wizard',     name: 'まほうつかいの ながい ひげ',   slot: 'mouth', price: 1500, tier: 'r' },
+  // --- ふやした かざり（メガネ・ぼうし・ネクタイ）---
+  { id: 'sqglasses',  name: 'くろぶちの しかくい メガネ', slot: 'eyes', price: 250, tier: 's' },
+  { id: 'sqred',      name: 'あかぶちの しかくい メガネ', slot: 'eyes', price: 250, tier: 's' },
+  { id: 'hachimaki',  name: 'はちまき',           slot: 'head',  price: 250,  tier: 's' },
+  { id: 'bowtie',     name: 'ちょうネクタイ',     slot: 'neck',  price: 300,  tier: 's' },
+  { id: 'knitcap',    name: 'ニットぼうし',       slot: 'head',  price: 600,  tier: 'n' },
   // --- スペシャルルーレットで はやく たっせい した 3にんだけ（おみせ・ふつうの ルーレットにも 出ない。js/roulette.js）---
   { id: 'firstmedal', name: 'いちばんのり きんのメダル', slot: 'neck', price: 0, tier: 'first', special: true },
   { id: 'secondmedal', name: 'にばんのり ぎんのメダル', slot: 'neck', price: 0, tier: 'second', special: true },
@@ -282,6 +288,16 @@ function shopRankMedal(g, ribbon, fill, stroke, star) {
     `<circle cx="32" cy="${c.midY + 5.2}" r="5.8" fill="${fill}" stroke="${stroke}" stroke-width="1"/><circle cx="32" cy="${c.midY + 5.2}" r="4.2" fill="none" stroke="#fff" stroke-width="0.7" opacity="0.8"/><path d="${shopStarPath(32, c.midY + 5.2, 3)}" fill="${star}"/>`;
 }
 
+// しかくい メガネ（ふちの いろを かえて つかう）
+function shopSquareGlasses(g, color) {
+  const y = g.eyeY;
+  return `<g fill="rgba(255,255,255,0.2)" stroke="${color}" stroke-width="2.2" stroke-linejoin="round">` +
+    `<rect x="16" y="${y - 5.2}" width="13.4" height="10.4" rx="2.2"/><rect x="34.6" y="${y - 5.2}" width="13.4" height="10.4" rx="2.2"/></g>` +
+    `<path d="M29.4 ${y - 1.6} L34.6 ${y - 1.6}" stroke="${color}" stroke-width="2"/>` +
+    `<path d="M16 ${y - 2.4} L12.8 ${y - 3.4} M48 ${y - 2.4} L51.2 ${y - 3.4}" stroke="${color}" stroke-width="1.6" stroke-linecap="round"/>` +
+    `<path d="M18.2 ${y - 3.4} L21.4 ${y - 3.4} M36.8 ${y - 3.4} L40 ${y - 3.4}" stroke="#fff" stroke-width="1.1" opacity="0.8" stroke-linecap="round"/>`;
+}
+
 const SHOP_DRAW = {
   // --- オーラ（でんせつ） ---
   legend: () => {
@@ -431,6 +447,21 @@ const SHOP_DRAW = {
   pearl: g => { const c = shopChain(g, 'none', 0); return shopPearls(g) + `<circle cx="32" cy="${c.midY + 3.2}" r="2.6" fill="#FDF2F8" stroke="#E5C8D6" stroke-width="0.7"/>`; },
   medal: g => { const c = shopChain(g, 'none', 0); return `<path d="M${c.x0 + 3} ${c.y0 - 0.5} L32 ${c.midY + 1.5} L${c.x1 - 3} ${c.y0 - 0.5}" stroke="#3B82F6" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>` +
     `<circle cx="32" cy="${c.midY + 4}" r="4.3" fill="#FBBF24" stroke="#B45309" stroke-width="0.9"/><path d="${shopStarPath(32, c.midY + 4, 2.4)}" fill="#fff" opacity="0.85"/>`; },
+  // --- ふやした かざり（メガネ・ぼうし・ネクタイ）---
+  sqglasses: g => shopSquareGlasses(g, '#111827'),
+  sqred: g => shopSquareGlasses(g, '#DC2626'),
+  hachimaki: g => `<path d="M${32 - g.rx + 1} ${g.y0 + 7} Q32 ${g.y0 + 2} ${32 + g.rx - 1} ${g.y0 + 7}" stroke="#fff" stroke-width="4.4" fill="none" stroke-linecap="round"/>` +
+    `<path d="M${32 - g.rx + 1} ${g.y0 + 7} Q32 ${g.y0 + 2} ${32 + g.rx - 1} ${g.y0 + 7}" stroke="#E5E7EB" stroke-width="0.7" fill="none" opacity="0.8"/>` +
+    `<circle cx="32" cy="${g.y0 + 4.6}" r="2.8" fill="#E5484D"/>` +
+    `<path d="M${32 + g.rx - 2} ${g.y0 + 7} l5.5 3.4 M${32 + g.rx - 2} ${g.y0 + 7} l4.6 -2.2" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/>`,
+  bowtie: g => { const y = g.cy + g.ry - 3.4; return `<path d="M32 ${y} L24.5 ${y - 4.4} L24.5 ${y + 4.4} Z" fill="#7C3AED"/><path d="M32 ${y} L39.5 ${y - 4.4} L39.5 ${y + 4.4} Z" fill="#7C3AED"/><circle cx="32" cy="${y}" r="2.2" fill="#5B21B6"/>`; },
+  knitcap: g => {
+    const base = Math.min(g.y0 + 7, g.cy - 10);
+    return `<path d="M${32 - g.rx + 4} ${base} Q${32 - g.rx + 4} ${g.y0 - 7} 32 ${g.y0 - 7} Q${32 + g.rx - 4} ${g.y0 - 7} ${32 + g.rx - 4} ${base} Z" fill="#EF4444"/>` +
+      `<rect x="${32 - g.rx + 3}" y="${base - 4}" width="${2 * (g.rx - 3)}" height="6" rx="2.4" fill="#DC2626"/>` +
+      `<path d="M${32 - g.rx + 6} ${base - 2} L${32 + g.rx - 6} ${base - 2}" stroke="#FCA5A5" stroke-width="0.9" stroke-dasharray="1.5 2"/>` +
+      `<circle cx="32" cy="${g.y0 - 8}" r="3.2" fill="#fff" stroke="#E5E7EB" stroke-width="0.8"/>`;
+  },
   // スペシャルの じゅんばん メダル（1ばん きん／2ばん ぎん／3ばん どう）
   firstmedal: g => shopRankMedal(g, '#E5484D', '#FFD43B', '#B45309', '#E5484D'),
   secondmedal: g => shopRankMedal(g, '#3B82F6', '#D1D5DB', '#6B7280', '#3B82F6'),
