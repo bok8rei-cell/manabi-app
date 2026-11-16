@@ -138,7 +138,10 @@ function mergeExtra(key, rawA, rawB) {
     if (newer.flash && newer.flash._last) flash._last = newer.flash._last;
     const lv = Math.max(a.lv || 0, b.lv || 0);
     const mx2 = (x, y) => { const o = {}; new Set([...Object.keys(x || {}), ...Object.keys(y || {})]).forEach(k => { const p = (x || {})[k] || [0, 0], q = (y || {})[k] || [0, 0]; o[k] = [Math.max(p[0] || 0, q[0] || 0), Math.max(p[1] || 0, q[1] || 0)]; }); return o; };   // [もんだい数, せいかい数]
-    const out = { v: 2, lv, st: mx(a.st, b.st), flash, day: mx2(a.day, b.day), lvs: mx2(a.lvs, b.lvs), checked: !!(a.checked || b.checked), t: Math.max(a.t || 0, b.t || 0) };
+    const ts = {};   // しんきゅうテスト [うけた かいすう, ごうかく かいすう, ベスト じかん（ごうかくが あれば）]
+    new Set([...Object.keys(a.ts || {}), ...Object.keys(b.ts || {})]).forEach(k => { const p = (a.ts || {})[k] || [0, 0, 0], q = (b.ts || {})[k] || [0, 0, 0]; const best = [p[2], q[2]].filter(x => x > 0); ts[k] = [Math.max(p[0], q[0]), Math.max(p[1], q[1]), best.length ? Math.min(...best) : 0]; });
+    const newerTn = ((b.t || 0) > (a.t || 0) ? b : a).tn || {};
+    const out = { v: 2, lv, st: mx(a.st, b.st), flash, day: mx2(a.day, b.day), lvs: mx2(a.lvs, b.lvs), ts, tn: Object.assign({}, newerTn), checked: !!(a.checked || b.checked), t: Math.max(a.t || 0, b.t || 0) };
     if (typeof SB_LEVELS !== 'undefined' && SB_LEVELS[lv]) out.lvId = SB_LEVELS[lv].id;
     return JSON.stringify(out);
   }

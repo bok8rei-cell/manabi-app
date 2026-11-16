@@ -919,3 +919,11 @@ body.trial-on { padding-top: 44px; }
 .same-panel { margin-top: 8px; padding: 10px 14px; background: #FFF1F0; border-color: #F5B5AE; }
 .same-title { font-weight: 800; font-size: 0.9rem; color: #B42318; line-height: 1.6; }
 .same-line { color: #B42318; font-weight: 700; }
+
+/* そろばん：はしご・テスト */
+.sb-tier { margin: 12px 2px 2px; font-size: 0.8rem; font-weight: 800; color: #8B5A2B; border-bottom: 2px solid #EADFD5; padding-bottom: 2px; }
+.sb-timer { height: 14px; border-radius: 7px; background: #EADFD5; overflow: hidden; margin: 6px 0 2px; }
+.sb-timer-fill { height: 100%; width: 100%; background: #22A06B; transition: width 0.25s linear; }
+.sb-timer-fill.low { background: #E5484D; }
+.sb-timer-left { text-align: right; font-size: 0.8rem; font-weight: 800; color: #7A6A5E; margin-bottom: 4px; }
+.sb-expr-long { font-size: 1.6rem; line-height: 1.5; word-break: keep-all; overflow-wrap: anywhere; }

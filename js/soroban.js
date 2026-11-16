@@ -14,7 +14,7 @@ const SB_PASS = 5;         // これだけ せいかいで クリア
 // あたらしい レベルの「なぞる」を はじめて ひらくと、さいしょに お手本（たまが 1つずつ うごく）を 見せる。
 // 2もん つづけて まちがえたら「お手本を 見る／なぞりで れんしゅう」を 出す。
 const SB_STEPS = ['nazoru', 'mieru', 'anzan', 'num'];
-const SB_STEP_NAME = { nazoru: 'なぞる', mieru: 'みえる', anzan: 'あんざん', num: 'すうじ', read: 'よむ', set: 'おく', pair: 'ペア' };
+const SB_STEP_NAME = { nazoru: 'なぞる', mieru: 'みえる', anzan: 'あんざん', num: 'すうじ', test: 'テスト', read: 'よむ', set: 'おく', pair: 'ペア' };
 
 // kind：read（たまを よむ）／set（たまを おく）／pair（あわせて n）／calc（たしひき。3だんかい）
 const SB_LEVELS = [
@@ -38,6 +38,121 @@ const SB_LEVELS = [
   { id: 'c9', title: '3つの たしひき（2けた）', kind: 'calc', gen: 'three2', cols: 3 }
 ];
 
+// ---- はしご（ひゃくこ いじょうの レベル）：わざ × けた × くち × はやさ ----
+// わざ T0 そのまま（1〜4 だけ）／T1 5を つかう／T2 10を つかう（くりあがり・くりさがり）／T3 5も 10も まざる
+// 各レベルは「なぞる→みえる→あんざん→すうじ」の れんしゅう（すきな ときに）と、「しんきゅうテスト」。
+// テスト：q もん ぜんぶ せいかい ＋ ぜんぶで limit びょう いない（まちがえたら そこで おわり）。ごうかくで つぎが ひらく。
+// しっぱいしたら、その レベルを SB_RETRY_PRACTICE かい れんしゅう（クリア）してから また うけられる。なんかい でも うけられる。
+const SB_LADDER_STEPS = ['nazoru', 'mieru', 'anzan', 'num', 'test'];
+const SB_RETRY_PRACTICE = 2;      // テストに しっぱいしたら、なんかい れんしゅうして また うけられる？
+const SB_TIME_SCALE = 1.3;        // せいげん じかんの ゆとり（みんなの きろくを 見て あとから ちょうせい する）
+const SB_TIERS = {
+  T0: { name: 'そのまま（1〜4だけ）', short: 'そのまま', f: 0.7 },
+  T1: { name: '5を つかう', short: '5を つかう', f: 0.9 },
+  T2: { name: '10を つかう（くりあがり・くりさがり）', short: '10を つかう', f: 1.0 },
+  T3: { name: '5も 10も まざる', short: '5も 10も', f: 1.15 }
+};
+// 1もんの せいげん じかん（びょう）：よむ じかん 3びょう ＋ 口が ふえる ほど・けたが ふえる ほど ながく
+function sbPerQ(tier, cols, terms, grade) {
+  const g = [1, 0.8, 0.65][grade - 1] || 1;
+  return Math.ceil((3 + 1.6 * (terms - 1) * (1 + 0.3 * (cols - 1)) * SB_TIERS[tier].f) * SB_TIME_SCALE * g);
+}
+function sbBuildLadder() {
+  const out = [];
+  const add = (tier, cols, terms, grade) => {
+    const perQ = sbPerQ(tier, cols, terms, grade);
+    const q = perQ <= 8 ? 20 : 10;   // かんたんな ときは 20もん、むずかしい ときは 10もん
+    const speed = grade === 1 ? '' : (grade === 2 ? '（はやい）' : '（もっと はやい）');
+    out.push({ id: `${tier}c${cols}t${terms}g${grade}`, title: `${SB_TIERS[tier].short}・${cols}けた・${terms}こ${speed}`, kind: 'ladder', tier, cols, terms, grade, perQ, q, limit: perQ * q });
+  };
+  const rows = (tier, list, grade) => list.sort((a, b) => a[0] - b[0] || a[1] - b[1]).forEach(([c, t]) => add(tier, c, t, grade));
+  const grid = (cols, termsList) => cols.flatMap(c => termsList.map(t => [c, t]));
+  rows('T0', [[2, 2], [3, 2], [4, 2], [3, 3]], 1);
+  rows('T1', grid([1, 2, 3, 4, 5], [2, 3, 5]), 1);
+  rows('T2', grid([1], [2, 3, 5, 7, 10]).concat(grid([2, 3, 4, 5], [2, 3, 5])), 1);
+  rows('T3', grid([1, 2, 3, 4, 5], [2, 3, 5, 7, 10]), 1);
+  rows('T3', grid([1, 2, 3, 4, 5], [3, 5, 7, 10]), 2);
+  rows('T3', grid([1, 2, 3, 4, 5], [5, 7, 10]), 3);
+  return out;
+}
+SB_LEVELS.push(...sbBuildLadder());
+const sbIsCalc = (lv) => lv.kind === 'calc' || lv.kind === 'ladder';
+// その レベルを クリアした（つぎが ひらく）か：はしごは テストに ごうかく、ほかは ふるい きまり
+function sbIsCleared(lv, st) { return lv.kind === 'ladder' ? (st[lv.id] || 0) >= 5 : (st[lv.id] || 0) >= sbNeed(lv); }
+
+// はしごの もんだい：わざの じょうけんを みたす まで つくる（けた＝1つの 数の けたすう。こたえは 1けた ふえて よい）
+//  T0/T1：くりあがり・くりさがりが ない もんだいを つくる（T0 は 1〜4 だけ、T1 は 5を つかう こと）
+//  T2：くりあがり・くりさがりが ある（できるだけ 5を つかわない ものを さきに さがす）／T3：5も 10も つかう
+function sbGenLadder(lv) {
+  const R = randInt;
+  const maxV = Math.min(99999, Math.pow(10, lv.cols + (lv.terms > 3 ? 2 : 1)) - 1);
+  const noCarry = lv.tier === 'T0' || lv.tier === 'T1';
+  const hi = lv.tier === 'T0' ? 4 : 9;
+  const nDigits = () => (Math.random() < 0.6 ? lv.cols : R(1, lv.cols));
+  const text = (terms) => terms.map((x, i) => (i === 0 ? '' : (x < 0 ? ' － ' : ' ＋ ')) + Math.abs(x)).join('');
+  const okTier = (m, strict) => {
+    if (lv.tier === 'T0') return ![...m].some(x => x !== 'direct');
+    if (lv.tier === 'T1') return m.has('five') && !m.has('ten');
+    if (lv.tier === 'T2') return m.has('ten') && (!strict || !m.has('five'));
+    return m.has('five') && m.has('ten');
+  };
+  // くりあがりの ない もんだい（けたごとに 0〜9 の はんいに おさめる）
+  const genNoCarry = () => {
+    const col = Array(SB_COLS).fill(0);   // 左から 万 千 百 十 一
+    const terms = [];
+    for (let j = 0; j < lv.terms; j++) {
+      let done = false;
+      for (let a = 0; a < 30 && !done; a++) {
+        const sign = (j === 0 || Math.random() < 0.6) ? 1 : -1;
+        const c = nDigits();
+        const ds = []; let ok = true;
+        for (let k = 0; k < c && ok; k++) {
+          const pos = SB_COLS - 1 - k;   // 一のくらいから
+          const bound = sign > 0 ? hi - col[pos] : Math.min(col[pos], hi);
+          const lead = (k === c - 1);
+          const lo = lead ? 1 : 0;
+          if (bound < lo) ok = false; else ds[k] = R(lo, bound);
+        }
+        if (!ok) continue;
+        let x = 0;
+        for (let k = c - 1; k >= 0; k--) x = x * 10 + ds[k];
+        for (let k = 0; k < c; k++) col[SB_COLS - 1 - k] += sign * ds[k];
+        terms.push(sign * x);
+        done = true;
+      }
+      if (!done) return null;
+    }
+    return terms;
+  };
+  // くりあがり・くりさがりが ある もんだい（ぜんたいの ごうけいが 0〜maxV）
+  const genAny = () => {
+    const rnd = () => { const c = nDigits(); let t = ''; for (let k = 0; k < c; k++) t += String(R(k === 0 ? 1 : 0, 9)); return Number(t); };
+    const terms = [rnd()];
+    let run = terms[0];
+    for (let j = 1; j < lv.terms; j++) {
+      const x = rnd();
+      let sign = Math.random() < 0.4 ? -1 : 1;
+      if (sign < 0 && run < x) sign = 1;
+      if (sign > 0 && run + x > maxV) { if (run >= x) sign = -1; else return null; }
+      terms.push(sign * x); run += sign * x;
+    }
+    return terms;
+  };
+  let last = null;
+  for (let k = 0; k < 4000; k++) {
+    const terms = noCarry ? genNoCarry() : genAny();
+    if (!terms || terms.length < lv.terms) continue;
+    const run = terms.reduce((a, x) => a + x, 0);
+    if (run < 0 || run > maxV) continue;
+    let plan;
+    try { plan = sbPlan(terms); } catch (e) { continue; }
+    if (plan.answer !== run) continue;
+    last = { terms, answer: run, text: text(terms) };
+    if (okTier(plan.methods, k < 1500)) return last;   // さいしょは きびしく、みつからなければ ゆるく（T2 だけ）
+  }
+  return last || { terms: [1, 1], answer: 2, text: '1 ＋ 1' };
+}
+
 // ---- きろく ----
 function sbKey(name) { return `manabi_soroban_${playerTag(name)}`; }
 // v1（さいしょの 版）の レベルの ならび。v2 で くりあがり・くりさがりを 2つに わけ、たしひきに「なぞる」を くわえた
@@ -55,8 +170,11 @@ function sbNormalize(o) {
     SB_LEVELS.forEach(l => { if (l.kind === 'calc' && st[l.id] > 0) st[l.id] = Math.min(SB_STEPS.length, st[l.id] + 1); });
   }
   lv = Math.max(0, Math.min(SB_LEVELS.length - 1, lv < 0 ? 0 : lv));
+  while (lv + 1 < SB_LEVELS.length && sbIsCleared(SB_LEVELS[lv], st)) lv++;   // クリアずみの レベルの つぎを ひらく（さいしょの 版の ぶんも）
   const pairs = (m) => { const r = {}; if (m && typeof m === 'object') Object.keys(m).forEach(k => { if (Array.isArray(m[k])) r[k] = [Number(m[k][0]) || 0, Number(m[k][1]) || 0]; }); return r; };
-  return { v: 2, lv, lvId: SB_LEVELS[lv].id, st, flash: (o.flash && typeof o.flash === 'object') ? o.flash : {}, day: pairs(o.day), lvs: pairs(o.lvs), checked: !!o.checked, t: o.t || 0 };
+  const triples = (m) => { const r = {}; if (m && typeof m === 'object') Object.keys(m).forEach(k => { if (Array.isArray(m[k])) r[k] = [Number(m[k][0]) || 0, Number(m[k][1]) || 0, Number(m[k][2]) || 0]; }); return r; };
+  const nums = (m) => { const r = {}; if (m && typeof m === 'object') Object.keys(m).forEach(k => { r[k] = Number(m[k]) || 0; }); return r; };
+  return { v: 2, lv, lvId: SB_LEVELS[lv].id, st, flash: (o.flash && typeof o.flash === 'object') ? o.flash : {}, day: pairs(o.day), lvs: pairs(o.lvs), ts: triples(o.ts), tn: nums(o.tn), checked: !!o.checked, t: o.t || 0 };
 }
 function sbLoad(name) { return sbNormalize(readJSON(sbKey(name), null)); }
 // 1もん こたえる ごとの きろく（日ごと・レベルごとの [もんだい数, せいかい数]）。ぶんせき・親の画面用
@@ -72,9 +190,9 @@ function sbRecord(levelId, correct) {
   sbSave(d);
 }
 function sbSave(d) { d.v = 2; d.lvId = SB_LEVELS[d.lv].id; d.t = Date.now(); writeJSON(sbKey(), d); }
-function sbStepsOf(level) { return level.kind === 'calc' ? SB_STEPS : [level.kind]; }
+function sbStepsOf(level) { return level.kind === 'ladder' ? SB_LADDER_STEPS : (level.kind === 'calc' ? SB_STEPS : [level.kind]); }
 // つぎの レベルへ すすめる だんかい：たしひきは「あんざん」まで、ほかは 1かい クリア
-function sbNeed(level) { return level.kind === 'calc' ? SB_STEPS.indexOf('anzan') + 1 : 1; }
+function sbNeed(level) { return level.kind === 'ladder' ? 5 : (level.kind === 'calc' ? SB_STEPS.indexOf('anzan') + 1 : 1); }   // はしごは テストに ごうかく（=5）で つぎへ
 
 // ---- そろばんの 絵 ----
 // digits：ひだりから じゅんの 数字（0〜9）。mode：'mieru'（おいた たまに 色）／'anzan'（色も いちも かわらない）／'show'（こたえを 見せる）
@@ -145,6 +263,7 @@ function sbGenCalc(gen) {
 function sbMakeQuestion(level, step) {
   if (level.kind === 'read' || level.kind === 'set') { const v = randInt(level.lo, level.hi); return { answer: v, text: String(v) }; }
   if (level.kind === 'pair') { const v = randInt(1, level.sum - 1); return { answer: level.sum - v, text: String(v), given: v }; }
+  if (level.kind === 'ladder') return sbGenLadder(level);
   return sbGenCalc(level.gen);
 }
 
@@ -189,8 +308,15 @@ function sbMenu() {
   root.appendChild(flash);
 
   const list = el('div', 'sb-levels');
+  const trial = (typeof isTrial === 'function' && isTrial());
+  let lastTier = null, hidden = 0;
   SB_LEVELS.forEach((lv, i) => {
-    const got = d.st[lv.id] || 0, max = sbStepsOf(lv).length, open = i <= d.lv || (typeof isTrial === 'function' && isTrial());   // おためしモードは ぜんぶ ひらく
+    if (!trial && i > d.lv + 3) { hidden++; return; }   // まだ さきの レベルは すこしだけ 見せる
+    if (lv.kind === 'ladder' && (lv.tier + lv.grade) !== lastTier) {
+      lastTier = lv.tier + lv.grade;
+      list.appendChild(el('div', 'sb-tier', `${SB_TIERS[lv.tier].name}${lv.grade === 2 ? '　はやい' : (lv.grade === 3 ? '　もっと はやい' : '')}`));
+    }
+    const got = d.st[lv.id] || 0, max = sbStepsOf(lv).length, open = i <= d.lv || trial;   // おためしモードは ぜんぶ ひらく
     const row = el('button', 'sb-level' + (open ? '' : ' locked') + (i === d.lv ? ' now' : ''));
     row.appendChild(el('span', 'sb-level-no', open ? String(i + 1) : '🔒'));
     row.appendChild(el('span', 'sb-level-title', lv.title));
@@ -199,6 +325,7 @@ function sbMenu() {
     row.addEventListener('click', () => sbLevelMenu(i));
     list.appendChild(row);
   });
+  if (hidden > 0) list.appendChild(el('div', 'sb-step-note', `…あと ${hidden}レベル（テストに ごうかくすると つぎが ひらくよ）`));
   root.appendChild(list);
   const chk = el('button', 'sub-btn wide', '📏 レベルチェックを やりなおす');
   chk.addEventListener('click', sbStartCheck);
@@ -219,9 +346,21 @@ function sbLevelMenu(i) {
   const demo = el('button', 'sub-btn wide sb-demo-btn', '📺 お手本を 見る（うごかしかた）');
   demo.addEventListener('click', () => sbDemo(sbMakeQuestion(lv), () => sbLevelMenu(i), `レベル ${i + 1} の お手本`));
   root.appendChild(demo);
-  const info = { nazoru: 'ひかる たまを じゅんばんに タップ。ゆびで うごかしかたを おぼえよう', mieru: 'おいた たまに 色が つくよ', anzan: 'たまの 色が かわらないよ。あたまの なかで おぼえよう', num: 'たまなし。あたまの なかの そろばんで こたえよう' };
+  const info = { nazoru: 'ひかる たまを じゅんばんに タップ。ゆびで うごかしかたを おぼえよう', mieru: 'おいた たまに 色が つくよ', anzan: 'たまの 色が かわらないよ。あたまの なかで おぼえよう', num: 'たまなし。あたまの なかの そろばんで こたえよう', test: 'あたまの なかで けいさん。ぜんぶ せいかい ＋ じかん いない で ごうかく！ はやく・ただしく' };
+  const trial = (typeof isTrial === 'function' && isTrial());   // おためしモードは ぜんぶ ひらく
   steps.forEach((st, k) => {
-    const open = k <= got || (typeof isTrial === 'function' && isTrial());   // おためしモードは ぜんぶ ひらく
+    if (st === 'test') {
+      const avail = sbTestAvail(d, lv), passed = (d.st[lv.id] || 0) >= 5;
+      const b = el('button', (avail ? 'main-btn' : 'sub-btn') + ' wide sb-step', `⏱ ${passed ? '★ ' : ''}しんきゅうテスト（${lv.q}もん・${lv.limit}びょう いない）${avail ? '' : ' 🔒'}`);
+      b.disabled = !avail;
+      b.addEventListener('click', () => sbTestStart(i));
+      root.appendChild(b);
+      root.appendChild(el('div', 'sb-step-note', avail ? info.test : `あと ${d.tn[lv.id]}かい この レベルを れんしゅう（クリア）したら また うけられるよ`));
+      const t = d.ts[lv.id];
+      if (t && t[0] > 0) root.appendChild(el('div', 'sb-step-note', `これまで ${t[0]}かい うけて ${t[1]}かい ごうかく${t[2] > 0 ? `（ベスト ${t[2]}びょう）` : ''}`));
+      return;
+    }
+    const open = k <= got || trial;
     const b = el('button', (open ? (k === got ? 'main-btn' : 'sub-btn') : 'sub-btn') + ' wide sb-step', `${k < got ? '★ ' : ''}${k + 1}. ${SB_STEP_NAME[st]}${open ? '' : ' 🔒'}`);
     b.disabled = !open;
     b.addEventListener('click', () => sbStart(i, st));
@@ -232,6 +371,7 @@ function sbLevelMenu(i) {
 
 function sbStart(levelIndex, step, opts) {
   const lv = SB_LEVELS[levelIndex];
+  if (step === 'test') { sbTestStart(levelIndex); return; }
   sb = Object.assign({ li: levelIndex, lv, step, n: 0, correct: 0, total: SB_Q, check: false, wrongRun: 0 }, opts || {});
   sbPlaying(true);
   // はじめての「なぞる」は、さいしょに お手本を 見せてから
@@ -251,7 +391,7 @@ function sbKeypad(onOk) {
   const press = (k) => {
     if (k === 'けす') out.textContent = out.textContent.slice(0, -1);
     else if (k === 'OK') { if (out.textContent !== '') onOk(Number(out.textContent)); }
-    else if (out.textContent.length < 4) out.textContent = (out.textContent === '0' ? '' : out.textContent) + k;
+    else if (out.textContent.length < 5) out.textContent = (out.textContent === '0' ? '' : out.textContent) + k;
     FX.tap();
   };
   ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'けす', '0', 'OK'].forEach(k => {
@@ -290,7 +430,7 @@ function sbShowQ() {
   root.appendChild(area);
   const fb = el('div', 'sb-feedback');
   const answer = (val) => sbJudge(val, area, fb);
-  if (lv.kind === 'calc' && !sb.check) {
+  if (sbIsCalc(lv) && !sb.check) {
     const help = el('button', 'sb-help-btn', '📺 お手本');
     help.addEventListener('click', () => { if (sb.answered) return; sbDemo(q, () => { sb.helped = true; sbPlaying(true); sbShowQ(); }, 'この もんだいの お手本', 'じぶんで やって みよう'); });
     area.appendChild(help);
@@ -384,14 +524,14 @@ function sbJudge(val, area, fb, opt) {
     pic.innerHTML = sbBoardSVG(sbDigits(sb.q.answer, SB_COLS), 'show');
     fb.appendChild(pic);
     // たしひき：うごかしかたを ことばで 見せる
-    if (sb.lv.kind === 'calc' && sb.q.terms) {
+    if (sbIsCalc(sb.lv) && sb.q.terms) {
       const how = el('div', 'sb-how');
       how.appendChild(el('div', 'sb-how-title', '🖐 うごかしかた'));
       sbPlan(sb.q.terms).heads.forEach(h => how.appendChild(el('div', 'sb-how-line', h)));
       fb.appendChild(how);
     }
     // 2もん つづけて まちがえたら、お手本・なぞりに もどれるように
-    if (sb.lv.kind === 'calc' && !sb.check && sb.wrongRun >= 2) {
+    if (sbIsCalc(sb.lv) && !sb.check && sb.wrongRun >= 2) {
       fb.appendChild(el('div', 'sb-fb-sub sb-stuck', 'むずかしい ときは、お手本を 見てから なぞって みよう'));
       const q = sb.q;
       const d1 = el('button', 'main-btn wide', '📺 この もんだいの お手本を 見る');
@@ -412,15 +552,15 @@ function sbJudge(val, area, fb, opt) {
 }
 
 // ごほうび（ふつうの べんきょうと おなじ あつかい）
-function sbReward(correct, total) {
+function sbReward(correct, total, extra) {
   recordHistory(correct, total);
-  const award = awardPet({ xp: correct, coins: correct * 3, perfect: false, mission: false, cleared: 0, levelKey: '' });
+  const award = awardPet({ xp: correct, coins: correct * 3 + (extra || 0), perfect: false, mission: false, cleared: 0, levelKey: '' });
   if (typeof autoSync === 'function') autoSync();
   return award;
 }
-function sbRewardLines(root, correct, award) {
+function sbRewardLines(root, correct, award, extra) {
   { const sn = (typeof sameSubjectNote === 'function') ? sameSubjectNote('soroban') : ''; if (sn) root.appendChild(el('div', 'note', sn)); }
-  root.appendChild(el('div', 'note gold', `💰 +${correct * 3}コイン`));
+  root.appendChild(el('div', 'note gold', `💰 +${correct * 3 + (extra || 0)}コイン${extra ? `（ごうかく ボーナス +${extra}）` : ''}`));
   ((award && award.bonuses) || []).forEach(b => root.appendChild(el('div', 'note gold', `🎁 ${b.label} +${b.coins}コイン`)));
   if (award && award.earned && award.earned.length > 0) root.appendChild(el('div', 'note warm', `🌱 そだちポイント +${award.earned.length}`));
   if (award && award.levelUp) FX.levelUp();
@@ -436,11 +576,14 @@ function sbFinish() {
   const d = sbLoad();
   const steps = sbStepsOf(lv), k = steps.indexOf(step) + 1;
   let unlocked = false;
+  let retryLeft = 0;
   if (pass) {
-    d.st[lv.id] = Math.max(d.st[lv.id] || 0, k);
+    d.st[lv.id] = Math.max(d.st[lv.id] || 0, Math.min(k, lv.kind === 'ladder' ? 4 : 99));   // はしごの ほし5は テストに ごうかくした とき だけ
     if (d.st[lv.id] >= sbNeed(lv) && d.lv <= li && li + 1 < SB_LEVELS.length) { d.lv = li + 1; unlocked = true; }
+    if ((d.tn[lv.id] || 0) > 0) d.tn[lv.id]--;     // テストに しっぱいした あとの れんしゅう
+    retryLeft = d.tn[lv.id] || 0;
     sbSave(d);
-  }
+  } else { retryLeft = d.tn[lv.id] || 0; }
   const award = sbReward(correct, total);
   root.appendChild(el('h2', 'result-title', pass ? 'クリア！' : 'おつかれさま！'));
   const score = el('div', 'result-score');
@@ -449,9 +592,11 @@ function sbFinish() {
   root.appendChild(score);
   root.appendChild(el('div', 'result-message', pass ? (unlocked ? `レベル ${li + 2}「${SB_LEVELS[li + 1].title}」が ひらいたよ！` : `「${SB_STEP_NAME[step]}」クリア！`) : `${SB_PASS}もん せいかいで クリアだよ。もういちど やってみよう`));
   sbRewardLines(root, correct, award);
+  if (retryLeft > 0) root.appendChild(el('div', 'sb-step-note', `テストに もどるまで あと ${retryLeft}かい（この レベルの れんしゅうを クリア）`));
+  else if (pass && lv.kind === 'ladder' && (d.tn[lv.id] || 0) === 0 && d.st[lv.id] < 5 && k >= 4) root.appendChild(el('div', 'sb-step-note', 'つぎは しんきゅうテスト！'));
   if (pass) FX.clear();
   const btns = el('div', 'result-buttons');
-  if (pass && k < steps.length) { const b = el('button', 'main-btn', `つぎは「${SB_STEP_NAME[steps[k]]}」`); b.addEventListener('click', () => sbStart(li, steps[k])); btns.appendChild(b); }
+  if (pass && k < steps.length) { const b = el('button', 'main-btn', `つぎは「${SB_STEP_NAME[steps[k]]}」`); b.addEventListener('click', () => sbStart(li, steps[k])); btns.appendChild(b); }   // テストは sbStart から sbTestStart へ
   else if (pass && unlocked) { const b = el('button', 'main-btn', 'つぎの レベルへ'); b.addEventListener('click', () => sbLevelMenu(li + 1)); btns.appendChild(b); }
   const again = el('button', pass ? 'sub-btn wide' : 'main-btn', 'もういちど');
   again.addEventListener('click', () => sbStart(li, step));
@@ -777,7 +922,8 @@ function sbSummary(name) {
     if (r < 0.8 && (!weak || r < weak.r)) weak = { l, r, p };
   });
   const started = tot[0] > 0 || d.lv > 0 || Object.keys(d.st).length > 0;
-  return { d, tot, week, today, stars, maxStars, weak, started, flashBest: Object.keys(d.flash).filter(k => k !== '_last').map(k => ({ k, v: d.flash[k] })) };
+  const tests = Object.keys(d.ts).reduce((a, k) => [a[0] + d.ts[k][0], a[1] + (d.ts[k][1] > 0 ? 1 : 0)], [0, 0]);   // [うけた かいすう, ごうかくした レベル数]
+  return { d, tot, week, today, stars, maxStars, weak, started, tests, flashBest: Object.keys(d.flash).filter(k => k !== '_last').map(k => ({ k, v: d.flash[k] })) };
 }
 function sbRateClass(r) { return r >= 80 ? 'high' : r >= 50 ? 'mid' : 'low'; }
 
@@ -793,6 +939,7 @@ function sbLines(card, s, withTitle) {
   card.appendChild(row);
   const wr = sbRate(s.week);
   card.appendChild(el('div', 'report-line', `この 1しゅうかん：${s.week[0]}もん${wr !== null ? `（せいかい ${wr}%）` : ''}　きょう：${s.today[0]}もん`));
+  if (s.tests[0] > 0) card.appendChild(el('div', 'report-line', `⏱ しんきゅうテスト：ごうかく ${s.tests[1]}レベル（うけた ${s.tests[0]}かい）`));
   if (s.weak) card.appendChild(el('div', 'report-line', `🔍 つまずいている レベル：${SB_LEVELS.indexOf(s.weak.l) + 1}「${s.weak.l.title}」${Math.round(s.weak.r * 100)}%（${s.weak.p[0]}もん）→ お手本・なぞりで れんしゅう`));
   if (s.flashBest.length) card.appendChild(el('div', 'report-line', `⚡ フラッシュの ベスト：${s.flashBest.map(f => `${f.k.replace(/^(\d)-(\d+)-(\w+)$/, (m, a, b, c) => `${a}けた${b}こ・${SB_FLASH_SPEED[c] ? SB_FLASH_SPEED[c][0] : c}`)} ${f.v}/5`).join('、')}`));
 }
@@ -814,4 +961,120 @@ function appendSorobanParent(card, name) {
   if (!s.started) return;
   card.appendChild(el('div', 'child-section', '🧮 そろばん'));
   sbLines(card, s);
+}
+
+// ===== しんきゅうテスト（スピード）=====
+// あたまの なかで けいさんして すうじで こたえる。q もん ぜんぶ せいかい ＋ ぜんぶで limit びょう いない。まちがえたら そこで おわり。
+function sbTestAvail(d, lv) { return (typeof isTrial === 'function' && isTrial()) || !((d.tn[lv.id] || 0) > 0); }
+
+function sbTestStart(li) {
+  const lv = SB_LEVELS[li], d = sbLoad();
+  if (!sbTestAvail(d, lv)) { showToast(`あと ${d.tn[lv.id]}かい れんしゅうしたら、また うけられるよ`); return; }
+  sb = { li, lv, step: 'test', test: true, n: 0, correct: 0, total: lv.q, t0: Date.now(), token: Math.random() };
+  sbPlaying(true);
+  sbTestQ();
+}
+
+function sbTestStop() { if (sb && sb.timer) { clearInterval(sb.timer); sb.timer = null; } }
+
+function sbTestQ() {
+  const root = sbRoot();
+  root.innerHTML = '';
+  sbTestStop();
+  const quit = el('button', 'back-btn', '← やめる');
+  quit.addEventListener('click', () => { sbTestStop(); sbMenu(); });
+  root.appendChild(quit);
+  const head = el('div', 'sb-head');
+  head.appendChild(el('span', 'sb-head-title', `⏱ しんきゅうテスト・レベル ${sb.li + 1}`));
+  head.appendChild(el('span', 'sb-head-count', `${sb.n + 1} / ${sb.total}`));
+  root.appendChild(head);
+  const bar = el('div', 'sb-timer');
+  const fill = el('div', 'sb-timer-fill');
+  bar.appendChild(fill);
+  const left = el('div', 'sb-timer-left', '');
+  root.appendChild(bar);
+  root.appendChild(left);
+  const q = sb.q = sbGenLadder(sb.lv);
+  sb.qStart = Date.now();
+  const area = el('div', 'sb-area');
+  area.appendChild(el('div', 'sb-ask', 'あたまの なかで けいさん！ はやく・ただしく'));
+  area.appendChild(el('div', 'sb-expr sb-expr-long', `${q.text} ＝ ？`));
+  area.appendChild(sbKeypad((val) => sbTestAnswer(val)));
+  root.appendChild(area);
+  const token = sb.token;
+  const limitMs = sb.lv.limit * 1000;
+  const tick = () => {
+    if (!sb || sb.token !== token || !sb.test) { return; }
+    const el1 = Date.now() - sb.t0;
+    const remain = Math.max(0, limitMs - el1);
+    fill.style.width = `${Math.max(0, remain / limitMs * 100)}%`;
+    fill.classList.toggle('low', remain / limitMs < 0.25);
+    left.textContent = `のこり ${Math.ceil(remain / 1000)}びょう`;
+    if (remain <= 0) sbTestEnd('time');
+  };
+  tick();
+  sb.timer = setInterval(tick, 250);
+}
+
+function sbTestAnswer(val) {
+  if (!sb || !sb.test || sb.ended) return;
+  const ok = val === sb.q.answer;
+  sbRecord(sb.lv.id, ok);
+  recordDaySubject('soroban');   // しんきゅうテストの 最中は ひとこと・かくにんを 出さない
+  if (!ok) { sb.lastWrong = { q: sb.q, val }; FX.wrong(); sbTestEnd('wrong'); return; }
+  sb.correct++;
+  FX.correct();
+  sb.n++;
+  if (Date.now() - sb.t0 > sb.lv.limit * 1000) { sbTestEnd('time'); return; }
+  if (sb.n >= sb.total) sbTestEnd('done'); else sbTestQ();
+}
+
+function sbTestEnd(reason) {
+  if (!sb || sb.ended) return;
+  sb.ended = true;
+  sbTestStop();
+  sbPlaying(false);
+  const { li, lv } = sb;
+  const sec = Math.round((Date.now() - sb.t0) / 100) / 10;
+  const pass = reason === 'done' && sec <= lv.limit;
+  const d = sbLoad();
+  const ts = d.ts[lv.id] || [0, 0, 0];
+  ts[0]++;
+  if (pass) { ts[1]++; ts[2] = ts[2] > 0 ? Math.min(ts[2], sec) : sec; }
+  d.ts[lv.id] = ts;
+  let unlocked = false;
+  if (pass) {
+    d.st[lv.id] = 5;
+    d.tn[lv.id] = 0;
+    if (d.lv <= li && li + 1 < SB_LEVELS.length) { d.lv = li + 1; unlocked = true; }
+  } else {
+    d.tn[lv.id] = SB_RETRY_PRACTICE;
+  }
+  sbSave(d);
+  const extra = pass ? 30 : 0;
+  const award = sbReward(sb.correct, sb.n + (reason === 'wrong' ? 1 : 0), extra);
+  const root = sbRoot();
+  root.innerHTML = '';
+  root.appendChild(el('h2', 'result-title', pass ? '🎉 ごうかく！' : 'ざんねん…'));
+  const score = el('div', 'result-score');
+  score.appendChild(el('span', 'big', String(sb.correct)));
+  score.appendChild(el('span', 'unit', ` / ${sb.total} もん`));
+  root.appendChild(score);
+  root.appendChild(el('div', 'sb-step-note', `じかん ${sec}びょう（せいげん ${lv.limit}びょう）`));
+  let msg;
+  if (pass) msg = unlocked ? `レベル ${li + 2}「${SB_LEVELS[li + 1].title}」が ひらいたよ！` : 'ごうかく！';
+  else if (reason === 'time') msg = 'じかんぎれ！ もっと はやく けいさん できるように なろう';
+  else msg = 'まちがえたので ここで おわり。ぜんぶ せいかいで ごうかく';
+  root.appendChild(el('div', 'result-message', msg));
+  if (!pass && sb.lastWrong) root.appendChild(el('div', 'sb-fb-sub', `${sb.lastWrong.q.text} ＝ ${sb.lastWrong.q.answer}（きみの こたえ：${sb.lastWrong.val}）`));
+  if (!pass) root.appendChild(el('div', 'sb-step-note', `このレベルを あと ${SB_RETRY_PRACTICE}かい れんしゅう（クリア）したら、また テストが うけられるよ`));
+  sbRewardLines(root, sb.correct, award, extra);
+  if (pass) FX.clear();
+  const btns = el('div', 'result-buttons');
+  if (pass && unlocked) { const b = el('button', 'main-btn', 'つぎの レベルへ'); b.addEventListener('click', () => sbLevelMenu(li + 1)); btns.appendChild(b); }
+  else if (!pass) { const b = el('button', 'main-btn', 'れんしゅうする'); b.addEventListener('click', () => sbLevelMenu(li)); btns.appendChild(b); }
+  const menu = el('button', 'sub-btn wide', 'レベルを えらぶ');
+  menu.addEventListener('click', sbMenu);
+  btns.appendChild(menu);
+  root.appendChild(btns);
 }

@@ -175,6 +175,8 @@ function appendBalanceParent(card, name) {
 // きろく `manabi_daysubj_{なまえ}` = { 日付: { 教科: 答えた数 } }（14日ぶん。どうきは 日付×教科ごとに 大きい ほう）
 const SAME_WARN = 40;
 const SAME_STRONG = 80;
+// そろばんは しんきゅうテスト（10〜20もん）が あるので しきいを ひろげる
+function sameLimits(subject) { return subject === 'soroban' ? [150, 300] : [SAME_WARN, SAME_STRONG]; }
 BALANCE_NAMES.soroban = 'そろばん';
 
 function daySubjKey(name) { return `manabi_daysubj_${playerTag(name)}`; }
@@ -200,6 +202,7 @@ function sameName(subject) { return BALANCE_NAMES[subject] || 'この きょう�
 // けっか画面などに 出す ひとこと（すくなければ ''）
 function sameSubjectNote(subject) {
   const n = daySubjCount(subject);
+  const [SAME_WARN, SAME_STRONG] = sameLimits(subject);
   if (n >= SAME_STRONG) return `⚠️ きょうは ${sameName(subject)}を ${n}もん も やったよ！ ほかの きょうかや、きゅうけいも しよう`;
   if (n >= SAME_WARN) return `💡 きょうは ${sameName(subject)}を ${n}もん やったよ。ほかの きょうかも やってみよう！`;
   return '';
@@ -208,6 +211,7 @@ function sameSubjectNote(subject) {
 // 1もん 答えた ときに よぶ。ちょうど SAME_WARN もんで ひとこと、SAME_STRONG もん いじょうは SAME_WARN もんごとに かくにん
 function sameSubjectTick(subject, onLeave) {
   const n = recordDaySubject(subject);
+  const [SAME_WARN, SAME_STRONG] = sameLimits(subject);
   if (typeof showToast !== 'function') return n;
   if (n === SAME_WARN) setTimeout(() => showToast(`💡 ${sameName(subject)}を ${n}もん やったよ。ほかの きょうかも やってみよう！`), 700);
   else if (n >= SAME_STRONG && n % SAME_WARN === 0 && typeof askConfirm === 'function') {
@@ -220,8 +224,8 @@ function sameSubjectTick(subject, onLeave) {
 function appendSameNote(root) {
   if (!state.playerName.trim()) return;
   const today = loadDaySubj()[localDateStr()] || {};
-  const top = Object.keys(today).sort((a, b) => today[b] - today[a])[0];
-  if (!top || today[top] < SAME_WARN) return;
+  const top = Object.keys(today).filter(k => today[k] >= sameLimits(k)[0]).sort((a, b) => today[b] - today[a])[0];
+  if (!top) return;
   const card = el('div', 'panel food-card same-panel');
   card.appendChild(el('div', 'same-title', sameSubjectNote(top)));
   root.appendChild(card);
@@ -230,7 +234,7 @@ function appendSameNote(root) {
 // おうちの人の 画面：ひとりぶん
 function appendSameParent(card, name) {
   const today = loadDaySubj(name)[localDateStr()] || {};
-  const rows = Object.keys(today).filter(k => today[k] >= SAME_WARN).sort((a, b) => today[b] - today[a]);
+  const rows = Object.keys(today).filter(k => today[k] >= sameLimits(k)[0]).sort((a, b) => today[b] - today[a]);
   if (rows.length === 0) return;
-  card.appendChild(el('div', 'report-line same-line', `⚠️ きょうは ${rows.map(k => `${sameName(k)} ${today[k]}もん`).join('、')}（おなじ きょうかを ${SAME_WARN}もん いじょう）`));
+  card.appendChild(el('div', 'report-line same-line', `⚠️ きょうは ${rows.map(k => `${sameName(k)} ${today[k]}もん`).join('、')}（おなじ きょうかを たくさん）`));
 }
