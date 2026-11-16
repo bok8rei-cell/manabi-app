@@ -1,6 +1,6 @@
 // ===== まなびポコ（旧 BRAIN QUEST：零式） 共通の部品 =====
 
-const APP_VERSION = 'v43.41';
+const APP_VERSION = 'v43.42';
 const TOTAL_QUESTIONS = 10;
 const DONT_KNOW = '__DONTKNOW__';
 
@@ -167,6 +167,7 @@ function maxDiff(grade, subject) {
 }
 
 function getDiff(grade, subject) {
+  if (typeof isTrial === 'function' && isTrial() && trialLevel !== null) return Math.min(trialLevel, maxDiff(grade, subject));   // おためしモード：えらんだ レベルで 出す（js/trial.js）
   const raw = localStorage.getItem(`${DIFF_KEY}_${playerTag()}_${grade}_${subject}`);
   // 初期値は「やさしい(0)」。入門期は足場（1年漢字はふりがな付き）から始め、
   // 昇段チャレンジで ふつう→むずかしい へ上げていく。
@@ -301,6 +302,7 @@ function loadPlayerNames() {
 }
 
 function selectPlayerName(name) {
+  if (typeof isTrial === 'function' && isTrial()) { showToast('おためしを おわってから なまえを かえてね'); return; }
   if ((typeof isLocked === 'function' && isLocked())) return;   // この iPad は ロック中
   state.playerName = name;
   localStorage.setItem('manabi_playername', state.playerName);

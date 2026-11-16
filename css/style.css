@@ -846,3 +846,57 @@ h2, h3 { margin: 0; }
 .shopnew-note { font-size: 0.8rem; color: #8A4B6B; line-height: 1.5; margin: 2px 0 4px; }
 .shopnew-panel .wide { margin-top: 6px; }
 .shopnew-note-box { background: #FDF2F8; border-color: #F5B8D4; color: #BE185D; font-weight: 800; font-size: 0.85rem; text-align: center; }
+
+/* ----- そろばん（あんざん）モード ----- */
+.soroban-banner { background: linear-gradient(135deg, #8B5A2B, #B9793F); }
+.sb-first { text-align: center; }
+.sb-first-title { font-weight: 800; margin-bottom: 8px; }
+.sb-first .wide { margin-top: 8px; }
+.sb-flash-btn { margin: 8px 0 12px; }
+.sb-levels { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+.sb-level { display: flex; align-items: center; gap: 10px; width: 100%; padding: 12px 14px; border-radius: 16px; border: 2px solid #EADFD5; background: #fff; font-size: 0.95rem; font-weight: 700; text-align: left; color: inherit; font-family: inherit; }
+.sb-level.now { border-color: #F59E0B; background: #FFF7E6; }
+.sb-level.locked { opacity: 0.5; }
+.sb-level-no { width: 2em; height: 2em; border-radius: 50%; background: #8B5A2B; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 800; flex: 0 0 auto; }
+.sb-level.locked .sb-level-no { background: #D6C9BC; }
+.sb-level-title { flex: 1; min-width: 0; }
+.sb-level-stars { color: #F59E0B; letter-spacing: 1px; white-space: nowrap; }
+.sb-step { margin-top: 10px; }
+.sb-step-note { font-size: 0.8rem; color: #8a7a6e; text-align: center; margin-top: 4px; }
+.sb-head { display: flex; justify-content: space-between; align-items: center; font-weight: 800; margin: 4px 0 8px; }
+.sb-head-title { color: #8B5A2B; }
+.sb-area { text-align: center; }
+.sb-ask { font-size: 0.9rem; color: #7A6A5E; font-weight: 700; }
+.sb-expr { font-size: 2.1rem; font-weight: 800; margin: 6px 0 8px; letter-spacing: 1px; }
+.sb-board-wrap { display: flex; justify-content: center; margin: 4px auto 10px; touch-action: manipulation; user-select: none; -webkit-user-select: none; }
+.sb-board { width: 100%; height: auto; display: block; }
+.sb-board-wrap.small .sb-board { max-width: 250px !important; }
+.sb-bead { cursor: pointer; }
+.sb-bead.pulse { opacity: 0.55; }
+.sb-row { display: flex; gap: 10px; justify-content: center; }
+.sb-row .main-btn, .sb-row .sub-btn { width: auto; flex: 1; }
+.sb-pad { max-width: 300px; margin: 0 auto; }
+.sb-pad-out { height: 2.6rem; font-size: 2rem; font-weight: 800; border-bottom: 3px solid #EADFD5; margin-bottom: 8px; }
+.sb-pad-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.sb-key { padding: 14px 0; font-size: 1.4rem; font-weight: 800; border-radius: 14px; border: 2px solid #EADFD5; background: #fff; color: inherit; font-family: inherit; }
+.sb-key.ok { background: #E5484D; border-color: #C53B40; color: #fff; }
+.sb-key.del { font-size: 1rem; background: #F6EFE8; }
+.sb-key:disabled { opacity: 0.5; }
+.sb-feedback { margin-top: 12px; text-align: center; }
+.sb-feedback.ok .sb-fb-title { color: #1B7F4B; }
+.sb-feedback.ng .sb-fb-title { color: #C0392B; }
+.sb-fb-title { font-size: 1.3rem; font-weight: 800; margin-bottom: 4px; }
+.sb-fb-sub { font-size: 0.9rem; color: #7A6A5E; margin-bottom: 6px; }
+.sb-flash-stage { font-size: 5rem; font-weight: 800; height: 7rem; display: flex; align-items: center; justify-content: center; }
+.sb-pick { margin: 10px 0; }
+.sb-pick-label { font-weight: 800; font-size: 0.9rem; margin-bottom: 4px; }
+.sb-pick-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.sb-chip { padding: 10px 16px; border-radius: 999px; border: 2px solid #EADFD5; background: #fff; font-weight: 800; color: inherit; font-family: inherit; }
+.sb-chip.on { background: #8B5A2B; border-color: #8B5A2B; color: #fff; }
+
+/* ----- おためしモードの おび ----- */
+#trial-bar { position: fixed; top: 0; left: 0; right: 0; z-index: 900; display: flex; align-items: center; gap: 8px; padding: 6px 10px; background: #1F2937; color: #fff; font-size: 0.8rem; font-weight: 700; }
+#trial-bar .trial-label { flex: 1; min-width: 0; }
+#trial-bar select { font-size: 0.8rem; padding: 4px 6px; border-radius: 8px; border: 0; max-width: 46%; }
+#trial-bar .trial-end { padding: 6px 12px; border-radius: 999px; border: 0; background: #E5484D; color: #fff; font-weight: 800; font-family: inherit; }
+body.trial-on { padding-top: 44px; }

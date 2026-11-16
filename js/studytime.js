@@ -81,7 +81,8 @@ function flushStudy() {
 
 function studyScreenOn() {
   const a = byId('screen-quiz'), b = byId('screen-speedquiz');
-  return !!((a && !a.classList.contains('hidden')) || (b && !b.classList.contains('hidden')));
+  const c = byId('screen-soroban');   // そろばんは もんだいを やっている あいだだけ（js/soroban.js が playing を つける）
+  return !!((a && !a.classList.contains('hidden')) || (b && !b.classList.contains('hidden')) || (c && !c.classList.contains('hidden') && c.classList.contains('playing')));
 }
 
 function updateQuizTimeChip() {

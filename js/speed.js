@@ -122,6 +122,7 @@ function loadSpeedRanking() {
 function saveSpeedRankingEntry(correct, total, time) {
   const name = state.playerName.trim();
   if (!name) return;
+  if (typeof isTrial === 'function' && isTrial()) return;   // おためしモードは ランキングに 入れない
 
   const list = loadSpeedRanking();
   list.push({

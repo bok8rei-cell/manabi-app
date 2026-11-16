@@ -83,7 +83,7 @@ function rouletteSpin(kind) {
   paid.roulette.push(rouletteKey(today, kind));
   // スペシャルの じゅんばん：まだ 3人に なっていなければ、この子が つぎの ばんごうに なる。
   // なった ばんごうの メダルを わたし、ルーレットは その ばんごうの コインの わくで とまる（1ばん=1000／2ばん=500／3ばん=300。うえのせは しない）
-  if (kind === 's') {
+  if (kind === 's' && !(typeof isTrial === 'function' && isTrial())) {   // おためしモードは メダルの じゅんばんに 入れない
     const list = rouletteRanks();
     let idx = list.findIndex(e => playerTag(e.n) === playerTag());
     if (idx < 0 && list.length < MEDALS.length) {

@@ -17,6 +17,7 @@ function loadRanking(grade) {
 function saveRankingEntry(grade, subjectKey, correct, total) {
   const name = state.playerName.trim();
   if (!name) return;
+  if (typeof isTrial === 'function' && isTrial()) return;   // おためしモードは ランキングに 入れない
 
   const subj = SUBJECTS.find(s => s.key === subjectKey);
   const label = subjectLabel(grade, subj);

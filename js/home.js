@@ -222,6 +222,13 @@ function renderHome() {
     body.appendChild(mc);
   }
 
+  // そろばん（あんざん）モード（js/soroban.js）
+  if (typeof openSoroban === 'function') {
+    const sbBtn = el('button', 'speed-banner soroban-banner', '🧮 そろばん（あんざん）');
+    sbBtn.addEventListener('click', openSoroban);
+    body.appendChild(sbBtn);
+  }
+
   // タイムアタック
   const speed = el('button', 'speed-banner', '⚡ 1けたの数 10問タイムアタック');
   speed.id = 'speed-open-btn';
@@ -509,6 +516,7 @@ function renderParent() {
   sampleBtn.addEventListener('click', openSamples);
   samplePanel.appendChild(sampleBtn);
   root.appendChild(samplePanel);
+  if (typeof appendTrialParent === 'function') appendTrialParent(root);   // おためしモード（js/trial.js）
   appendFamilyParent(root);   // ポコクエスト（ウラボスの ネタバレは おうちの人だけ）
   if (typeof appendBurgerParent === 'function') appendBurgerParent(root);   // バーガークエスト（js/burger.js）
 

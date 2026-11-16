@@ -2,12 +2,13 @@
 function collectSyncData() {
   // playerNames（保存された名前の一覧）も含める。これを入れないと
   // 同期しても「今選んでいる1人」しか相手の端末に渡らない。
-  const data = { progress: {}, ranking: {}, diff: {}, extras: {}, playerName: state.playerName, playerNames: loadPlayerNames(), deletedNames: loadDeletedNames() };
+  const data = { progress: {}, ranking: {}, diff: {}, extras: {}, playerName: (typeof isTrial === 'function' && isTrial()) ? trialPrev : state.playerName, playerNames: loadPlayerNames(), deletedNames: loadDeletedNames() };
   // 全プレイヤーぶんの進捗・難易度を集める（名前別キーをまるごとスキャン）。
   // 旧形式（全員合算/共通）のキーは同期に乗せない。
   for (let i = 0; i < localStorage.length; i++) {
     const key = localStorage.key(i);
     if (!key) continue;
+    if (typeof isTrialKey === 'function' && isTrialKey(key)) continue;   // おためしモードの きろくは おくらない（js/trial.js）
     if (key.indexOf('manabi_progress_') === 0 && !isLegacyProgressKey(key)) {
       try { data.progress[key] = JSON.parse(localStorage.getItem(key)); } catch (e) {}
     } else if (key.indexOf('manabi_diff_') === 0 && !isLegacyDiffKey(key)) {
@@ -27,7 +28,7 @@ function collectSyncData() {
 }
 
 // ---- ポコ・にがて・毎日の連続日数も同期する ----
-const EXTRA_PREFIXES = ['manabi_pet_', 'manabi_mistakes_', 'manabi_daystreak_', 'manabi_history_', 'manabi_grade_', 'manabi_skip_', 'manabi_recent_', 'manabi_week_', 'manabi_solo_', 'manabi_shop_', 'manabi_subj_', 'manabi_taper_', 'manabi_unit_', 'manabi_focus_', 'manabi_msg_', 'manabi_time_', 'manabi_first_', 'manabi_testset_', 'manabi_burger', 'manabi_pdays_', 'manabi_shopseen_', 'manabi_wrong_'];
+const EXTRA_PREFIXES = ['manabi_pet_', 'manabi_mistakes_', 'manabi_daystreak_', 'manabi_history_', 'manabi_grade_', 'manabi_skip_', 'manabi_recent_', 'manabi_week_', 'manabi_solo_', 'manabi_shop_', 'manabi_subj_', 'manabi_taper_', 'manabi_unit_', 'manabi_focus_', 'manabi_msg_', 'manabi_time_', 'manabi_first_', 'manabi_testset_', 'manabi_burger', 'manabi_pdays_', 'manabi_shopseen_', 'manabi_wrong_', 'manabi_soroban_'];
 
 function parseJSONOr(raw, fallback) {
   try { return raw ? JSON.parse(raw) : fallback; } catch (e) { return fallback; }
@@ -117,6 +118,14 @@ function mergeExtra(key, rawA, rawB) {
       used[n] = { set: Math.max(x.set || 0, y.set || 0), side: Math.max(x.side || 0, y.side || 0) };
     });
     return JSON.stringify(Object.assign({}, newer, { used, closed: !!(a.closed || b.closed), t: Math.max(a.t || 0, b.t || 0) }));
+  }
+  if (key.indexOf('manabi_soroban_') === 0) {   // そろばん：レベル・クリアした だんかい・フラッシュの ベストは 大きい ほう
+    const a = parseJSONOr(rawA, {}), b = parseJSONOr(rawB, {});
+    const mx = (x, y) => { const o = {}; new Set([...Object.keys(x || {}), ...Object.keys(y || {})]).forEach(k => { if (k === '_last') return; o[k] = Math.max((x || {})[k] || 0, (y || {})[k] || 0); }); return o; };
+    const newer = (b.t || 0) > (a.t || 0) ? b : a;
+    const flash = mx(a.flash, b.flash);
+    if (newer.flash && newer.flash._last) flash._last = newer.flash._last;
+    return JSON.stringify({ lv: Math.max(a.lv || 0, b.lv || 0), st: mx(a.st, b.st), flash, checked: !!(a.checked || b.checked), t: Math.max(a.t || 0, b.t || 0) });
   }
   if (key.indexOf('manabi_wrong_') === 0) {   // まちがえた こたえの きろく：りょうほう あわせて、あたらしい じゅんに 200こ
     const a = parseJSONOr(rawA, []), b = parseJSONOr(rawB, []);
@@ -540,6 +549,7 @@ function syncSignature() {
 }
 
 async function autoSync() {
+  if (typeof isTrial === 'function' && isTrial()) return;   // おためし中は どうきしない
   if (autoSyncRunning || !cloudDb || !getActiveSyncCode()) return;
   if (typeof navigator !== 'undefined' && navigator.onLine === false) return;
   autoSyncRunning = true;
