@@ -120,12 +120,17 @@ function mergeExtra(key, rawA, rawB) {
     return JSON.stringify(Object.assign({}, newer, { used, closed: !!(a.closed || b.closed), t: Math.max(a.t || 0, b.t || 0) }));
   }
   if (key.indexOf('manabi_soroban_') === 0) {   // そろばん：レベル・クリアした だんかい・フラッシュの ベストは 大きい ほう
-    const a = parseJSONOr(rawA, {}), b = parseJSONOr(rawB, {});
+    // ふるい かたち（v1）の きろくも sbNormalize（js/soroban.js）で いまの かたちに そろえてから あわせる
+    const norm = (raw) => { const o = parseJSONOr(raw, {}); return (typeof sbNormalize === 'function') ? sbNormalize(o) : o; };
+    const a = norm(rawA), b = norm(rawB);
     const mx = (x, y) => { const o = {}; new Set([...Object.keys(x || {}), ...Object.keys(y || {})]).forEach(k => { if (k === '_last') return; o[k] = Math.max((x || {})[k] || 0, (y || {})[k] || 0); }); return o; };
     const newer = (b.t || 0) > (a.t || 0) ? b : a;
     const flash = mx(a.flash, b.flash);
     if (newer.flash && newer.flash._last) flash._last = newer.flash._last;
-    return JSON.stringify({ lv: Math.max(a.lv || 0, b.lv || 0), st: mx(a.st, b.st), flash, checked: !!(a.checked || b.checked), t: Math.max(a.t || 0, b.t || 0) });
+    const lv = Math.max(a.lv || 0, b.lv || 0);
+    const out = { v: 2, lv, st: mx(a.st, b.st), flash, checked: !!(a.checked || b.checked), t: Math.max(a.t || 0, b.t || 0) };
+    if (typeof SB_LEVELS !== 'undefined' && SB_LEVELS[lv]) out.lvId = SB_LEVELS[lv].id;
+    return JSON.stringify(out);
   }
   if (key.indexOf('manabi_wrong_') === 0) {   // まちがえた こたえの きろく：りょうほう あわせて、あたらしい じゅんに 200こ
     const a = parseJSONOr(rawA, []), b = parseJSONOr(rawB, []);

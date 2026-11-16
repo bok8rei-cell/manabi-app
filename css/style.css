@@ -900,3 +900,18 @@ h2, h3 { margin: 0; }
 #trial-bar select { font-size: 0.8rem; padding: 4px 6px; border-radius: 8px; border: 0; max-width: 46%; }
 #trial-bar .trial-end { padding: 6px 12px; border-radius: 999px; border: 0; background: #E5484D; color: #fff; font-weight: 800; font-family: inherit; }
 body.trial-on { padding-top: 44px; }
+/* そろばん：お手本・なぞり */
+.sb-target { stroke: #DC2626 !important; stroke-width: 4.5 !important; animation: sbPulse 0.9s ease-in-out infinite; }
+@keyframes sbPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
+.sb-caption { min-height: 3.6em; margin: 4px auto 8px; padding: 8px 12px; max-width: 460px; border-radius: 14px; background: #FFF7E6; border: 2px solid #F5D9A8; text-align: left; }
+.sb-caption:empty { visibility: hidden; }
+.sb-cap-head { font-weight: 800; font-size: 0.95rem; color: #8B5A2B; line-height: 1.5; }
+.sb-cap-text { font-size: 0.9rem; font-weight: 700; color: #3B2F2A; line-height: 1.6; white-space: pre-line; }
+.sb-caption.shake { animation: sbShake 0.35s; }
+@keyframes sbShake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
+.sb-help-btn { display: block; margin: 0 0 4px auto; padding: 6px 12px; border-radius: 999px; border: 2px solid #EADFD5; background: #fff; font-weight: 800; font-size: 0.85rem; color: #8B5A2B; font-family: inherit; }
+.sb-demo-btn { margin-top: 10px; }
+.sb-how { margin: 8px auto; max-width: 460px; padding: 8px 12px; border-radius: 12px; background: #fff; border: 1px solid #EADFD5; text-align: left; }
+.sb-how-title { font-weight: 800; font-size: 0.9rem; margin-bottom: 4px; }
+.sb-how-line { font-size: 0.85rem; line-height: 1.6; }
+.sb-stuck { font-weight: 800; color: #C2410C; margin-top: 6px; }

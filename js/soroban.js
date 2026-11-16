@@ -10,8 +10,11 @@
 const SB_COLS = 5;         // そろばんは いつも 5けた（万のくらいまで）ならべる。つかわない けたも 見せる
 const SB_Q = 6;            // 1かいの もんだい数
 const SB_PASS = 5;         // これだけ せいかいで クリア
-const SB_STEPS = ['mieru', 'anzan', 'num'];
-const SB_STEP_NAME = { mieru: 'みえる', anzan: 'あんざん', num: 'すうじ', read: 'よむ', set: 'おく', pair: 'ペア' };
+// たしひきは「なぞる（ひかる たまを じゅんに タップ）→ みえる → あんざん → すうじ」の 4だんかい。
+// あたらしい レベルの「なぞる」を はじめて ひらくと、さいしょに お手本（たまが 1つずつ うごく）を 見せる。
+// 2もん つづけて まちがえたら「お手本を 見る／なぞりで れんしゅう」を 出す。
+const SB_STEPS = ['nazoru', 'mieru', 'anzan', 'num'];
+const SB_STEP_NAME = { nazoru: 'なぞる', mieru: 'みえる', anzan: 'あんざん', num: 'すうじ', read: 'よむ', set: 'おく', pair: 'ペア' };
 
 // kind：read（たまを よむ）／set（たまを おく）／pair（あわせて n）／calc（たしひき。3だんかい）
 const SB_LEVELS = [
@@ -26,7 +29,9 @@ const SB_LEVELS = [
   { id: 'c3', title: '5を つかう ひきざん', kind: 'calc', gen: 'five-', cols: 1 },
   { id: 'p10', title: 'あわせて 10', kind: 'pair', sum: 10, cols: 1 },
   { id: 'c4', title: 'くりあがりの たしざん', kind: 'calc', gen: 'ten+', cols: 2 },
+  { id: 'c4b', title: 'くりあがり（5も つかう）', kind: 'calc', gen: 'ten5+', cols: 2 },
   { id: 'c5', title: 'くりさがりの ひきざん', kind: 'calc', gen: 'ten-', cols: 2 },
+  { id: 'c5b', title: 'くりさがり（5も つかう）', kind: 'calc', gen: 'ten5-', cols: 2 },
   { id: 'c6', title: '3つの たしひき（1けた）', kind: 'calc', gen: 'three1', cols: 2 },
   { id: 'c7', title: '2けた と 1けた', kind: 'calc', gen: 'two1', cols: 2 },
   { id: 'c8', title: '2けた と 2けた', kind: 'calc', gen: 'two2', cols: 3 },
@@ -35,14 +40,28 @@ const SB_LEVELS = [
 
 // ---- きろく ----
 function sbKey(name) { return `manabi_soroban_${playerTag(name)}`; }
-function sbLoad(name) {
-  const o = readJSON(sbKey(name), null) || {};
-  return { lv: Math.max(0, Math.min(SB_LEVELS.length - 1, Number(o.lv) || 0)), st: (o.st && typeof o.st === 'object') ? o.st : {}, flash: (o.flash && typeof o.flash === 'object') ? o.flash : {}, checked: !!o.checked, t: o.t || 0 };
+// v1（さいしょの 版）の レベルの ならび。v2 で くりあがり・くりさがりを 2つに わけ、たしひきに「なぞる」を くわえた
+const SB_OLD_IDS = ['r1', 'r2', 's1', 'r3', 's2', 'p5', 'c1', 'c2', 'c3', 'p10', 'c4', 'c5', 'c6', 'c7', 'c8', 'c9'];
+// きろくを いまの かたち（v2）に そろえる。どうき（sync.js）からも つかう
+function sbNormalize(o) {
+  o = o || {};
+  const st = Object.assign({}, (o.st && typeof o.st === 'object') ? o.st : {});
+  let lv = 0;
+  if (o.v >= 2 && o.lvId) lv = SB_LEVELS.findIndex(l => l.id === o.lvId);
+  else {
+    const id = SB_OLD_IDS[Number(o.lv) || 0];
+    lv = SB_LEVELS.findIndex(l => l.id === id);
+    // v1 の たしひきの ほしは「みえる＝1」だった。まえに「なぞる」が 入ったので 1つ ずらす
+    SB_LEVELS.forEach(l => { if (l.kind === 'calc' && st[l.id] > 0) st[l.id] = Math.min(SB_STEPS.length, st[l.id] + 1); });
+  }
+  lv = Math.max(0, Math.min(SB_LEVELS.length - 1, lv < 0 ? 0 : lv));
+  return { v: 2, lv, lvId: SB_LEVELS[lv].id, st, flash: (o.flash && typeof o.flash === 'object') ? o.flash : {}, checked: !!o.checked, t: o.t || 0 };
 }
-function sbSave(d) { d.t = Date.now(); writeJSON(sbKey(), d); }
+function sbLoad(name) { return sbNormalize(readJSON(sbKey(name), null)); }
+function sbSave(d) { d.v = 2; d.lvId = SB_LEVELS[d.lv].id; d.t = Date.now(); writeJSON(sbKey(), d); }
 function sbStepsOf(level) { return level.kind === 'calc' ? SB_STEPS : [level.kind]; }
 // つぎの レベルへ すすめる だんかい：たしひきは「あんざん」まで、ほかは 1かい クリア
-function sbNeed(level) { return level.kind === 'calc' ? 2 : 1; }
+function sbNeed(level) { return level.kind === 'calc' ? SB_STEPS.indexOf('anzan') + 1 : 1; }
 
 // ---- そろばんの 絵 ----
 // digits：ひだりから じゅんの 数字（0〜9）。mode：'mieru'（おいた たまに 色）／'anzan'（色も いちも かわらない）／'show'（こたえを 見せる）
@@ -90,8 +109,16 @@ function sbGenCalc(gen) {
     if (gen === 'direct') { const a = R(1, 9), b = R(1, 9); if (Math.random() < 0.5) { if (a + b > 9 || !sbDirectAdd(a, b)) continue; t = [a, b]; } else { if (a <= b || !sbDirectSub(a, b)) continue; t = [a, -b]; } }
     else if (gen === 'five+') { const a = R(1, 4), b = R(1, 4); if (a + b < 5) continue; t = [a, b]; }
     else if (gen === 'five-') { const a = R(5, 8), b = R(1, 4); if (b <= a % 5) continue; t = [a, -b]; }
-    else if (gen === 'ten+') { const a = R(2, 9), b = R(2, 9); if (a + b < 10) continue; t = [a, b]; }
-    else if (gen === 'ten-') { const a = R(11, 18), b = R(2, 9); if (a - b > 9 || a - b < 1 || a % 10 >= b) continue; t = [a, -b]; }
+    else if (gen === 'ten+' || gen === 'ten5+') {   // くりあがり：5を つかう うごかし方が まざるか どうかで わける
+      const a = R(1, 9), b = R(2, 9); if (a + b < 10) continue;
+      const m = sbPlan([a, b]).methods; if (m.has('five') !== (gen === 'ten5+')) continue;
+      t = [a, b];
+    }
+    else if (gen === 'ten-' || gen === 'ten5-') {   // くりさがり：おなじく 5を つかうか どうかで わける
+      const a = R(10, 18), b = R(2, 9); if (a - b > 9 || a - b < 0 || a % 10 >= b) continue;
+      const m = sbPlan([a, -b]).methods; if (m.has('five') !== (gen === 'ten5-')) continue;
+      t = [a, -b];
+    }
     else if (gen === 'three1') { const a = R(2, 9), b = R(2, 9), c = R(1, 9); const s1 = a + b; if (Math.random() < 0.5) { if (s1 - c < 0) continue; t = [a, b, -c]; } else { if (a - c < 0) continue; t = [a, -c, b]; } }
     else if (gen === 'two1') { const a = R(11, 89), b = R(2, 9); if (Math.random() < 0.5) t = [a, b]; else t = [a, -b]; }
     else if (gen === 'two2') { const a = R(11, 89), b = R(11, 89); if (Math.random() < 0.5) t = [a, b]; else { if (a <= b) continue; t = [a, -b]; } }
@@ -176,7 +203,10 @@ function sbLevelMenu(i) {
   root.appendChild(back);
   root.appendChild(el('h2', 'page-title', `レベル ${i + 1}`));
   root.appendChild(el('p', 'lead', lv.title));
-  const info = { mieru: 'おいた たまに 色が つくよ', anzan: 'たまの 色が かわらないよ。あたまの なかで おぼえよう', num: 'たまなし。あたまの なかの そろばんで こたえよう' };
+  const demo = el('button', 'sub-btn wide sb-demo-btn', '📺 お手本を 見る（うごかしかた）');
+  demo.addEventListener('click', () => sbDemo(sbMakeQuestion(lv), () => sbLevelMenu(i), `レベル ${i + 1} の お手本`));
+  root.appendChild(demo);
+  const info = { nazoru: 'ひかる たまを じゅんばんに タップ。ゆびで うごかしかたを おぼえよう', mieru: 'おいた たまに 色が つくよ', anzan: 'たまの 色が かわらないよ。あたまの なかで おぼえよう', num: 'たまなし。あたまの なかの そろばんで こたえよう' };
   steps.forEach((st, k) => {
     const open = k <= got;
     const b = el('button', (open ? (k === got ? 'main-btn' : 'sub-btn') : 'sub-btn') + ' wide sb-step', `${k < got ? '★ ' : ''}${k + 1}. ${SB_STEP_NAME[st]}${open ? '' : ' 🔒'}`);
@@ -189,8 +219,14 @@ function sbLevelMenu(i) {
 
 function sbStart(levelIndex, step, opts) {
   const lv = SB_LEVELS[levelIndex];
-  sb = Object.assign({ li: levelIndex, lv, step, n: 0, correct: 0, total: SB_Q, check: false }, opts || {});
+  sb = Object.assign({ li: levelIndex, lv, step, n: 0, correct: 0, total: SB_Q, check: false, wrongRun: 0 }, opts || {});
   sbPlaying(true);
+  // はじめての「なぞる」は、さいしょに お手本を 見せてから
+  if (step === 'nazoru' && !(sbLoad().st[lv.id] > 0)) {
+    const ex = sbMakeQuestion(lv);
+    sbDemo(ex, () => { sbPlaying(true); sbNext(); }, 'まずは お手本を 見よう', 'なぞって みよう！');
+    return;
+  }
   sbNext();
 }
 
@@ -225,18 +261,31 @@ function sbHeader(root) {
 }
 
 function sbNext() {
+  if (sb.n >= sb.total) { sbRoot().innerHTML = ''; sbFinish(); return; }
+  sb.q = sbMakeQuestion(sb.lv, sb.step);
+  sb.helped = false;   // お手本を 見た／なぞりで まちがえた ときは ほしに かぞえない
+  sbShowQ();
+}
+
+// いまの もんだいを 出す（お手本の あとに おなじ もんだいへ もどる ときも ここ）
+function sbShowQ() {
   const root = sbRoot();
   root.innerHTML = '';
-  if (sb.n >= sb.total) { sbFinish(); return; }
   sbHeader(root);
-  const lv = sb.lv, step = sb.step;
-  const q = sb.q = sbMakeQuestion(lv, step);
+  const lv = sb.lv, step = sb.step, q = sb.q;
   const area = el('div', 'sb-area');
   root.appendChild(area);
   const fb = el('div', 'sb-feedback');
   const answer = (val) => sbJudge(val, area, fb);
+  if (lv.kind === 'calc' && !sb.check) {
+    const help = el('button', 'sb-help-btn', '📺 お手本');
+    help.addEventListener('click', () => { if (sb.answered) return; sbDemo(q, () => { sb.helped = true; sbPlaying(true); sbShowQ(); }, 'この もんだいの お手本', 'じぶんで やって みよう'); });
+    area.appendChild(help);
+  }
 
-  if (step === 'read') {
+  if (step === 'nazoru') {
+    sbGuide(area, q, answer);
+  } else if (step === 'read') {
     area.appendChild(el('div', 'sb-ask', 'この たまは いくつ？'));
     const b = el('div', 'sb-board-wrap'); b.innerHTML = sbBoardSVG(sbDigits(q.answer, SB_COLS), 'show'); area.appendChild(b);
     area.appendChild(sbKeypad(answer));
@@ -254,6 +303,7 @@ function sbNext() {
     area.appendChild(el('div', 'sb-ask', step === 'set' ? 'この かずを たまで おこう' : (step === 'anzan' ? 'たまの 色は かわらないよ。おぼえながら うごかそう' : 'たまを うごかして けいさんしよう')));
     area.appendChild(el('div', 'sb-expr', step === 'set' ? q.text : `${q.text} ＝ ？`));
     const digits = Array(SB_COLS).fill(0);
+    const hist = [];   // タップ ごとの たまの かず（そろばんで けいさん したかを たしかめる）
     const wrap = el('div', 'sb-board-wrap');
     const mode = step === 'anzan' ? 'anzan' : 'mieru';
     const draw = () => { wrap.innerHTML = sbBoardSVG(digits, mode); };
@@ -263,6 +313,7 @@ function sbNext() {
       if (!t || sb.answered) return;
       e.preventDefault();
       sbTap(digits, Number(t.dataset.col), t.dataset.kind, Number(t.dataset.i));
+      hist.push(sbValue(digits));
       FX.tap();
       if (mode === 'anzan') { t.classList.add('pulse'); setTimeout(() => t.classList.remove('pulse'), 160); }
       else draw();
@@ -270,9 +321,14 @@ function sbNext() {
     area.appendChild(wrap);
     const row = el('div', 'sb-row');
     const clear = el('button', 'sub-btn', 'はらう（0に する）');
-    clear.addEventListener('click', () => { if (sb.answered) return; digits.fill(0); draw(); });
+    clear.addEventListener('click', () => { if (sb.answered) return; digits.fill(0); hist.push('C'); draw(); });   // はらったら そこから やりなおし
     const ok = el('button', 'main-btn', 'こたえる');
-    ok.addEventListener('click', () => answer(sbValue(digits)));
+    ok.addEventListener('click', () => {
+      // たしひきは、さいしょの 数を たまで おいて、そこから うごかして こたえに たどりついた ときだけ せいかい
+      // （あたまの なかや 紙で けいさんして、こたえの たまだけ おいても せいかいに しない）
+      const skipped = q.terms ? !sbUsedBoard(hist, q.terms) : false;
+      sbJudge(sbValue(digits), area, fb, { skipped });
+    });
     row.appendChild(clear); row.appendChild(ok);
     area.appendChild(row);
   }
@@ -280,19 +336,58 @@ function sbNext() {
   sb.answered = false;
 }
 
-function sbJudge(val, area, fb) {
+// たまの うごきに、とちゅうの かず（さいしょの 数 → とちゅうの ごうけい）が じゅんばんに 出てきたか
+function sbUsedBoard(hist, terms) {
+  const need = [];
+  terms.slice(0, -1).reduce((s, x) => { s += x; need.push(s); return s; }, 0);
+  let k = 0;
+  const from = hist.lastIndexOf('C') + 1;   // さいごに はらった あとの うごきだけ みる（はらって こたえだけ おきなおすのは だめ）
+  hist.slice(from).forEach(v => { if (k < need.length && v === need[k]) k++; });
+  return k === need.length;
+}
+
+function sbJudge(val, area, fb, opt) {
   if (!sb || sb.answered) return;
   sb.answered = true;
-  const ok = val === sb.q.answer;
-  if (ok) { sb.correct++; FX.correct(); } else FX.wrong();
+  const skipped = !!(opt && opt.skipped) && val === sb.q.answer;   // こたえの たまだけ おいた
+  const ok = val === sb.q.answer && !skipped;
+  const counted = ok && !sb.helped;
+  if (counted) sb.correct++;
+  if (ok) FX.correct(); else FX.wrong();
+  sb.wrongRun = ok ? 0 : (sb.wrongRun || 0) + 1;
   fb.innerHTML = '';
   fb.className = 'sb-feedback ' + (ok ? 'ok' : 'ng');
-  fb.appendChild(el('div', 'sb-fb-title', ok ? 'せいかい！' : `おしい！ こたえは ${sb.q.answer}`));
-  if (!ok && !sb.flash) {
+  fb.appendChild(el('div', 'sb-fb-title', counted ? 'せいかい！' : (ok ? 'できた！' : (skipped ? 'たまで けいさん しよう！' : `おしい！ こたえは ${sb.q.answer}`))));
+  if (ok && !counted) fb.appendChild(el('div', 'sb-fb-sub', sb.step === 'nazoru' ? 'ちがう たまを タップした ので、この もんだいは ほしに かぞえないよ' : 'お手本を 見た ので、この もんだいは ほしに かぞえないよ'));
+  if (skipped) {
+    const t = sb.q.terms;
+    fb.appendChild(el('div', 'sb-fb-sub', `まず ${t[0]}を たまで おいて、そこから たまを うごかして けいさん しよう。こたえの たまだけ おいても せいかいに ならないよ`));
+  }
+  if (!ok && !sb.flash && !skipped) {
     if (sb.step !== 'read') fb.appendChild(el('div', 'sb-fb-sub', `きみの こたえ：${val}`));
     const pic = el('div', 'sb-board-wrap small');
     pic.innerHTML = sbBoardSVG(sbDigits(sb.q.answer, SB_COLS), 'show');
     fb.appendChild(pic);
+    // たしひき：うごかしかたを ことばで 見せる
+    if (sb.lv.kind === 'calc' && sb.q.terms) {
+      const how = el('div', 'sb-how');
+      how.appendChild(el('div', 'sb-how-title', '🖐 うごかしかた'));
+      sbPlan(sb.q.terms).heads.forEach(h => how.appendChild(el('div', 'sb-how-line', h)));
+      fb.appendChild(how);
+    }
+    // 2もん つづけて まちがえたら、お手本・なぞりに もどれるように
+    if (sb.lv.kind === 'calc' && !sb.check && sb.wrongRun >= 2) {
+      fb.appendChild(el('div', 'sb-fb-sub sb-stuck', 'むずかしい ときは、お手本を 見てから なぞって みよう'));
+      const q = sb.q;
+      const d1 = el('button', 'main-btn wide', '📺 この もんだいの お手本を 見る');
+      d1.addEventListener('click', () => sbDemo(q, () => { sb.n++; sbPlaying(true); sbNext(); }, 'この もんだいの お手本', 'つぎの もんだいへ'));
+      fb.appendChild(d1);
+      if (sb.step !== 'nazoru') {
+        const d2 = el('button', 'sub-btn wide', '✍️ なぞりで れんしゅう する');
+        d2.addEventListener('click', () => sbStart(sb.li, 'nazoru'));
+        fb.appendChild(d2);
+      }
+    }
   }
   area.querySelectorAll('button').forEach(b => { b.disabled = true; });
   const next = el('button', 'main-btn wide', sb.n + 1 < sb.total ? 'つぎへ' : 'けっかを 見る');
@@ -489,4 +584,160 @@ function sbFlashFinish() {
   menu.addEventListener('click', sbFlashMenu);
   btns.appendChild(again); btns.appendChild(menu);
   root.appendChild(btns);
+}
+
+// ===== うごかしかたの てじゅん（お手本・なぞり・まちがえた ときの せつめい）=====
+// そろばんの きほんの うごかしかた：左の くらいから じゅんに、
+//  ・そのまま 入れる／とる
+//  ・5の 合成・分解（たす：5を 入れて □を とる／ひく：□を 入れて 5を とる）
+//  ・10の 合成・分解（たす：□を とって となりに 1を 入れる／ひく：となりから 1を とって □を 入れる）
+// steps：1かい タップする ごとの {col, kind, i, head（だい ひょうし）, note（なかの うごき）, text（たまの うごき）}
+const SB_COL_NAME = ['一', '十', '百', '千', '万'];
+function sbColName(c) { return `${SB_COL_NAME[SB_COLS - 1 - c]}の くらい`; }
+
+function sbPlan(terms) {
+  const digits = Array(SB_COLS).fill(0), steps = [], heads = [], methods = new Set();
+  let head = '', note = '', term = 0, depth = 0, label = '';
+  const push = (col, kind, i, text) => { sbTap(digits, col, kind, i); steps.push({ col, kind, i, text, head, note, term }); };
+  const five = (c, on) => push(c, 'five', 0, on ? '5の たまを 入れる' : '5の たまを とる');
+  const ones = (c, to) => { const from = digits[c] % 5; if (to === from) return; push(c, 'one', to > from ? to - 1 : to, to > from ? `1の たまを ${to - from}こ 入れる` : `1の たまを ${from - to}こ とる`); };
+  const say = (text, method) => {
+    if (term > 0) methods.add(method);
+    if (depth === 0) { head = `${label}　${text}`; note = ''; if (term > 0) heads.push(head); } else note = text;
+  };
+  function addAt(c, d) {
+    if (d <= 0) return;
+    if (c < 0) throw new Error('soroban overflow');
+    const v = digits[c];
+    if (v + d <= 9 && !(d >= 5 && v >= 5) && v % 5 + d % 5 <= 4) {
+      say(`${sbColName(c)}に ${d}を 入れる`, 'direct');
+      if (d >= 5) five(c, true);
+      if (d % 5) ones(c, v % 5 + d % 5);
+    } else if (v + d <= 9) {
+      say(`${sbColName(c)}：${d}を たすには、5を 入れて ${5 - d}を とる`, 'five');
+      five(c, true); ones(c, v % 5 - (5 - d));
+    } else {
+      say(`${sbColName(c)}：${d}を たすには、${10 - d}を とって、となりの くらいに 1を 入れる`, 'ten');
+      depth++; subAt(c, 10 - d); addAt(c - 1, 1); depth--;
+    }
+  }
+  function subAt(c, d) {
+    if (d <= 0) return;
+    if (c < 0) throw new Error('soroban underflow');
+    const v = digits[c];
+    if (v >= d && (d < 5 || v >= 5) && v % 5 >= d % 5) {
+      say(`${sbColName(c)}から ${d}を とる`, 'direct');
+      if (d >= 5) five(c, false);
+      if (d % 5) ones(c, v % 5 - d % 5);
+    } else if (v >= d) {
+      say(`${sbColName(c)}：${d}を ひくには、${5 - d}を 入れて 5を とる`, 'five');
+      ones(c, v % 5 + (5 - d)); five(c, false);
+    } else {
+      say(`${sbColName(c)}：${d}を ひくには、となりの くらいから 1を とって、${10 - d}を 入れる`, 'ten');
+      depth++; subAt(c - 1, 1); addAt(c, 10 - d); depth--;
+    }
+  }
+  terms.forEach((x, ti) => {
+    term = ti; depth = 0;
+    const s = String(Math.abs(x));
+    label = ti === 0 ? `まず ${x}を おく：` : (x < 0 ? `－${-x}：` : `＋${x}：`);
+    for (let j = 0; j < s.length; j++) {
+      const c = SB_COLS - s.length + j, d = Number(s[j]);
+      if (!d) continue;
+      if (ti === 0 || x > 0) addAt(c, d); else subAt(c, d);
+    }
+  });
+  return { steps, heads, methods, answer: sbValue(digits) };
+}
+
+// なぞる：つぎに うごかす たまが ひかる。じゅんばんどおりに タップする
+function sbGuide(area, q, answer) {
+  const plan = sbPlan(q.terms);
+  area.appendChild(el('div', 'sb-ask', 'ひかる たまを じゅんばんに タップしよう'));
+  area.appendChild(el('div', 'sb-expr', `${q.text} ＝ ？`));
+  const cap = el('div', 'sb-caption');
+  area.appendChild(cap);
+  const wrap = el('div', 'sb-board-wrap');
+  area.appendChild(wrap);
+  const digits = Array(SB_COLS).fill(0);
+  let k = 0;
+  sb.missTap = 0;
+  const draw = () => {
+    wrap.innerHTML = sbBoardSVG(digits, 'mieru');
+    cap.innerHTML = '';
+    const st = plan.steps[k];
+    if (!st) return;
+    cap.appendChild(el('div', 'sb-cap-head', st.head));
+    cap.appendChild(el('div', 'sb-cap-text', (st.note ? st.note + '\n→ ' : '') + st.text));
+    const t = wrap.querySelector(`.sb-bead[data-col="${st.col}"][data-kind="${st.kind}"][data-i="${st.i}"]`);
+    if (t) t.classList.add('sb-target');
+  };
+  draw();
+  wrap.addEventListener('pointerdown', (e) => {
+    const t = e.target.closest('.sb-bead');
+    if (!t || sb.answered) return;
+    e.preventDefault();
+    const st = plan.steps[k];
+    if (!st) return;
+    if (Number(t.dataset.col) === st.col && t.dataset.kind === st.kind && Number(t.dataset.i) === st.i) {
+      sbTap(digits, st.col, st.kind, st.i);
+      FX.tap();
+      k++;
+      draw();
+      if (k >= plan.steps.length) { if (sb.missTap > 0) sb.helped = true; setTimeout(() => answer(sbValue(digits)), 300); }
+    } else {
+      sb.missTap++;
+      cap.classList.remove('shake'); void cap.offsetWidth; cap.classList.add('shake');
+      showToast('ひかっている たまを タップしてね');
+    }
+  });
+}
+
+// お手本：たまが 1つずつ うごく（ことばと よみあげ つき）。おわったら onDone
+function sbDemo(q, onDone, title, doneLabel) {
+  const plan = sbPlan(q.terms);
+  const token = {};
+  sbDemo.cur = token;
+  sbPlaying(false);
+  const root = sbRoot();
+  root.innerHTML = '';
+  root.appendChild(el('h2', 'page-title', `📺 ${title || 'お手本'}`));
+  root.appendChild(el('div', 'sb-expr', `${q.text} ＝ ？`));
+  const cap = el('div', 'sb-caption');
+  root.appendChild(cap);
+  const wrap = el('div', 'sb-board-wrap');
+  root.appendChild(wrap);
+  const row = el('div', 'sb-row');
+  const again = el('button', 'sub-btn', '🔁 もういちど');
+  const done = el('button', 'main-btn', doneLabel || 'おわり');
+  row.appendChild(again); row.appendChild(done);
+  root.appendChild(row);
+  const digits = Array(SB_COLS).fill(0);
+  let k = 0, lastHead = '';
+  const show = (st) => {
+    wrap.innerHTML = sbBoardSVG(digits, 'mieru');
+    if (st) { const t = wrap.querySelector(`.sb-bead[data-col="${st.col}"][data-kind="${st.kind}"][data-i="${st.i}"]`); if (t) t.classList.add('sb-target'); }
+  };
+  const tick = () => {
+    if (sbDemo.cur !== token) return;
+    cap.innerHTML = '';
+    if (k >= plan.steps.length) { cap.appendChild(el('div', 'sb-cap-head', `こたえは ${q.answer}`)); show(null); return; }
+    const st = plan.steps[k];
+    cap.appendChild(el('div', 'sb-cap-head', st.head));
+    cap.appendChild(el('div', 'sb-cap-text', (st.note ? st.note + '\n→ ' : '') + st.text));
+    if (st.head !== lastHead) { lastHead = st.head; try { FX.speak(st.head.replace(/[：　]/g, ' ')); } catch (e) { /* よみあげ できなくても よい */ } }
+    show(st);
+    setTimeout(() => {
+      if (sbDemo.cur !== token) return;
+      sbTap(digits, st.col, st.kind, st.i);
+      FX.tap();
+      show(null);
+      k++;
+      setTimeout(tick, 900);
+    }, 1300);
+  };
+  again.addEventListener('click', () => sbDemo(q, onDone, title, doneLabel));
+  done.addEventListener('click', () => { sbDemo.cur = null; if (FX.stopSpeak) FX.stopSpeak(); onDone(); });
+  show(null);
+  setTimeout(tick, 700);
 }
