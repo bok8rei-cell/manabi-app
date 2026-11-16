@@ -187,6 +187,7 @@ function weekEndPassed(weekStart) {   // その週が おわって、そのあ�
 // プレゼントを わたして、いまの子に あたらしく とどいた id の 一覧を かえす
 let lastQuestNotes = [];   // いまの子に とどいた コイン・そだちポイントの おしらせ
 function grantQuestGifts() {
+  if ((typeof isTrial === 'function' && isTrial())) return [];   // おためしモードは プレゼントも ボーナスも わたさない（js/trial.js）
   const me = (state.playerName || '').trim();
   lastQuestNotes = [];
   const today = weekStartOf(localDateStr());
@@ -211,6 +212,7 @@ function grantQuestGifts() {
 }
 
 function announceGifts(ids) {
+  if ((typeof isTrial === 'function' && isTrial())) { lastQuestNotes.splice(0); return false; }   // おためしモードは おしらせも 出さない
   const names = ids.map(id => (shopItem(id) || {}).name).filter(Boolean);
   const notes = lastQuestNotes.splice(0);
   if (names.length === 0 && notes.length === 0) return false;
@@ -222,6 +224,7 @@ function announceGifts(ids) {
 
 // とうじょう・げきは の えんしゅつ（この たんまつ・この子で 1かいだけ。1かいに ひとつずつ）
 function checkBossReveal(w) {
+  if ((typeof isTrial === 'function' && isTrial())) return;   // おためしモードは ボスの えんしゅつも 出さない
   if (!w.started || !w.boss || !w.revealed) return;
   const key = `manabi_bossseen_${playerTag()}_${w.start}`;
   const seen = localStorage.getItem(key) || '';
