@@ -326,6 +326,8 @@ function renderReport() {
   week.appendChild(buildWeekBars(days));
   container.appendChild(week);
 
+  if (typeof appendSorobanReport === 'function') appendSorobanReport(container);   // そろばん（js/soroban.js）
+
   // にがて（教科べつ）
   const weak = el('div', 'panel');
   weak.appendChild(el('h3', null, 'にがて（まちがえた もんだい）'));
@@ -566,6 +568,8 @@ function renderParent() {
     card.appendChild(buildWeekBars(days));
     appendDoubleParent(card, name);
     appendBalanceParent(card, name);
+    if (typeof appendSameParent === 'function') appendSameParent(card, name);   // おなじ きょうかばかり（js/balance.js）
+    if (typeof appendSorobanParent === 'function') appendSorobanParent(card, name);   // そろばん（js/soroban.js）
 
     // 教科べつ（せいかいりつ）
     const rows = [];

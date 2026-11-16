@@ -423,6 +423,7 @@ function checkAnswer() {
   }
 
   s.answered = true;
+  if (typeof sameSubjectTick === 'function') sameSubjectTick(s.currentSubject, () => { session = null; showTab('home'); });   // おなじ きょうかばかり やって いないか（js/balance.js）
   if (!s.fromMistakes) noteSkipTrial(s.currentSubject, s.grade, p.key, ok && s.hintStage === 0);   // 「まだ ならってない」の おためし
   if (!s.fromMistakes && s.mode !== 'challenge') recordUnit(s.currentSubject, s.grade, p.unitLabel, ok && s.hintStage === 0);   // たんげんべつの きろく（ぶんせき用）。昇段チャレンジは まだ ならっていない レベルなので 入れない
   if (s.mode === 'testweek') noteTestWeek(s.testSetId, p.twIdx, ok && s.hintStage === 0);   // テスト週間：じりきで せいかいした もんだいを おぼえる（js/testweek.js）
@@ -702,6 +703,7 @@ function renderResult(r) {
   chips.appendChild(streak);
   root.appendChild(chips);
 
+  { const sn = (typeof sameSubjectNote === 'function') ? sameSubjectNote(s.currentSubject) : ''; if (sn) root.appendChild(el('div', 'note', sn)); }
   if (s.limitedCount > 0) root.appendChild(el('div', 'note', `⚖️ ${BALANCE_NAMES[s.currentSubject] || 'この きょうか'}は せいげんちゅうで、コインが すくなくなったよ（さんすう・こくごを やると もどるよ）`));
   if (s.mode === 'testweek' && typeof testSetById === 'function' && testSetById(s.testSetId)) {
     const set = testSetById(s.testSetId), pr = testsetProgress(set);

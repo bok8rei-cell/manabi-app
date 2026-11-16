@@ -55,9 +55,22 @@ function sbNormalize(o) {
     SB_LEVELS.forEach(l => { if (l.kind === 'calc' && st[l.id] > 0) st[l.id] = Math.min(SB_STEPS.length, st[l.id] + 1); });
   }
   lv = Math.max(0, Math.min(SB_LEVELS.length - 1, lv < 0 ? 0 : lv));
-  return { v: 2, lv, lvId: SB_LEVELS[lv].id, st, flash: (o.flash && typeof o.flash === 'object') ? o.flash : {}, checked: !!o.checked, t: o.t || 0 };
+  const pairs = (m) => { const r = {}; if (m && typeof m === 'object') Object.keys(m).forEach(k => { if (Array.isArray(m[k])) r[k] = [Number(m[k][0]) || 0, Number(m[k][1]) || 0]; }); return r; };
+  return { v: 2, lv, lvId: SB_LEVELS[lv].id, st, flash: (o.flash && typeof o.flash === 'object') ? o.flash : {}, day: pairs(o.day), lvs: pairs(o.lvs), checked: !!o.checked, t: o.t || 0 };
 }
 function sbLoad(name) { return sbNormalize(readJSON(sbKey(name), null)); }
+// 1もん こたえる ごとの きろく（日ごと・レベルごとの [もんだい数, せいかい数]）。ぶんせき・親の画面用
+function sbRecord(levelId, correct) {
+  const d = sbLoad();
+  const t = localDateStr();
+  d.day[t] = d.day[t] || [0, 0];
+  d.day[t][0]++; if (correct) d.day[t][1]++;
+  const days = Object.keys(d.day).sort();
+  while (days.length > 60) delete d.day[days.shift()];
+  d.lvs[levelId] = d.lvs[levelId] || [0, 0];
+  d.lvs[levelId][0]++; if (correct) d.lvs[levelId][1]++;
+  sbSave(d);
+}
 function sbSave(d) { d.v = 2; d.lvId = SB_LEVELS[d.lv].id; d.t = Date.now(); writeJSON(sbKey(), d); }
 function sbStepsOf(level) { return level.kind === 'calc' ? SB_STEPS : [level.kind]; }
 // つぎの レベルへ すすめる だんかい：たしひきは「あんざん」まで、ほかは 1かい クリア
@@ -353,6 +366,8 @@ function sbJudge(val, area, fb, opt) {
   const ok = val === sb.q.answer && !skipped;
   const counted = ok && !sb.helped;
   if (counted) sb.correct++;
+  sbRecord(sb.flash ? 'flash' : sb.lv.id, counted);
+  if (typeof sameSubjectTick === 'function') sameSubjectTick('soroban', () => { sb = null; sbPlaying(false); showTab('home'); });   // おなじ きょうかばかり（js/balance.js）
   if (ok) FX.correct(); else FX.wrong();
   sb.wrongRun = ok ? 0 : (sb.wrongRun || 0) + 1;
   fb.innerHTML = '';
@@ -404,6 +419,7 @@ function sbReward(correct, total) {
   return award;
 }
 function sbRewardLines(root, correct, award) {
+  { const sn = (typeof sameSubjectNote === 'function') ? sameSubjectNote('soroban') : ''; if (sn) root.appendChild(el('div', 'note', sn)); }
   root.appendChild(el('div', 'note gold', `💰 +${correct * 3}コイン`));
   ((award && award.bonuses) || []).forEach(b => root.appendChild(el('div', 'note gold', `🎁 ${b.label} +${b.coins}コイン`)));
   if (award && award.earned && award.earned.length > 0) root.appendChild(el('div', 'note warm', `🌱 そだちポイント +${award.earned.length}`));
@@ -740,4 +756,62 @@ function sbDemo(q, onDone, title, doneLabel) {
   done.addEventListener('click', () => { sbDemo.cur = null; if (FX.stopSpeak) FX.stopSpeak(); onDone(); });
   show(null);
   setTimeout(tick, 700);
+}
+
+// ===== きろく・おうちの人の 画面 =====
+function sbRate(pair) { return pair && pair[0] > 0 ? Math.round(pair[1] / pair[0] * 100) : null; }
+function sbSummary(name) {
+  const d = sbLoad(name);
+  const tot = Object.keys(d.lvs).reduce((a, k) => [a[0] + d.lvs[k][0], a[1] + d.lvs[k][1]], [0, 0]);
+  const days = [];
+  for (let i = 6; i >= 0; i--) days.push(addDaysStr(localDateStr(), -i));
+  const week = days.reduce((a, k) => { const p = d.day[k] || [0, 0]; return [a[0] + p[0], a[1] + p[1]]; }, [0, 0]);
+  const today = d.day[localDateStr()] || [0, 0];
+  const stars = SB_LEVELS.reduce((a, l) => a + (d.st[l.id] || 0), 0);
+  const maxStars = SB_LEVELS.reduce((a, l) => a + sbStepsOf(l).length, 0);
+  // つまずいている レベル：10もん いじょう やって せいかいりつが いちばん ひくい（クリアずみの 4だんかいは のぞく）
+  let weak = null;
+  SB_LEVELS.forEach(l => {
+    const p = d.lvs[l.id]; if (!p || p[0] < 10) return;
+    const r = p[1] / p[0];
+    if (r < 0.8 && (!weak || r < weak.r)) weak = { l, r, p };
+  });
+  const started = tot[0] > 0 || d.lv > 0 || Object.keys(d.st).length > 0;
+  return { d, tot, week, today, stars, maxStars, weak, started, flashBest: Object.keys(d.flash).filter(k => k !== '_last').map(k => ({ k, v: d.flash[k] })) };
+}
+function sbRateClass(r) { return r >= 80 ? 'high' : r >= 50 ? 'mid' : 'low'; }
+
+function sbLines(card, s, withTitle) {
+  const lv = s.d.lv;
+  card.appendChild(el('div', 'report-line', `いまの レベル：${lv + 1} / ${SB_LEVELS.length}「${SB_LEVELS[lv].title}」　★ ${s.stars} / ${s.maxStars}`));
+  const row = el('div', 'report-row');
+  row.appendChild(el('span', 'subject-name', 'ぜんぶの せいかいりつ'));
+  const det = el('span', 'subject-detail', `${s.tot[0]}もん中 `);
+  const r = sbRate(s.tot);
+  if (r !== null) det.appendChild(el('span', 'subject-rate ' + sbRateClass(r), `${r}%`)); else det.appendChild(el('span', 'report-empty', 'まだ'));
+  row.appendChild(det);
+  card.appendChild(row);
+  const wr = sbRate(s.week);
+  card.appendChild(el('div', 'report-line', `この 1しゅうかん：${s.week[0]}もん${wr !== null ? `（せいかい ${wr}%）` : ''}　きょう：${s.today[0]}もん`));
+  if (s.weak) card.appendChild(el('div', 'report-line', `🔍 つまずいている レベル：${SB_LEVELS.indexOf(s.weak.l) + 1}「${s.weak.l.title}」${Math.round(s.weak.r * 100)}%（${s.weak.p[0]}もん）→ お手本・なぞりで れんしゅう`));
+  if (s.flashBest.length) card.appendChild(el('div', 'report-line', `⚡ フラッシュの ベスト：${s.flashBest.map(f => `${f.k.replace(/^(\d)-(\d+)-(\w+)$/, (m, a, b, c) => `${a}けた${b}こ・${SB_FLASH_SPEED[c] ? SB_FLASH_SPEED[c][0] : c}`)} ${f.v}/5`).join('、')}`));
+}
+
+// 子どもの「きろく」画面
+function appendSorobanReport(container) {
+  if (!state.playerName.trim()) return;
+  const s = sbSummary();
+  const panel = el('div', 'panel');
+  panel.appendChild(el('h3', null, '🧮 そろばん'));
+  if (!s.started) panel.appendChild(el('div', 'report-empty', 'まだ やっていません。'));
+  else sbLines(panel, s);
+  container.appendChild(panel);
+}
+
+// おうちの人の 画面：ひとりぶん
+function appendSorobanParent(card, name) {
+  const s = sbSummary(name);
+  if (!s.started) return;
+  card.appendChild(el('div', 'child-section', '🧮 そろばん'));
+  sbLines(card, s);
 }

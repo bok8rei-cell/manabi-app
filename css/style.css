@@ -915,3 +915,7 @@ body.trial-on { padding-top: 44px; }
 .sb-how-title { font-weight: 800; font-size: 0.9rem; margin-bottom: 4px; }
 .sb-how-line { font-size: 0.85rem; line-height: 1.6; }
 .sb-stuck { font-weight: 800; color: #C2410C; margin-top: 6px; }
+/* おなじ きょうかばかり */
+.same-panel { margin-top: 8px; padding: 10px 14px; background: #FFF1F0; border-color: #F5B5AE; }
+.same-title { font-weight: 800; font-size: 0.9rem; color: #B42318; line-height: 1.6; }
+.same-line { color: #B42318; font-weight: 700; }

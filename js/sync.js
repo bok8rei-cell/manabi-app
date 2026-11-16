@@ -28,7 +28,7 @@ function collectSyncData() {
 }
 
 // ---- ポコ・にがて・毎日の連続日数も同期する ----
-const EXTRA_PREFIXES = ['manabi_pet_', 'manabi_mistakes_', 'manabi_daystreak_', 'manabi_history_', 'manabi_grade_', 'manabi_skip_', 'manabi_recent_', 'manabi_week_', 'manabi_solo_', 'manabi_shop_', 'manabi_subj_', 'manabi_taper_', 'manabi_unit_', 'manabi_focus_', 'manabi_msg_', 'manabi_time_', 'manabi_first_', 'manabi_testset_', 'manabi_burger', 'manabi_pdays_', 'manabi_shopseen_', 'manabi_wrong_', 'manabi_soroban_'];
+const EXTRA_PREFIXES = ['manabi_pet_', 'manabi_mistakes_', 'manabi_daystreak_', 'manabi_history_', 'manabi_grade_', 'manabi_skip_', 'manabi_recent_', 'manabi_week_', 'manabi_solo_', 'manabi_shop_', 'manabi_subj_', 'manabi_taper_', 'manabi_unit_', 'manabi_focus_', 'manabi_msg_', 'manabi_time_', 'manabi_first_', 'manabi_testset_', 'manabi_burger', 'manabi_pdays_', 'manabi_shopseen_', 'manabi_wrong_', 'manabi_soroban_', 'manabi_daysubj_'];
 
 function parseJSONOr(raw, fallback) {
   try { return raw ? JSON.parse(raw) : fallback; } catch (e) { return fallback; }
@@ -119,6 +119,15 @@ function mergeExtra(key, rawA, rawB) {
     });
     return JSON.stringify(Object.assign({}, newer, { used, closed: !!(a.closed || b.closed), t: Math.max(a.t || 0, b.t || 0) }));
   }
+  if (key.indexOf('manabi_daysubj_') === 0) {   // きょうかごとの 1日の もんだい数：日付×教科で 大きい ほう
+    const a = parseJSONOr(rawA, {}), b = parseJSONOr(rawB, {});
+    const out = {};
+    new Set([...Object.keys(a), ...Object.keys(b)]).forEach(d => {
+      const x = a[d] || {}, y = b[d] || {}; out[d] = {};
+      new Set([...Object.keys(x), ...Object.keys(y)]).forEach(k => { out[d][k] = Math.max(x[k] || 0, y[k] || 0); });
+    });
+    return JSON.stringify(out);
+  }
   if (key.indexOf('manabi_soroban_') === 0) {   // そろばん：レベル・クリアした だんかい・フラッシュの ベストは 大きい ほう
     // ふるい かたち（v1）の きろくも sbNormalize（js/soroban.js）で いまの かたちに そろえてから あわせる
     const norm = (raw) => { const o = parseJSONOr(raw, {}); return (typeof sbNormalize === 'function') ? sbNormalize(o) : o; };
@@ -128,7 +137,8 @@ function mergeExtra(key, rawA, rawB) {
     const flash = mx(a.flash, b.flash);
     if (newer.flash && newer.flash._last) flash._last = newer.flash._last;
     const lv = Math.max(a.lv || 0, b.lv || 0);
-    const out = { v: 2, lv, st: mx(a.st, b.st), flash, checked: !!(a.checked || b.checked), t: Math.max(a.t || 0, b.t || 0) };
+    const mx2 = (x, y) => { const o = {}; new Set([...Object.keys(x || {}), ...Object.keys(y || {})]).forEach(k => { const p = (x || {})[k] || [0, 0], q = (y || {})[k] || [0, 0]; o[k] = [Math.max(p[0] || 0, q[0] || 0), Math.max(p[1] || 0, q[1] || 0)]; }); return o; };   // [もんだい数, せいかい数]
+    const out = { v: 2, lv, st: mx(a.st, b.st), flash, day: mx2(a.day, b.day), lvs: mx2(a.lvs, b.lvs), checked: !!(a.checked || b.checked), t: Math.max(a.t || 0, b.t || 0) };
     if (typeof SB_LEVELS !== 'undefined' && SB_LEVELS[lv]) out.lvId = SB_LEVELS[lv].id;
     return JSON.stringify(out);
   }
