@@ -30,6 +30,7 @@ function rouletteState(kind, p) {
   const pet = p || loadPet();
   const today = localDateStr();
   if (rouletteDone(pet, today, kind)) return 'done';
+  if ((typeof isTrial === 'function' && isTrial())) return 'ready';   // おためしモードは じょうけん なしで まわせる
   if (kind === 'n') return petDayAllDone(pet) ? 'ready' : 'locked';
   return studySecondsOn(today) >= ROULETTE_SPECIAL_SEC ? 'ready' : 'locked';
 }

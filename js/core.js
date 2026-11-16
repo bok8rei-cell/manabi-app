@@ -1,6 +1,6 @@
 // ===== まなびポコ（旧 BRAIN QUEST：零式） 共通の部品 =====
 
-const APP_VERSION = 'v43.43';
+const APP_VERSION = 'v43.44';
 const TOTAL_QUESTIONS = 10;
 const DONT_KNOW = '__DONTKNOW__';
 
@@ -221,6 +221,7 @@ function offerChallenge(grade, subject) {
 }
 
 function canAttemptChallenge(grade, subject, diffLevel) {
+  if ((typeof isTrial === 'function' && isTrial())) return true;   // おためしモードは なんかいでも
   const attemptKey = getChallengeAttemptKey(grade, subject, diffLevel);
   const lastAttempt = localStorage.getItem(attemptKey);
   const today = localDateStr();

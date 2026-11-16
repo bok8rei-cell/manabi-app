@@ -27,7 +27,7 @@ function petToday(p) {
   const d = (p.growthDay && p.growthDay.date === today) ? p.growthDay : { date: today, base: false, amount: false, mission: false, c: 0, food: 0 };
   return d;
 }
-function petDayAllDone(p) { const d = petToday(p); return !!(d.base && d.amount && d.mission); }
+function petDayAllDone(p) { if ((typeof isTrial === 'function' && isTrial())) return true; const d = petToday(p); return !!(d.base && d.amount && d.mission); }   // おためしモードは そろって いる あつかい
 function petFoodLeft(p) { return Math.max(0, FOOD_MAX - (petToday(p).food || 0)); }
 
 // ごはんを かう：'ok' | 'locked'（きょうの ポイントが そろってない）| 'full' | 'poor'

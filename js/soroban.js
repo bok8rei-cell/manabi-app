@@ -177,7 +177,7 @@ function sbMenu() {
 
   const list = el('div', 'sb-levels');
   SB_LEVELS.forEach((lv, i) => {
-    const got = d.st[lv.id] || 0, max = sbStepsOf(lv).length, open = i <= d.lv;
+    const got = d.st[lv.id] || 0, max = sbStepsOf(lv).length, open = i <= d.lv || (typeof isTrial === 'function' && isTrial());   // おためしモードは ぜんぶ ひらく
     const row = el('button', 'sb-level' + (open ? '' : ' locked') + (i === d.lv ? ' now' : ''));
     row.appendChild(el('span', 'sb-level-no', open ? String(i + 1) : '🔒'));
     row.appendChild(el('span', 'sb-level-title', lv.title));
@@ -208,7 +208,7 @@ function sbLevelMenu(i) {
   root.appendChild(demo);
   const info = { nazoru: 'ひかる たまを じゅんばんに タップ。ゆびで うごかしかたを おぼえよう', mieru: 'おいた たまに 色が つくよ', anzan: 'たまの 色が かわらないよ。あたまの なかで おぼえよう', num: 'たまなし。あたまの なかの そろばんで こたえよう' };
   steps.forEach((st, k) => {
-    const open = k <= got;
+    const open = k <= got || (typeof isTrial === 'function' && isTrial());   // おためしモードは ぜんぶ ひらく
     const b = el('button', (open ? (k === got ? 'main-btn' : 'sub-btn') : 'sub-btn') + ' wide sb-step', `${k < got ? '★ ' : ''}${k + 1}. ${SB_STEP_NAME[st]}${open ? '' : ' 🔒'}`);
     b.disabled = !open;
     b.addEventListener('click', () => sbStart(i, st));
