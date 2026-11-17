@@ -927,3 +927,5 @@ body.trial-on { padding-top: 44px; }
 .sb-timer-fill.low { background: #E5484D; }
 .sb-timer-left { text-align: right; font-size: 0.8rem; font-weight: 800; color: #7A6A5E; margin-bottom: 4px; }
 .sb-expr-long { font-size: 1.6rem; line-height: 1.5; word-break: keep-all; overflow-wrap: anywhere; }
+.weak-trend { color: #1B7F4B; font-weight: 700; }
+.weak-wrong { color: #8a4b3a; font-size: 0.82rem; }

@@ -1189,24 +1189,15 @@ function generateMathProblem(grade, diff = 1) {
   if (typeof bridgePick === 'function') { const b = bridgePick(grade); if (b) return b; }
   let p = make();
   // 学校で いま やっている たんげん（おうちの人が えらんだ もの）を 約6わり の 確率で 多めに
+  // 学校の たんげん と にがて（95%みまん）を おおめに：りょうほう あれば 4わり ずつ、どちらか だけ なら 6わり／5わり
   const focus = (typeof focusMathUnits === 'function') ? focusMathUnits(grade) : new Set();
-  if (focus.size > 0) {
-    if (Math.random() < 0.6 && !focus.has(p.unitLabel)) {
-      for (let i = 0; i < 30; i++) {
-        const q = make();
-        if (focus.has(q.unitLabel)) { p = q; break; }
-      }
-    }
-    return p;
-  }
-  // はんぷく練習：この子が じりきで 9わり みたない たんげんを、半分くらいの 確率で 多めに 出す（ぜんぶ できている子は ふつうどおり）
   const weak = weakMathUnits(grade);
-  if (weak.size > 0 && Math.random() < 0.5 && !weak.has(p.unitLabel)) {
-    for (let i = 0; i < 20; i++) {
-      const q = make();
-      if (weak.has(q.unitLabel)) { p = q; break; }
-    }
-  }
+  const pickFrom = (set) => { for (let i = 0; i < 30; i++) { const q = make(); if (set.has(q.unitLabel)) return q; } return null; };
+  const pf = focus.size > 0 ? (weak.size > 0 ? 0.4 : 0.6) : 0;
+  const pw = weak.size > 0 ? (focus.size > 0 ? 0.4 : 0.5) : 0;
+  const roll = Math.random();
+  if (roll < pf) { if (!focus.has(p.unitLabel)) p = pickFrom(focus) || p; }
+  else if (roll < pf + pw) { if (!weak.has(p.unitLabel)) p = pickFrom(weak) || p; }
   return p;
 }
 

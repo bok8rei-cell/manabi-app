@@ -93,6 +93,17 @@ function startMissionItem(item) {
     });
     return;
   }
+  if (item.kind === 'weak') {   // にがて とっくん（js/weak.js）
+    const w = buildWeakSession(grade);
+    if (!w) {
+      completeMissionItem(grade, item.id);
+      showToast('にがては ぜんぶ クリア！');
+      refreshHome();
+      return;
+    }
+    startSession({ mode: 'mission', grade, subject: 'math', total: w.problems.length, problems: w.problems, missionItemId: item.id, weak: true, weakUnits: w.units });
+    return;
+  }
   startSession({ mode: 'mission', grade, subject: item.subject, total: item.n, missionItemId: item.id });
 }
 
@@ -124,6 +135,7 @@ function notLearned() {
   const p = s.current;
   const subject = s.currentSubject;
   if (s.mode === 'testweek') { showToast('テストの もんだいは とばせないよ。わからない ときは「わからない」を おしてね'); return; }
+  if (s.weak) { showToast('にがて とっくんは とばせないよ。わからない ときは「わからない」を おしてね'); return; }
   if (p.key === undefined || p.key === null || p.key === '') {
     showToast('この もんだいは、つぎに すすんでね');
     return;
@@ -181,6 +193,7 @@ function quizTagText() {
   const name = subjectNameOf(session.grade, session.currentSubject);
   if (session.mode === 'challenge') return `🚀 チャレンジ ・ ${name}`;
   if (session.mode === 'testweek') return `📝 テスト対策 ・ ${name}`;
+  if (session.weak) return `🎯 にがて とっくん ・ ${name}`;
   if (session.current && session.current.retry) return `🔁 にた もんだいで もういちど ・ ${name}`;
   if (session.fromMistakes) return `💪 にがて ふくしゅう ・ ${name}`;
   if (session.mode === 'mission') return `⭐ ミッション ・ ${name}`;
@@ -426,6 +439,10 @@ function checkAnswer() {
   if (typeof sameSubjectTick === 'function') sameSubjectTick(s.currentSubject, () => { session = null; showTab('home'); });   // おなじ きょうかばかり やって いないか（js/balance.js）
   if (!s.fromMistakes) noteSkipTrial(s.currentSubject, s.grade, p.key, ok && s.hintStage === 0);   // 「まだ ならってない」の おためし
   if (!s.fromMistakes && s.mode !== 'challenge') recordUnit(s.currentSubject, s.grade, p.unitLabel, ok && s.hintStage === 0);   // たんげんべつの きろく（ぶんせき用）。昇段チャレンジは まだ ならっていない レベルなので 入れない
+  if (!s.fromMistakes && s.mode !== 'challenge' && ok && s.hintStage === 0 && typeof checkGraduation === 'function') {   // にがてを そつぎょう（js/weak.js）
+    const gu = checkGraduation(s.currentSubject, s.grade, p.unitLabel);
+    if (gu) { (s.graduated = s.graduated || []).push(gu); showToast(`🎓 「${gu}」を そつぎょう！ +${GRAD_COINS}コイン`); FX.levelUp(); }
+  }
   if (s.mode === 'testweek') noteTestWeek(s.testSetId, p.twIdx, ok && s.hintStage === 0);   // テスト週間：じりきで せいかいした もんだいを おぼえる（js/testweek.js）
   if (!s.fromMistakes && s.mode !== 'testweek' && getDiff(s.grade, s.currentSubject) < 3) recordRecent(s.currentSubject, s.grade, ok && s.hintStage === 0);   // 「ちょうむずかしい」の 結果は 「まえの学年に もどる」の 判定に 入れない   // 最近の正解率（ヒントを使って正解したぶんは、自力ではないので 数えない）
   updateHintUI();
@@ -708,6 +725,11 @@ function renderResult(r) {
   if (s.mode === 'testweek' && typeof testSetById === 'function' && testSetById(s.testSetId)) {
     const set = testSetById(s.testSetId), pr = testsetProgress(set);
     root.appendChild(el('div', 'note warm', `📝 ${set.title}：じりきで せいかい ${pr.done} / ${pr.total} もん（のこり ${pr.total - pr.done}もん）`));
+  }
+  (s.graduated || []).forEach(u => root.appendChild(el('div', 'note gold', `🎓 「${u}」を そつぎょう！ +${GRAD_COINS}コイン`)));
+  if (s.weak && s.weakUnits) {
+    const us = loadUnits();
+    s.weakUnits.forEach(u => { const r = unitRate(us[`${s.grade}|math|${u}`]); if (r) root.appendChild(el('div', 'note warm', `🎯 にがて とっくん：${u}　さいきん ${r.n}もんで ${Math.round(r.rate * 100)}%（95%で そつぎょう）`)); });
   }
   if (s.luckyCount > 0) root.appendChild(el('div', 'note gold', `🍀 ラッキー教科！ ${s.luckyCount}もんぶん コインが 1.5ばいに なったよ`));
   if (s.hintCost > 0) root.appendChild(el('div', 'note', `💡 ヒントで ${s.hintCost}コイン つかったよ（${s.hintsUsed}かい）`));

@@ -88,7 +88,7 @@ function missionKey(grade) { return `manabi_mission_${playerTag()}_g${grade}_${l
 
 function getMission(grade) {
   const saved = readJSON(missionKey(grade), null);
-  if (saved && Array.isArray(saved.items)) return saved;
+  if (saved && Array.isArray(saved.items)) { if (typeof ensureWeakItem === 'function') ensureWeakItem(saved, grade); return saved; }
   // その学年に ある 教科から えらぶ（中2・中3 など、国語・理科社会が まだ ない学年は 英語に する）。同じ教科は 2回 えらばない
   const used = [];
   const choose = (...cands) => {
@@ -108,6 +108,7 @@ function getMission(grade) {
   }
   const mission = { items, bonus: false };
   writeJSON(missionKey(grade), mission);
+  if (typeof ensureWeakItem === 'function') ensureWeakItem(mission, grade);   // にがてが あれば「にがて とっくん」を くわえる（js/weak.js）
   return mission;
 }
 
@@ -319,7 +320,8 @@ function loadUnits(name) {
 }
 
 // r：さいきん 20もんの けっか（'1'＝じりきで せいかい／'0'）。にがての はんていは こちらを つかう（これまで ぜんぶ だと なかなか かわらないため）
-const UNIT_RECENT_N = 20;
+const UNIT_RECENT_N = 20;   // せいかいりつを みる はんい
+const UNIT_KEEP_N = 40;     // きろくは 40もん のこす（まえ 20もん との くらべ用）
 const UNIT_GOAL = 0.95;   // さいきん 20もんで 95%いじょう なら「そつぎょう」
 
 function recordUnit(subject, grade, unitLabel, ok) {
@@ -329,7 +331,9 @@ function recordUnit(subject, grade, unitLabel, ok) {
   e.t += 1;
   if (ok) e.c += 1;
   e.d = localDateStr();
-  e.r = ((typeof e.r === 'string' ? e.r : '') + (ok ? '1' : '0')).slice(-UNIT_RECENT_N);
+  e.r = ((typeof e.r === 'string' ? e.r : '') + (ok ? '1' : '0')).slice(-UNIT_KEEP_N);
+  // にがてに なった（さいきん 10もん いじょうで 95%みまん）しるし。そつぎょうの ごほうびは この しるしが ある たんげんだけ
+  { const win = e.r.slice(-UNIT_RECENT_N); if (win.length >= 10 && win.split('').filter(x => x === '1').length / win.length < UNIT_GOAL) e.w = 1; }
   u[id] = e;
   writeJSON(unitKey(), u);
 }
@@ -338,10 +342,15 @@ function recordUnit(subject, grade, unitLabel, ok) {
 function unitRate(e) {
   if (!e) return null;
   if (typeof e.r === 'string' && e.r.length >= 5) {
-    const ok = e.r.split('').filter(x => x === '1').length;
-    return { n: e.r.length, ok, rate: ok / e.r.length, recent: true };
+    const win = e.r.slice(-UNIT_RECENT_N);
+    const ok = win.split('').filter(x => x === '1').length;
+    return { n: win.length, ok, rate: ok / win.length, recent: true };
   }
-  if (e.t >= 8) return { n: e.t, ok: e.c, rate: e.c / e.t, recent: false };
+  if (e.t >= 8) {
+    // さいきんの きろくが ない ふるい ごうけいは、1しゅうかん いじょう やっていなければ もう 見ない（昇段チャレンジの のこり など）
+    if (e.d && Math.round((Date.UTC(...localDateStr().split('-').map((x, i) => i === 1 ? x - 1 : +x)) - Date.UTC(...String(e.d).split('-').map((x, i) => i === 1 ? x - 1 : +x))) / 86400000) > 7) return null;
+    return { n: e.t, ok: e.c, rate: e.c / e.t, recent: false };
+  }
   return null;
 }
 
