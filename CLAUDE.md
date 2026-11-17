@@ -133,7 +133,7 @@ GitHub Pages: `https://bok8rei-cell.github.io/manabi-app/`
 | `js/algebra.js` | 文字式の答えあわせ（展開・因数分解・直線の式・解）。parsePoly などの多項式パーサー |
 | `js/math_extra.js` | 算数の追加問題（1年：くりあがり・くりさがり・3つのたし算・文章題、5年：小数×小数・小数÷小数・平均・体積・分数の文章題・約分）と その解き方。genGrade1/genGrade5 から genExtra1/genExtra5 で呼ぶ。約分系は answerType reducedFraction（約分した形だけ正解） |
 | `js/weak.js` | にがて とっくん と そつぎょう。**まいにちの ミッションの「算数 5もん」（m1）を「算数 10もん（🎯 にがて とっくん）」に かえる**（ミッションの かずは 3つの まま。getMission → ensureWeakItem。その学年の 算数で さいきん 20もんが 95%みまんの たんげんが あるとき。さいしょの 版の 4つめ m4 は 3つに もどす）。weakTargets が ひくい じゅんに 2たんげんを えらび（いまの レベルで じっさいに 出る たんげんだけ＝producibleUnits）、buildWeakSession が その たんげんの もんだい（かずが ちがう）＋ さかのぼり（BRIDGE_MAP）を まぜて 10もん。quiz.js の startMissionItem（kind 'weak'）から はじまる（「まだ ならってない」は つかえない）。**そつぎょう**：にがてに なった（unit の w しるし）たんげんが さいきん 20もんで 95%に なったら 100コイン（GRAD_COINS）。1たんげん 1かい（pet.paid.grad）。いちど そつぎょうして から おちたら、また にがてに もどる（コインは もう 出ない）。ふつうの ドリルでは 学校の たんげんが あっても にがてを 出す（math.js：りょうほう あれば 4わり ずつ）。親の画面の「よわい たんげん」は appendWeakParent：さいきん 20もん、まえ 20もん → いま（unitTrend）、まちがえた こたえ 3つ（manabi_wrong）、そつぎょうの かず。さいきんの きろくが ない ふるい ごうけいは 1しゅうかん やっていなければ にがてに 入れない（unitRate）。unit の r は 40もん のこす（UNIT_KEEP_N）|
-| `js/math_bridge.js` | 算数の「さかのぼり」と さくらんぼ計算。generateMathProblem の さいしょに bridgePick：1年は いつも 約3わり さくらんぼけいさん（bCherry、くりあがり。学校の しゅくだいに あわせて）。さいきん20もんで じりき 8わり みまんの たんげんが あれば、約35%で その手前の だんかいの もんだい（BRIDGE_MAP：小数のかけ算→小数点の いち、あまりの いみ→あまりを どうする？、お金→硬貨の 絵で かぞえる、公倍数→ならべて さがす など）。mathProblemOfType は まちがえた すぐ あとの「にた もんだい」用 |
+| `js/math_bridge.js` | 算数の「さかのぼり」と さくらんぼ計算。generateMathProblem の さいしょに bridgePick：1年は いつも 約3わり さくらんぼけいさん（bCherry、くりあがり。学校の しゅくだいに あわせて）。さいきん20もんで じりき 8わり みまんの たんげんが あれば、約35%で その手前の だんかいの もんだい（BRIDGE_MAP：小数のかけ算→小数点の いち、あまりの いみ→あまりを どうする？、お金→硬貨の 絵で かぞえる、公倍数→ならべて さがす など）。mathProblemOfType は まちがえた すぐ あとの「にた もんだい」用。1年の お金（10円・5円・1円）は 硬貨の え（しゅるいごとに 1れつ）つき、「5ずつ・10ずつ かぞえる」れんしゅう（bCoin5・bCoin10）、ヒントも かぞえかたまで 出す |
 | `js/math_super.js` | 算数「ちょうむずかしい」（レベル3。3年。maxDiff／SUPER_LEVEL は core.js）。昇段チャレンジで むずかしい→ちょうむずかしい に上がる。他学年・教科は最大レベル2のまま |
 | `js/math_super_more.js` | 算数「ちょうむずかしい」（1・2・4・5・6年、各6種類。問題に params を持たせ、解き方は params から作る） |
 | `js/steps_jh.js` | 中2・中3数学の「解き方」とヒント（steps.js と同じ決まり） |
@@ -188,6 +188,6 @@ Agent ツールで以下を実行：
 
 - iOS でPWAをホーム画面から削除すると localStorage が消えるが、プレイヤー名を再入力すれば Firestore から復元できる
 - Service Worker のキャッシュバージョンを上げないと端末に古いバージョンが残る
-- バージョンは `js/core.js` の APP_VERSION・`version.json`・`sw.js` の CACHE_NAME・`index.html` の `?v=` を同じ番号にそろえて上げる（現在 v43.49）
+- バージョンは `js/core.js` の APP_VERSION・`version.json`・`sw.js` の CACHE_NAME・`index.html` の `?v=` を同じ番号にそろえて上げる（現在 v43.50）
 - 日付は `localDateStr()`（js/store.js）を使う。`toISOString()` は UTC なので日本時間の朝に1日ずれる
 - `explain.js` を変更したら、先生エージェントに審査を依頼する（問題データと同じ扱い）

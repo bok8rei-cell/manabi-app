@@ -70,10 +70,18 @@ MATH_STEPS.s1Diff = (p) => { const { a, b } = p.params; return { value: a - b, l
 function s1Money() {
   lastMathType = 's1Money';
   const a = randInt(2, 6), b = randInt(1, 4), c = randInt(1, 4);
-  return _sP(`10円玉が ${a}まい、5円玉が ${b}まい、1円玉が ${c}まい あります。\nぜんぶで なん円？`, a * 10 + b * 5 + c, 's1Money', { a, b, c });
+  return _sP(`10円玉が ${a}まい、5円玉が ${b}まい、1円玉が ${c}まい あります。\nぜんぶで なん円？`, a * 10 + b * 5 + c, 's1Money', { a, b, c }, (typeof coinSVG === 'function') ? { figure: coinSVG(a, b, c) } : {});   // 硬貨の え つき（js/math_bridge.js）
 }
-MATH_STEPS.s1Money = (p) => { const { a, b, c } = p.params; return { value: a * 10 + b * 5 + c, lines: [
-  'お金の しゅるいごとに わけて かんがえよう', `10円玉 ${a}まいで ${a * 10}円、5円玉 ${b}まいで ${b * 5}円、1円玉 ${c}まいで ${c}円`, `${a * 10} ＋ ${b * 5} = ${a * 10 + b * 5}`, `${a * 10 + b * 5} ＋ ${c} = ${a * 10 + b * 5 + c}` ] }; };
+MATH_STEPS.s1Money = (p) => {
+  const { a, b, c } = p.params;
+  const seq = (v, n) => Array.from({ length: n }, (_, k) => v * (k + 1)).join('、');
+  return { value: a * 10 + b * 5 + c, lines: [
+    '10円玉・5円玉・1円玉を わけて かんがえよう。5円玉は 5ずつ かぞえるよ',
+    `10円玉は 1まい 10円。${a}まいで ${seq(10, a)}（${a * 10}円）`,
+    `5円玉は 1まい 5円。${b}まいで ${seq(5, b)}（${b * 5}円）`,
+    `${a * 10}円 ＋ ${b * 5}円 ＝ ${a * 10 + b * 5}円`,
+    `${a * 10 + b * 5}円 ＋ 1円玉 ${c}まい ＝ ${a * 10 + b * 5 + c}円` ] };
+};
 
 function s1Compare() {
   lastMathType = 's1Compare';

@@ -7,7 +7,7 @@
 // 「解き方」（ヒント・解説）は MATH_STEPS に 登録する（答えが 一致したときだけ 使われる）。
 
 Object.assign(MATH_UNIT_LABELS, {
-  bCherry: 'さくらんぼけいさん（くりあがり）', bCoin: 'お金を かぞえる', bOrder: 'ならびかた（まえと うしろ）',
+  bCherry: 'さくらんぼけいさん（くりあがり）', bCoin: 'お金を かぞえる', bCoin5: '5円玉を かぞえる（5ずつ）', bCoin10: '10円玉を かぞえる（10ずつ）', bOrder: 'ならびかた（まえと うしろ）',
   bRemUse: 'あまりを どうする？', bShopSum: '2つの 買いもの（だんかいで）', bChange: 'おつり（だんかいで）', bTime60: '時こく（60分の くぎり）',
   bDecMul: '小数のかけ算（小数点の いち）', bDecDiv: '小数のわり算（小数点の いち）', bLcmList: '公倍数を ならべて さがす', bGcdList: '公約数を ならべて さがす', bAvgSum: '平均（ごうけいから）'
 });
@@ -57,22 +57,29 @@ MATH_STEPS.bCherry = (p) => {
 };
 
 // ---------------- 1年：お金を かぞえる（硬貨の 絵つき）----------------
-function coinSVG(n10, n5, n1) {
-  const coins = [];
-  for (let i = 0; i < n10; i++) coins.push(10);
-  for (let i = 0; i < n5; i++) coins.push(5);
-  for (let i = 0; i < n1; i++) coins.push(1);
-  const per = 6, R = 16, gap = 38;
-  const rows = Math.ceil(coins.length / per);
-  let s = '';
-  coins.forEach((v, i) => {
-    const x = 22 + (i % per) * gap, y = 22 + Math.floor(i / per) * gap;
-    if (v === 10) s += `<circle cx="${x}" cy="${y}" r="${R}" fill="#D08B57" stroke="#9A5B2E" stroke-width="2"/><text x="${x}" y="${y + 5}" font-size="13" font-weight="800" text-anchor="middle" fill="#fff">10</text>`;
-    else if (v === 5) s += `<circle cx="${x}" cy="${y}" r="${R}" fill="#E9C46A" stroke="#B8860B" stroke-width="2"/><circle cx="${x}" cy="${y}" r="4" fill="#fff"/><text x="${x}" y="${y - 7}" font-size="9" font-weight="800" text-anchor="middle" fill="#6B4E00">5</text>`;
-    else s += `<circle cx="${x}" cy="${y}" r="${R - 2}" fill="#E5E7EB" stroke="#9CA3AF" stroke-width="2"/><text x="${x}" y="${y + 5}" font-size="13" font-weight="800" text-anchor="middle" fill="#4B5563">1</text>`;
-  });
-  return `<svg viewBox="0 0 ${22 * 2 + (per - 1) * gap} ${rows * gap + 6}" style="width:100%;max-width:260px;display:block;margin:0 auto" aria-hidden="true">${s}</svg>`;
+// こうかの え：しゅるいごとに 1れつ（6まいで おりかえす）。labels が あれば、したに かぞえた かずを 出す（'？' は まだ わからない）
+function coinPiece(v, x, y) {
+  if (v === 10) return `<circle cx="${x}" cy="${y}" r="16" fill="#D08B57" stroke="#9A5B2E" stroke-width="2"/><text x="${x}" y="${y + 5}" font-size="13" font-weight="800" text-anchor="middle" fill="#fff">10</text>`;
+  if (v === 5) return `<circle cx="${x}" cy="${y}" r="16" fill="#E9C46A" stroke="#B8860B" stroke-width="2"/><circle cx="${x}" cy="${y}" r="4" fill="#fff"/><text x="${x}" y="${y - 7}" font-size="9" font-weight="800" text-anchor="middle" fill="#6B4E00">5</text>`;
+  return `<circle cx="${x}" cy="${y}" r="14" fill="#E5E7EB" stroke="#9CA3AF" stroke-width="2"/><text x="${x}" y="${y + 5}" font-size="13" font-weight="800" text-anchor="middle" fill="#4B5563">1</text>`;
 }
+function coinsSVG(groups) {
+  const per = 6, gap = 38;
+  let s = '', y0 = 4;
+  groups.filter(g => g.n > 0).forEach(g => {
+    const rows = Math.ceil(g.n / per), rowH = gap + (g.labels ? 16 : 0);
+    for (let i = 0; i < g.n; i++) {
+      const x = 22 + (i % per) * gap, y = y0 + 18 + Math.floor(i / per) * rowH;
+      s += coinPiece(g.v, x, y);
+      if (g.labels) s += `<text x="${x}" y="${y + 32}" font-size="13" font-weight="800" text-anchor="middle" fill="${g.labels[i] === '？' ? '#DC2626' : '#3B2F2A'}">${g.labels[i]}</text>`;
+    }
+    y0 += rows * rowH + 4;
+  });
+  return `<svg viewBox="0 0 ${22 * 2 + (per - 1) * gap} ${y0 + 4}" style="width:100%;max-width:260px;display:block;margin:0 auto" aria-hidden="true">${s}</svg>`;
+}
+function coinSVG(n10, n5, n1) { return coinsSVG([{ v: 10, n: n10 }, { v: 5, n: n5 }, { v: 1, n: n1 }]); }
+const _bSeq = (v, n) => Array.from({ length: n }, (_, i) => v * (i + 1)).join('、');
+
 function bCoin() {
   lastMathType = 'bCoin';
   const v = _bOne(['10and1', '10and1', '10and5', 'all']);
@@ -88,13 +95,34 @@ function bCoin() {
 }
 MATH_STEPS.bCoin = (p) => {
   const { n10, n5, n1 } = p.params; const total = n10 * 10 + n5 * 5 + n1;
-  const lines = [`まず 10円玉を かぞえよう：10、20、30… と ふえるよ`, `10円玉 ${n10}まいで ${n10 * 10}円`];
-  if (n5 && !n1) { lines.push('つぎに 5円玉 1まいを たそう', `${n10 * 10} ＋ 5 ＝ ${total}円`); return { value: total, lines }; }   // こたえは さいごの 行だけに 出す
-  if (n5) lines.push(`5円玉を たすと ${n10 * 10} ＋ 5 ＝ ${n10 * 10 + 5}円`);
-  if (n1) lines.push(`1円玉 ${n1}まいを たして ${total}円`);
-  else lines.push(`ぜんぶで ${total}円`);
+  const lines = ['10円玉・5円玉・1円玉を わけて かぞえよう。5円玉は 5ずつ かぞえるよ', `10円玉は 1まい 10円。${n10}まいで ${_bSeq(10, n10)}（${n10 * 10}円）`];
+  if (n5) lines.push(`5円玉は 1まい 5円。${n5}まいで ${_bSeq(5, n5)}（${n5 * 5}円）`);
+  let run = n10 * 10;
+  if (n5) { run += n5 * 5; lines.push(`${n10 * 10}円 ＋ ${n5 * 5}円 ＝ ${run}円`); }
+  if (n1) lines.push(`${run}円 ＋ 1円玉 ${n1}まい ＝ ${total}円`);
   return { value: total, lines };
 };
+
+// 5円玉・10円玉を ならべて「5ずつ・10ずつ」かぞえる れんしゅう（ぜんぶで なん円？／かぞえた かずを 見て さいごの かず）
+function _bCoinCount(v) {
+  lastMathType = v === 5 ? 'bCoin5' : 'bCoin10';
+  const n = randInt(3, 6);
+  const mode = Math.random() < 0.4 ? 'count' : 'total';
+  const params = { v, n, mode };
+  if (mode === 'count') {
+    const labels = Array.from({ length: n }, (_, i) => (i === n - 1 ? '？' : String(v * (i + 1))));
+    return _bP(`${v}円玉を ${v}、${v * 2}… と かぞえるよ。\nさいごの 1まいの ところは いくつ？`, v * n, lastMathType, params, { figure: coinsSVG([{ v, n, labels }]) });
+  }
+  return _bP(`${v}円玉が ${n}まい あります。\nぜんぶで なん円？`, v * n, lastMathType, params, { figure: coinsSVG([{ v, n }]) });
+}
+function bCoin5() { return _bCoinCount(5); }
+function bCoin10() { return _bCoinCount(10); }
+const _bCoinSteps = (p) => {
+  const { v, n } = p.params;
+  return { value: v * n, lines: [`${v}円玉は 1まいで ${v}円。${v}ずつ ふえるよ`, `${_bSeq(v, n)} と かぞえる`, `${n}まいで ${v * n}円`] };
+};
+MATH_STEPS.bCoin5 = _bCoinSteps;
+MATH_STEPS.bCoin10 = _bCoinSteps;
 
 // ---------------- 1年：ならびかた（まえと うしろ）----------------
 function bOrder() {
@@ -244,14 +272,14 @@ MATH_STEPS.bAvgSum = (p) => {
 // ---------------- どの たんげんに、どの さかのぼりを まぜるか ----------------
 const BRIDGE_MAP = {
   'くりあがりの たしざん': [bCherry], 'くりあがりの もんだい': [bCherry],
-  'お金（10円・5円・1円）': [bCoin], 'ならびかた': [bOrder],
+  'お金（10円・5円・1円）': [bCoin5, bCoin5, bCoin10, bCoin], 'ならびかた': [bOrder],
   'あまりの いみ': [bRemUse], 'わり算の 切り上げ': [bRemUse],
   '2つの 買いもの': [bShopSum], 'おつり（おうよう）': [bChange], '時こくと時間': [bTime60],
   '小数のかけ算': [bDecMul], '小数のわり算': [bDecDiv],
   '最小公倍数': [bLcmList], '最小公倍数の 文章題': [bLcmList], '最大公約数': [bGcdList], '最大公約数の 文章題': [bGcdList],
   '平均': [bAvgSum], '平均（つぎの 点）': [bAvgSum]
 };
-const BRIDGE_GENS = { bCherry, bCoin, bOrder, bRemUse, bShopSum, bChange, bTime60, bDecMul, bDecDiv, bLcmList, bGcdList, bAvgSum };
+const BRIDGE_GENS = { bCherry, bCoin, bCoin5, bCoin10, bOrder, bRemUse, bShopSum, bChange, bTime60, bDecMul, bDecDiv, bLcmList, bGcdList, bAvgSum };
 
 function _bTag(p) {
   p.key = lastMathType;
