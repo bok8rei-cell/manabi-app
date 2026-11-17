@@ -141,7 +141,7 @@ function renderHome() {
     row.appendChild(el('span', 'mark', item.done ? '✓' : '○'));
     const label = item.kind === 'review'
       ? `にがて ふくしゅう`
-      : (item.kind === 'weak' ? `🎯 にがて とっくん ${item.n}もん` : `${subjectNameOf(grade, item.subject)} ${item.n}もん`);
+      : (item.kind === 'weak' ? `算数 ${item.n}もん（🎯 にがて とっくん）` : `${subjectNameOf(grade, item.subject)} ${item.n}もん`);
     row.appendChild(el('span', null, label));
     card.appendChild(row);
   });

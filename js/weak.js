@@ -1,7 +1,7 @@
 // ===== にがて とっくん（まいにちの ミッションの 1つ）と、そつぎょう =====
 // ・「にがて」＝ その学年の 算数で、さいきん 20もんの じりき せいかいが 95%みまんの たんげん（store.js の unitRate）。
 //   はんの すくない（ふるい きろく だけで 1しゅうかん いじょう やっていない）ものは ふくめない。
-// ・まいにちの ミッションに「🎯 にがて とっくん 10もん」を ひとつ くわえる（にがてが あるとき）。
+// ・まいにちの ミッションの「算数」を「🎯 にがて とっくん 10もん」に かえる（ミッションの かずは 3つの まま。にがてが あるとき）。
 //   にがて 2つ ぶんを えらび、その たんげんの もんだい（かずだけ ちがう）と「さかのぼり」を まぜて 10もん。
 // ・そつぎょう：にがてだった たんげんが さいきん 20もんで 95%に なったら 100コイン（1たんげん 1かい）。
 // ・おうちの人の 画面：にがての へんか（まえ 20もん → いま）と、まちがえた こたえの かたち。
@@ -66,15 +66,26 @@ function buildWeakSession(grade) {
   return { problems: shuffleArray(problems), units: targets.map(t => t.unit) };
 }
 
-// ミッションに「にがて とっくん」を くわえる（その日の ミッションに まだ なければ。1日 1かいだけ たしかめる）
+// ミッションの「算数 5もん」を「にがて とっくん 10もん」に かえる（ミッションの かずは ふえない。1日 1かいだけ たしかめる）
+// にがてが ない ときは ふつうの 算数。さいしょの 版で くわえた 4つめ（id m4）は、3つに もどす。
 function ensureWeakItem(mission, grade) {
-  if (!mission || mission.weakChecked) return false;
+  if (!mission) return false;
+  const legacy = mission.items.findIndex(it => it.id === 'm4' && it.kind === 'weak');
+  if (mission.weakChecked && legacy < 0) return false;
+  const m1 = mission.items.find(it => it.id === 'm1');
+  const canSwap = m1 && m1.kind === 'subject' && m1.subject === 'math' && !m1.done;
+  let changed = false;
+  if (legacy >= 0) {
+    const old = mission.items.splice(legacy, 1)[0];
+    if (canSwap) { m1.kind = 'weak'; m1.n = WEAK_Q; m1.units = old.units; }
+    changed = true;
+  } else if (!mission.bonus && canSwap) {
+    const t = weakTargets(grade);
+    if (t.length > 0) { m1.kind = 'weak'; m1.n = WEAK_Q; m1.units = t.map(x => x.unit); changed = true; }
+  }
   mission.weakChecked = true;
-  if (mission.bonus || mission.items.some(it => it.kind === 'weak')) { writeJSON(missionKey(grade), mission); return false; }
-  const t = weakTargets(grade);
-  if (t.length > 0) mission.items.push({ id: 'm4', kind: 'weak', n: WEAK_Q, done: false, units: t.map(x => x.unit) });
   writeJSON(missionKey(grade), mission);
-  return t.length > 0;
+  return changed;
 }
 
 // そつぎょう：にがて だった（w）たんげんが さいきん 20もんで 95%に なった とき 1かいだけ。たんげんの なまえを かえす
